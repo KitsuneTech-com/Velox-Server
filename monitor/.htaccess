@@ -1,0 +1,19 @@
+# This .htaccess file is important for access control to the monitor API endpoint.
+# While the endpoint does not perform any sensitive operations, in order to avoid
+# unexpected behavior that might be caused by unauthorized access, this should
+# be protected with a whitelist policy that permits only the addresses of the
+# database servers that will be sending updates.
+
+<RequireAny>
+    # Deny access unless specifically authorized
+    Require all denied
+
+    # Localhost allowed by default
+    Require host localhost
+    Require ip 127.0.0.1
+
+    # Other allowed hosts
+    Require host npcautomotive.com
+    Require ip 192.168.1.37
+    Require ip 104.61.46.242
+</RequireAny>
