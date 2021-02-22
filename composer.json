@@ -1,3 +1,8 @@
 {
-    "name": "calkette"
+    "name": "kitsunetech/velox",
+    "description": "Server-side component of Velox framework",
+    "type": "library",
+    "keywords": ["database","AJAX","JSON"],
+    "homepage": "https://kitsunetech.com/projects/velox",
+    "time": "2021-02-21",
 }
