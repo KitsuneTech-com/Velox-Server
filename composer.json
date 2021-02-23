@@ -19,8 +19,6 @@
         "psr-4": {
             "KitsuneTech\\Velox\\": "php/"
         },
-        "files": {
-            ["php/Support/Constants.php","php/Support/ErrorHandling.php"]
-        }
+        "files": ["php/Support/Constants.php","php/Support/ErrorHandling.php"]
     }
 }
