@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// KitsuneTech\Velox\Connection
+// KitsuneTech\Velox\Database\Connection
 
-namespace KitsuneTech\Velox;
+namespace KitsuneTech\Velox\Database;
 
 require_once '../config/config.php';
 require_once 'constants.php';	    //also in config.php
