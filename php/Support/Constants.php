@@ -1,5 +1,4 @@
 <?php
-const TEST = 255;
 const VELOX_ERR_NONE = 0;
 const VELOX_ERR_STDERR = 1;
 const VELOX_ERR_JSONOUT = 2;
