@@ -1,8 +1,30 @@
 <?php
+declare(strict_types=1);
 
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+namespace KitsuneTech\Velox\Structures;
 
+public class Diff {
+    public array $select;
+    public array $update;
+    public array $insert;
+    public array $delete;
+    public function __construct(?string $json){
+        //Expected JSON format (where col1 is an autoincrement field not set by this library):
+        //(each row is an object with properties representing each field name)
+        // {
+        //  select:
+        //    [{where: [{col1: ["=","someValue"]}
+        //  insert:
+        //    [{values: {col2: 'data', col3: 'data'},{col2: 'moredata', col3: 'moredata'}}],
+        //  delete:
+        //    [{where: [{col1: 1},{col2: 'deleteThis', col3: 'deleteThis'}]],
+        //  update:
+        //    [{values: {col2: 'changeThis'}, where: {col2: 'fromThis'}},{values: {col2: 'thisToo'}, where: {col1: 2}}]
+        // }
+        $diffObj = json_decode($json) ?? (object)[];
+        $this->select = $diffObj->select ?? [];
+        $this->update = $diffObj->update ?? [];
+        $this->insert = $diffObj->insert ?? [];
+        $this->delete = $diffObj->delete ?? [];
+    }
+}
