@@ -2,5 +2,5 @@
     "name": "kitsunetech/velox",
     "description": "Server-side component of Velox framework",
     "type": "library",
-    "keywords": ["database","AJAX","JSON"],
+    "keywords": ["database","AJAX","JSON"]
 }
