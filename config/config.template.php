@@ -1,7 +1,7 @@
 <?php
 //This file contains server-specific information to be used by the server-side library. Change this as necessary
 //to fit your configuration.
-require_once '../php/errorReporting.php';
+
 use KitsuneTech\Velox;
 
 $GLOBALS['Velox'] = [];
@@ -16,20 +16,11 @@ $GLOBALS['Velox']['VeloxRoot'] = $GLOBALS['Velox']['SiteRoot'].'/velox';
 //or above the site root, but must be accessible to PHP)
 $GLOBALS['Velox']['QueryDefPath'] = $GLOBALS['Velox']['SiteRoot'].'/queries';
 
-//The mode and level of error reporting (constants defined in php/constants.php)
+//This is used to set the mode and level of error reporting (constants defined in Support/constants.php)
 $GLOBALS['Velox']['ErrorReportingMode'] = VELOX_ERR_JSONOUT+VELOX_ERR_STACKTRACE;
-
-//
 Velox\veloxErrorReporting($GLOBALS['Velox']['ErrorReportingMode']);
 
 //Database connections can be generated and stored in this array, to avoid hard-coding
 //connection details into query definitions
 $GLOBALS['Velox']['Connections'] = [];
-$GLOBALS['Velox']['Connections']['my-database'] = 
-
-
-
-
-
-$GLOBALS['VeloxConnections'] = [];				    //This array stores all used database connections
-$GLOBALS['VeloxConnections']['NIS'] = new Velox\Connection('localhost','npc-rev2', 'web', 'webserver');
+$GLOBALS['Velox']['Connections']['my-database'] = new Velox\Connection('host','database','username','password');
