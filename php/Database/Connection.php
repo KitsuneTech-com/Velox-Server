@@ -5,12 +5,6 @@ declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database;
 
-require_once '../config/config.php';
-require_once 'constants.php';	    //also in config.php
-require_once 'error-reporting.php'; //also in config.php
-
-Velox\veloxErrorReporting($GLOBALS['Velox']['ErrorReportingMode']);
-
 class Connection {
     private object $_conn;
     private string $_host;
