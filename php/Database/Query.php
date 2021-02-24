@@ -2,8 +2,6 @@
 
 //KitsuneTech\Velox\Procedures\Query
 
-require_once '../Connection.php';
-require_once '../Structures/ResultSet.php';
 namespace KitsuneTech\Velox\Procedures;
 
 class Query {
