@@ -1,9 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// KitsuneTech\Velox\Database\Transaction
-
-namespace KitsuneTech\Velox\Database;
+namespace KitsuneTech\Velox\Database\Procedures;
 
 class Transaction {
     public array $queries;
