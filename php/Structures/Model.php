@@ -1,6 +1,6 @@
 <?php
 
-namespace KitsuneTech\Velox\Structures
+namespace KitsuneTech\Velox\Structures;
     
 class Model {
     
