@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace KitsuneTech\Velox;
+namespace KitsuneTech\Velox\Database\Procedures;
 
 class PreparedStatement extends Query {
     private array $_namedParams = [];
