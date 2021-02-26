@@ -1,5 +1,7 @@
 <?php
 
+namespace KitsuneTech\Velox\Structures
+    
 class Model {
     
     // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd together.
