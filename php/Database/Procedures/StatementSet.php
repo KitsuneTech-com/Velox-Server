@@ -1,4 +1,8 @@
 <?php
+declare(strict_types=1);
+
+namespace KitsuneTech\Velox\Database\Procedures
+    
 class StatementSet implements \Iterator {
     private string $_baseSql;
     public Connection $conn;
