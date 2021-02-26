@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// KitsuneTech\Velox\Database\Connection
-
 namespace KitsuneTech\Velox\Database;
 
 class Connection {
