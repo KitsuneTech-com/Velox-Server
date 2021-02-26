@@ -1,7 +1,5 @@
 <?php
 
-//KitsuneTech\Velox\Database\Procedures\Query
-
 namespace KitsuneTech\Velox\Database\Procedures;
 
 class Query {
