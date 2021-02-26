@@ -1,8 +1,8 @@
 <?php
 
-//KitsuneTech\Velox\Procedures\Query
+//KitsuneTech\Velox\Database\Procedures\Query
 
-namespace KitsuneTech\Velox\Procedures;
+namespace KitsuneTech\Velox\Database\Procedures;
 
 class Query {
     public Connection $conn;
