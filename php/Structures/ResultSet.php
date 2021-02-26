@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// KitsuneTech\Velox\Structures\ResultSet
-
 namespace KitsuneTech\Velox\Structures;
 
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
