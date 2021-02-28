@@ -23,4 +23,4 @@ Velox\veloxErrorReporting($GLOBALS['Velox']['ErrorReportingMode']);
 //Database connections can be generated and stored in this array, to avoid hard-coding
 //connection details into query definitions
 $GLOBALS['Velox']['Connections'] = [];
-$GLOBALS['Velox']['Connections']['my-database'] = new Velox\Connection('host','database','username','password');
+//$GLOBALS['Velox']['Connections']['my-database'] = new Velox\Connection('host','database','username','password');
