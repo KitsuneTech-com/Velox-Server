@@ -1,6 +1,6 @@
 ## VeloxException codes/descriptions (subject to change during development)
 
-> Database\Connection
+### Database\Connection
 
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
