@@ -98,7 +98,7 @@ class Connection {
     }
     public function setSavepoint() : bool {
 	if (!$this->_inTransaction){
-	    throw new VeloxException("Transaction function called without active transaction",18);
+	    throw new VeloxException("Transactional method called without active transaction",18);
 	}
 	switch ($this->_serverType){
 	    case DB_MYSQL:
@@ -109,7 +109,7 @@ class Connection {
     }
     public function rollBack(bool $toSavepoint = false) : bool {
 	if (!$this->_inTransaction){
-	    throw new VeloxException("Transaction function called without active transaction",18);
+	    throw new VeloxException("Transactional method called without active transaction",18);
 	}
 	switch ($this->_serverType){
 	    case DB_MYSQL:
@@ -130,7 +130,7 @@ class Connection {
     }
     public function commit() : bool {
 	if (!$this->_inTransaction){
-	    throw new VeloxException("Transaction function called without active transaction",18);
+	    throw new VeloxException("Transactional method called without active transaction",18);
 	}
 	switch ($this->_serverType){
 	    case DB_MYSQL:
