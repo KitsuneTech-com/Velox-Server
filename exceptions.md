@@ -43,7 +43,7 @@
 ### Database\Structures\Model
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_R>ESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
+| 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
