@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database;
+use KitsuneTech\Velox\VeloxException;
 
 class Connection {
     private object $_conn;
