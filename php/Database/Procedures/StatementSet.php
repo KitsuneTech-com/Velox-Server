@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-namespace KitsuneTech\Velox\Database\Procedures
+namespace KitsuneTech\Velox\Database\Procedures;
+use KitsuneTech\Velox\VeloxException;
     
 class StatementSet implements \Iterator {
     private string $_baseSql;
