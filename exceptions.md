@@ -1,6 +1,7 @@
 ## VeloxException codes/descriptions (subject to change during development)
 
 > Database\Connection
+
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 10   | Invalid database type constant                                | An unsupported database type constant was passed. See constants.php.                |
