@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database\Procedures;
+use KitsuneTech\Velox\VeloxException;
 
 class PreparedStatement extends Query {
     private array $_namedParams = [];
