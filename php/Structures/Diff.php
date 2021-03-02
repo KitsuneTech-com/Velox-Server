@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Structures;
 
-public class Diff {
+class Diff {
     public array $select;
     public array $update;
     public array $insert;
