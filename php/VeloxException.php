@@ -1,3 +1,3 @@
 <?php
-namespace KitsuneTech\Velox
+namespace KitsuneTech\Velox;
 class VeloxException extends \Exception {}
