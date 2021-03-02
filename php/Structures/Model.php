@@ -2,7 +2,7 @@
 
 namespace KitsuneTech\Velox\Structures;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Transaction};
-use KitsuneTech\Velox\Support::export as Export;
+use KitsuneTech\Velox\Transport\Export as Export;
 
 class Model {
     
