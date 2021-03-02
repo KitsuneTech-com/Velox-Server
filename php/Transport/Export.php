@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Transport;
+use KitsuneTech\Velox\Structures\Model as Model;
 
 function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     function isPowerOf2($num){
