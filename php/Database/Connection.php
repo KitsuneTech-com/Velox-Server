@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Database;
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{Query,PreparedStatement};
+use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 					   
 class Connection {
     private object $_conn;
