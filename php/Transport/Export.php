@@ -47,7 +47,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
             $output = json_encode($data);
             break;
         case AS_XML:
-            if (!extension_loaded('xmlwriter'){
+            if (!extension_loaded('xmlwriter')){
                 throw new VeloxException("XML export requires the xmlwriter extension",34);
             }
             $xml = xmlwriter_open_memory();
