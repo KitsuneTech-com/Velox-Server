@@ -29,10 +29,10 @@ if ($answer == "y"){
 	    $fullpath = rtrim($webpath,"/").$apipath;
 	    $result = exec("cp ".getcwd()." ".$fullpath);
 	    if ($result){
-		echo "API endpoint created at ".$webpath.".\n";
+		echo "API endpoint created at ".$fullpath.".\n";
 	    }
 	    else {
-		echo "Endpoint creation failed at ".$webpath.".\n";
+		echo "Endpoint creation failed at ".$fullpath.".\n";
 	    }
 	}
 	else {
