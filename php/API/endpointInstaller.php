@@ -36,9 +36,10 @@ if ($answer == "y"){
 				}
 				else {
 					echo "Failed to create queries subdirectory at ".$fullpath."/queries\n";
-			}
+				}
+            }
 	    	else {
-				echo "Endpoint creation failed at ".$fullpath.".\n";
+			    echo "Endpoint creation failed at ".$fullpath.".\n";
 	   		} 
 		}
 		else {
