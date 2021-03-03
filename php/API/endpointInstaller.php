@@ -13,8 +13,8 @@ function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR){
 
 //Command flow
 
-echo "Velox API endpoint post-installer";
-echo "---------------------------------";
+echo "Velox API endpoint post-installer\n";
+echo "---------------------------------\n";
 echo "Would you like to configure Velox API endpoints? (y/[n])\n";
 $answer = trim(fgets(STDIN));
 if ($answer == "y"){
