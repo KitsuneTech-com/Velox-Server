@@ -60,30 +60,36 @@ if ($answer == "y"){
         echo 'to create, or hit Enter to finish.\n';
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
+            echo "\n";
             $fullpath = rtrim($webpath,"/")."/".$apipath;
+            $directory = false;
             if (!is_dir($fullpath)){
                 echo "Directory ".$fullpath." does not exist. Creating...\n";
                 if (!mkdir($fullpath)){
-                    echo "Error: Could not create directory ".$fullpath.".\n";
-                    break;
-                }
-            }
-            echo "Copying ".$thisDir."/index.php to ".$fullpath."/index.php...\n";
-            $index = copy($thisDir."/index.php",$fullpath."/index.php");
-            if ($index){
-                echo "API endpoint created at ".$fullpath.".\n\n";
-                echo "Copying queries directory...\n";
-                $queries = copy_dir($thisDir."/queries",$fullpath."/queries");
-                if ($queries){
-                    echo "Queries subdirectory created at ".$fullpath."/queries\n";
+                    echo "Error: Could not create directory ".$fullpath.".\n\n";
                 }
                 else {
-                    echo "Error: Could not create queries subdirectory at ".$fullpath."/queries\n";
+                    $directory = true;
                 }
             }
-            else {
-                echo "Error: could not create API endpoint at ".$fullpath."/index.php.\n";
-            } 
+            if ($directory){
+                echo "Copying ".$thisDir."/index.php to ".$fullpath."/index.php...\n";
+                $index = copy($thisDir."/index.php",$fullpath."/index.php");
+                if ($index){
+                    echo "API endpoint created at ".$fullpath.".\n\n";
+                    echo "Copying queries directory...\n";
+                    $queries = copy_dir($thisDir."/queries",$fullpath."/queries");
+                    if ($queries){
+                        echo "Queries subdirectory created at ".$fullpath."/queries\n\n";
+                    }
+                    else {
+                        echo "Error: Could not create queries subdirectory at ".$fullpath."/queries\n\n";
+                    }
+                }
+                else {
+                    echo "Error: could not create API endpoint at ".$fullpath."/index.php.\n\n";
+                }
+            }
         }
         else {
             break;
