@@ -10,6 +10,9 @@ function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR){
     return str_pad("", count($arFrom) * 3, '..'.$ps).implode($ps, $arTo);
 }
 
+//get current file path
+$thisDir = dirname(__FILE__);
+
 //Command flow
 
 echo "Velox API endpoint post-installer\n";
@@ -26,12 +29,12 @@ if ($answer == "y"){
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
             $fullpath = rtrim($webpath,"/")."/".$apipath;
-            echo "cp ".getcwd()."/index.php ".$fullpath."\n";
-            $index = exec("cp ".getcwd()."/index.php ".$fullpath);
+            echo "cp ".$thisDir."/index.php ".$fullpath."\n";
+            $index = exec("cp ".$thisDir."/index.php ".$fullpath);
             if ($index){
                 echo "API endpoint created at ".$fullpath.".\n";
-                echo "cp -r ".getcwd()."/queries ".$fullpath."/queries\n";
-                $queries = exec("cp -r ".getcwd()."/queries ".$fullpath."/queries");
+                echo "cp -r ".$thisDir."/queries ".$fullpath."/queries\n";
+                $queries = exec("cp -r ".$thisDir."/queries ".$fullpath."/queries");
                 if ($queries){
                     echo "Queries subdirectory created at ".$fullpath."/queries\n";
                 }
