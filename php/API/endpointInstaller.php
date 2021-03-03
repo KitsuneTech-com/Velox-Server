@@ -52,7 +52,7 @@ echo "---------------------------------\n";
 echo "Would you like to configure Velox API endpoints? (y/[n])\n";
 $answer = trim(fgets(STDIN));
 if ($answer == "y"){
-    echo "Enter the full wwwabsolute path of your website root.\n";
+    echo "Enter the full absolute path of your website root.\n";
     $webpath = trim(fgets(STDIN));
     $finished = false;
     while (true){
