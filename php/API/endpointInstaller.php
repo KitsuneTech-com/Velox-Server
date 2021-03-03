@@ -23,17 +23,22 @@ if ($answer == "y"){
     $finished = false;
     while (true){
 	echo 'Enter the site-relative endpoint path for each endpoint you wish ';
-	echo 'to create, or hit Enter to finish.';
+	echo 'to create, or hit Enter to finish.\n';
 	$apipath = trim(fgets(STDIN));
 	if ($apipath != ""){
 	    $fullpath = rtrim($webpath,"/")."/".$apipath;
-	    $result = exec("cp ".getcwd()." ".$fullpath);
-	    if ($result){
+	    $index = exec("cp ".getcwd()."/index.php ".$fullpath);
+	    $queries = exec("cp -r ".getcwd()."/queries ".$fullpath."/queries");
+	    if ($index){
 		echo "API endpoint created at ".$fullpath.".\n";
+		$queries = exec("cp -r ".getcwd()."/queries ".$fullpath."/queries");
+		if ($queries){
+			echo "Queries subdirectory created at ".$fullpath."/queries\n";
 	    }
 	    else {
 		echo "Endpoint creation failed at ".$fullpath.".\n";
 	    }
+            
 	}
 	else {
 	    break;
