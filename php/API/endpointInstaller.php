@@ -29,8 +29,8 @@ if ($answer == "y"){
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
             $fullpath = rtrim($webpath,"/")."/".$apipath;
-            echo "cp ".$thisDir."/index.php ".$fullpath."\n";
-            $index = exec("cp ".$thisDir."/index.php ".$fullpath);
+            echo "cp ".$thisDir."/index.php ".$fullpath."/index.php\n";
+            $index = exec("cp ".$thisDir."/index.php ".$fullpath."/index.php");
             if ($index){
                 echo "API endpoint created at ".$fullpath.".\n";
                 echo "cp -r ".$thisDir."/queries ".$fullpath."/queries\n";
