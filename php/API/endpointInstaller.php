@@ -26,7 +26,7 @@ if ($answer == "y"){
 	echo 'to create, or hit Enter to finish.';
 	$apipath = trim(fgets(STDIN));
 	if ($apipath != ""){
-	    $fullpath = rtrim($webpath,"/").$apipath;
+	    $fullpath = rtrim($webpath,"/")."/".$apipath;
 	    $result = exec("cp ".getcwd()." ".$fullpath);
 	    if ($result){
 		echo "API endpoint created at ".$fullpath.".\n";
