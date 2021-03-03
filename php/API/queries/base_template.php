@@ -1,8 +1,6 @@
 <?php
-require_once '/velox/php/core.php';
-require_once '/velox/php/config.php';
 
-use KitsuneTech\Velox;
+use KitsuneTech\Velox\Database\Connection as Connection;
 
 // Generic template for Velox query definition - replace placeholder info as appropriate
 // -------------------------------------------------------------------------------------
