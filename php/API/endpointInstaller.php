@@ -26,10 +26,11 @@ if ($answer == "y"){
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
             $fullpath = rtrim($webpath,"/")."/".$apipath;
+            echo "cp ".getcwd()."/index.php ".$fullpath."\n";
             $index = exec("cp ".getcwd()."/index.php ".$fullpath);
-            $queries = exec("cp -r ".getcwd()."/queries ".$fullpath."/queries");
             if ($index){
                 echo "API endpoint created at ".$fullpath.".\n";
+                echo "cp -r ".getcwd()."/queries ".$fullpath."/queries\n";
                 $queries = exec("cp -r ".getcwd()."/queries ".$fullpath."/queries");
                 if ($queries){
                     echo "Queries subdirectory created at ".$fullpath."/queries\n";
