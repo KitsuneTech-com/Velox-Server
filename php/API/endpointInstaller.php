@@ -14,19 +14,25 @@ function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR) : string {
 function copy_dir($src,$dst) : bool {
     $dir = opendir($src);
     if (!is_dir($dst)){
+        echo "Creating directory ".$dst."...\n";
         if (!mkdir($dst)){
+            echo "Failed to create directory.\n";
             return false;
         }
     }
     while( ( $file = readdir($dir)) !== false ) {
+        $sourceFile = $src."/".$file;
+        $destFile = $dst."/".$file;
         if (( $file != '.' ) && ( $file != '..' )) {
-            if ( is_dir($src . '/' . $file) ) {
-                if (!copy_dir($src . '/' . $file,$dst . '/' . $file)){
+            if ( is_dir($sourceFile) ) {
+                if (!copy_dir($sourceFile,$destFile)){
                     return false;
                 }
             }
             else {
-                if (!copy($src . '/' . $file,$dst . '/' . $file)){
+                echo "Copying ".$sourceFile." to ".$destFile."...\n";
+                if (!copy($sourceFile,$destFile)){
+                    echo "Failed to copy.\n";
                     return false;
                 }
             }
@@ -55,6 +61,13 @@ if ($answer == "y"){
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
             $fullpath = rtrim($webpath,"/")."/".$apipath;
+            if (!is_dir($fullpath)){
+                echo "Directory ".$fullpath." does not exist. Creating...\n";
+                if (!mkdir($fullpath)){
+                    echo "Error: Could not create directory ".$fullpath.".\n";
+                    break;
+                }
+            }
             echo "Copying ".$thisDir."/index.php to ".$fullpath."/index.php...\n";
             $index = copy($thisDir."/index.php",$fullpath."/index.php");
             if ($index){
@@ -65,11 +78,11 @@ if ($answer == "y"){
                     echo "Queries subdirectory created at ".$fullpath."/queries\n";
                 }
                 else {
-                    echo "Failed to create queries subdirectory at ".$fullpath."/queries\n";
+                    echo "Error: Could not create queries subdirectory at ".$fullpath."/queries\n";
                 }
             }
             else {
-                echo "Endpoint creation failed at ".$fullpath.".\n";
+                echo "Error: could not create API endpoint at ".$fullpath."/index.php.\n";
             } 
         }
         else {
