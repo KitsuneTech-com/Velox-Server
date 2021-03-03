@@ -22,12 +22,12 @@ if ($answer == "y"){
     $webpath = trim(fgets(STDIN));
     $finished = false;
     while (true){
-	echo 'Enter the site-relative endpoint path for each endpoint you wish';
-	echo 'to create, or hit Enter to finish.\n';
+	echo 'Enter the site-relative endpoint path for each endpoint you wish ';
+	echo 'to create, or hit Enter to finish.';
 	$apipath = trim(fgets(STDIN));
-	if ($apipath){
+	if ($apipath != ""){
 	    $fullpath = rtrim($webpath,"/").$apipath;
-	    $result = exec("cp ".getcwd()."/API ".$fullpath);
+	    $result = exec("cp ".getcwd()." ".$fullpath);
 	    if ($result){
 		echo "API endpoint created at ".$webpath.".\n";
 	    }
@@ -35,6 +35,9 @@ if ($answer == "y"){
 		echo "Endpoint creation failed at ".$webpath.".\n";
 	    }
 	}
-	echo "Endpoint creation finished.\n";
+	else {
+	    break;
+	}
     }
+    echo "Endpoint creation finished.\n";
 }
