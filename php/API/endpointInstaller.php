@@ -58,7 +58,7 @@ if ($answer == "y"){
         $apiPath = trim(fgets(STDIN));
         if ($apiPath != ""){
             echo "\n";
-            $fullPath = rtrim($webpath,DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$apipath;
+            $fullPath = rtrim($webpath,DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$apiPath;
             $directory = false;
             if (!is_dir($fullPath)){
                 echo "Directory ".$fullPath." does not exist. Creating...\n";
