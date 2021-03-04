@@ -78,7 +78,7 @@ if ($answer == "y"){
                     echo "API endpoint created at ".$full{ath.".\n";
                     
                     echo "Setting relative path to autoloader...\n";
-                    $relPath = relativePath($fullPath,__DIR__);
+                    $relPath = relativePath($fullPath,__DIR__."/../../../../").";
                     $endpointFile = file_get_contents($endpointPath);
                     $endpointFile = str_replace('/path/to/autoloader',$relPath,$endpointFile);
                     file_put_contents($endpointPath,$endpointFile);
