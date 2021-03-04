@@ -41,6 +41,7 @@ function copy_dir($src,$dst) : bool {
     closedir($dir);
     return true;
 }
+$sep = DIRECTORY_SEPARATOR;
 
 // ---- Execution begins here ---- //
 
@@ -58,7 +59,7 @@ if ($answer == "y"){
         $apiPath = trim(fgets(STDIN));
         if ($apiPath != ""){
             echo "\n";
-            $fullPath = rtrim($webpath,DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$apiPath;
+            $fullPath = rtrim($webpath,$sep).$sep.$apiPath;
             $directory = false;
             if (!is_dir($fullPath)){
                 echo "Directory ".$fullPath." does not exist. Creating...\n";
@@ -70,21 +71,21 @@ if ($answer == "y"){
                 }
             }
             if ($directory){
-                $endpointPath = $fullPath.DIRECTORY_SEPARATOR."index.php";
-                $queriesPath = $fullPath.DIRECTORY_SEPARATOR."queries";
-                echo "Copying ".__DIR__.DIRECTORY_SEPARATOR."index.php to ".$endpointPath."...\n";
-                $index = copy(__DIR__.DIRECTORY_SEPARATOR."index.php",$endpointPath);
+                $endpointPath = $fullPath.$sep."index.php";
+                $queriesPath = $fullPath.$sep."queries";
+                echo "Copying ".__DIR__.$sep."index.php to ".$endpointPath."...\n";
+                $index = copy(__DIR__.$sep."index.php",$endpointPath);
                 if ($index){
                     echo "API endpoint created at ".$fullPath.".\n";
                     
                     echo "Setting relative path to autoloader...\n";
-                    $relPath = relativePath($fullPath,__DIR__."/../../../../").";
+                    $relPath = relativePath($fullPath,__DIR__."$sep..$sep..$sep..$sep..$sep");
                     $endpointFile = file_get_contents($endpointPath);
                     $endpointFile = str_replace('/path/to/autoloader',$relPath,$endpointFile);
                     file_put_contents($endpointPath,$endpointFile);
                     
                     echo "Copying queries directory...\n";
-                    $queries = copy_dir(__DIR__.DIRECTORY_SEPARATOR."queries",$queriesPath);
+                    $queries = copy_dir(__DIR__.$sep."queries",$queriesPath);
                     if ($queries){
                         echo "Queries subdirectory created at ".$queriesPath."\n\n";
                     }
