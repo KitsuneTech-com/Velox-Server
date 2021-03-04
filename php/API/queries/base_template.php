@@ -3,6 +3,8 @@
 
 // Generic template for Velox query definition - replace placeholder info as appropriate
 // -------------------------------------------------------------------------------------
+// Query definitions created with this template should remain in the same directory to be accessible by the appropriate
+// API endpoint.
 
 // Note: these are defined by way of the autoloader include in the API endpoint script. As such, this template is only
 // intended to be used in the context of the Velox API.
