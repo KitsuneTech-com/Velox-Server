@@ -75,7 +75,7 @@ if ($answer == "y"){
                 echo "Copying ".__DIR__.DIRECTORY_SEPARATOR."index.php to ".$endpointPath."...\n";
                 $index = copy(__DIR__.DIRECTORY_SEPARATOR."index.php",$endpointPath);
                 if ($index){
-                    echo "API endpoint created at ".$full{ath.".\n";
+                    echo "API endpoint created at ".$fullPath.".\n";
                     
                     echo "Setting relative path to autoloader...\n";
                     $relPath = relativePath($fullPath,__DIR__."/../../../../").";
