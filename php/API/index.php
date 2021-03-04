@@ -6,8 +6,14 @@ header("Access-Control-Allow-Headers: X-Requested-With");
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { exit(); } //Return CORS preflight headers
 
-//Path to autoloader substituted by post-install script
-require_once $autoloaderPath;
+//Path to autoloader substituted by post-install script. If you are editing this file because you received the
+//exception below, replace the following path with the absolute path of the autoloader file.
+$autoloaderPath = '/path/to/autoloader';
+
+if ((@include_once $autoloaderPath) === false){
+    throw new Exception("Autoloader not found. If this endpoint was not installed with the Composer installer, ".
+                        "or if the autoloader was moved, you will need to edit this file to correct the path.");
+}
 
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\{Model, Diff};
