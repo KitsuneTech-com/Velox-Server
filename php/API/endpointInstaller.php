@@ -49,7 +49,7 @@ $thisDir = dirname(__FILE__);
 
 echo "Velox API endpoint post-installer\n";
 echo "---------------------------------\n";
-echo "Would you like to configure Velox API endpoints? (y/[n])\n";
+echo "Would you like to configure Velox API endpoints? [y/n] (n)\n";
 $answer = trim(fgets(STDIN));
 if ($answer == "y"){
     echo "Enter the full absolute path of your website root.\n";
@@ -61,7 +61,7 @@ if ($answer == "y"){
         $apipath = trim(fgets(STDIN));
         if ($apipath != ""){
             echo "\n";
-            $fullpath = rtrim($webpath,"/")."/".$apipath;
+            $fullpath = rtrim($webpath,DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$apipath;
             $directory = false;
             if (!is_dir($fullpath)){
                 echo "Directory ".$fullpath." does not exist. Creating...\n";
@@ -73,21 +73,21 @@ if ($answer == "y"){
                 }
             }
             if ($directory){
-                echo "Copying ".$thisDir."/index.php to ".$fullpath."/index.php...\n";
-                $index = copy($thisDir."/index.php",$fullpath."/index.php");
+                echo "Copying ".$thisDir.DIRECTORY_SEPARATOR."index.php to ".$fullpath.DIRECTORY_SEPARATOR."index.php...\n";
+                $index = copy($thisDir.DIRECTORY_SEPARATOR."index.php",$fullpath.DIRECTORY_SEPARATOR."index.php");
                 if ($index){
                     echo "API endpoint created at ".$fullpath.".\n\n";
                     echo "Copying queries directory...\n";
-                    $queries = copy_dir($thisDir."/queries",$fullpath."/queries");
+                    $queries = copy_dir($thisDir.DIRECTORY_SEPARATOR."queries",$fullpath.DIRECTORY_SEPARATOR."queries");
                     if ($queries){
-                        echo "Queries subdirectory created at ".$fullpath."/queries\n\n";
+                        echo "Queries subdirectory created at ".$fullpath.DIRECTORY_SEPARATOR."queries\n\n";
                     }
                     else {
-                        echo "Error: Could not create queries subdirectory at ".$fullpath."/queries\n\n";
+                        echo "Error: Could not create queries subdirectory at ".$fullpath.DIRECTORY_SEPARATOR."queries\n\n";
                     }
                 }
                 else {
-                    echo "Error: could not create API endpoint at ".$fullpath."/index.php.\n\n";
+                    echo "Error: could not create API endpoint at ".$fullpath.DIRECTORY_SEPARATOR."index.php.\n\n";
                 }
             }
         }
