@@ -6,9 +6,12 @@
 
 echo "Velox web component installation\n";
 echo "--------------------------------\n";
-echo "Enter the full absolute path of your website root, or hit Enter to use the directory\n";
+echo "Enter the full absolute path of your website root, or hit Enter to cancel installation.\n";
 $webpath = trim(fgets(STDIN));
-
+if ($webpath == ""){
+    echo "Web component installation cancelled.";
+    exit(0);
+}
 echo "Would you like to configure API endpoint(s)? [y/n] (n)\n";
 $answer = trim(fgets(STDIN));
 if ($answer == "y") {
