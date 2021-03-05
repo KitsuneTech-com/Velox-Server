@@ -20,5 +20,10 @@
             "KitsuneTech\\Velox\\": "php/"
         },
         "files": ["php/Support/Constants.php","php/Support/ErrorHandling.php","php/Transport/Export.php","config/config.php"]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php php/API/endpointInstaller.php"
+        ]
     }
 }
