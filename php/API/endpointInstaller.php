@@ -47,9 +47,10 @@ $sep = DIRECTORY_SEPARATOR;
 echo "\n";
 echo "Velox API endpoint installation\n";
 echo "-------------------------------\n";
-echo "Enter the full absolute path of your website root.\n";
-$webpath = trim(fgets(STDIN));
-$finished = false;
+if (!isset($webpath)){
+    echo "Enter the full absolute path of your website root.\n";
+    $webpath = trim(fgets(STDIN));
+}
 while (true){
     echo "Enter the site-relative endpoint path for each endpoint you wish ";
     echo "to create, or hit Enter to finish.\n";
