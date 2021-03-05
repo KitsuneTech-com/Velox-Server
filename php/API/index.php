@@ -26,7 +26,7 @@ else {
     $queryName = $_GET['q'];
 }
 
-$queryFileName = $GLOBALS['VeloxQueryPath'].$queryName.".php";
+$queryFileName = __DIR__."/queries/".$queryName.".php";
 
 //Make sure the query definition file exists in the defined location.
 if (!file_exists($queryFileName)){
