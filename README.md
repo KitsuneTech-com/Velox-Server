@@ -1,4 +1,4 @@
-# Velox MVC Framework
+# Velox MVA Framework
 
 Velox is intended as a streamlined client/server data retrieval and communication platform for websites and progressive web apps. While currently designed for a LAMP backend (and optionally Microsoft SQL Server through the PHP sqlsrv driver), the included libraries are designed to make database-driven web development as platform-agnostic as possible. Velox is comprised of both front end and back-end components, designed to communicate with each other over AJAX, but decoupled in such a way that each can be used independently if necessary. Used as a whole, Velox simplifies development by implementing a CRUD interface on the front-end and automating the data flow up to and back from the
 back-end database. The client-side component communicates with
