@@ -23,7 +23,7 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "@php php/API/endpointInstaller.php"
+            "SHELL_INTERACTIVE=1 @php php/API/endpointInstaller.php"
         ]
     }
 }
