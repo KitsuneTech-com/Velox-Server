@@ -23,7 +23,7 @@
     },
     "scripts": {
         "post-install-cmd": [
-            "SHELL_INTERACTIVE=1 @php php/API/endpointInstaller.php"
+            "@php php/API/endpointInstaller.php < /dev/tty"
         ]
     }
 }
