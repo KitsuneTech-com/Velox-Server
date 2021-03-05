@@ -74,3 +74,6 @@ if (isset($QUERIES['SELECT'])){
 if (function_exists("postProcessing")){
     postProcessing($VELOX_MODEL);
 }
+
+//Export JSON to browser
+$VELOX_MODEL->export();
