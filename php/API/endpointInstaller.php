@@ -45,8 +45,8 @@ $sep = DIRECTORY_SEPARATOR;
 
 // ---- Execution begins here ---- //
 
-echo "Velox API endpoint post-installer\n";
-echo "---------------------------------\n";
+echo "Velox API endpoint installation\n";
+echo "-------------------------------\n";
 echo "Would you like to configure Velox API endpoints? [y/n] (n)\n";
 $answer = trim(fgets(STDIN));
 if ($answer == "y"){
