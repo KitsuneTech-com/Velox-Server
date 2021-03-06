@@ -1,6 +1,6 @@
 {
     "name": "kitsunetech/velox",
-    "description": "Server-side component of Velox framework",
+    "description": "Velox MVA Framework",
     "type": "library",
     "keywords": ["database","AJAX","JSON"],
     "support": {
