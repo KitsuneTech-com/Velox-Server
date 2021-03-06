@@ -16,8 +16,8 @@ The client-side component has yet to be fleshed out, but at minimum it will requ
 * Edge 80+
 * Firefox 72+
 * Chrome 80+
-* Safari 13.1+
-* Opera 67+
+* Desktop Safari 13.1+
+* Desktop Opera 67+
 * IOS Safari 13.7+
 * Android Browser 81+
 * Chrome for Android 88+
