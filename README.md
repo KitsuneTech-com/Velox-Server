@@ -43,16 +43,3 @@ This framework is still in development, and is not at present suitable for integ
 
 ## Disclaimer
 As mentioned in the note above, this is under active development, and as such there is absolutely no warranty of fitness of use. If you use any part of this framework prior to official release, you do so at your own risk. Anyone who contributes code to this project does so without assuming any liability for damages that might result from its use prior to official release.
-
-
-Velox is a MVA (model-view-adapter) software architecture that facilitates two-way data transfer between a database and a web frontend.
-In Velox, only the view is completely handled by the browser. The model is maintained on the backend and is not directly influenced by
-the client-side view. The adapter portion of this architecture is split along the client/server interface, with the data transferred
-across the interface in JSON over HTTP. This actual transfer is handled mostly transparently, using JavaScript libraries client-side
-and PHP libraries server-side (this can be ported to other server-side languages as needed). Using this framework, developers can focus
-more specifically on UI on the frontend and database design on the backend, without having to worry about how the data gets from one to
-the other.
-
-This specific implementation of Velox is built with the intent of serving browsers implementing ECMAScript 2020 (11th Edition), with
-the backend operating on a LAMP architecture using PHP8. Earlier versions of these languages may or may not be compatible with Velox
-as written here.
