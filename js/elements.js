@@ -1,19 +1,19 @@
-class VeloxElement extends HTMLElement {
+export class VeloxElement extends HTMLElement {
     constructor(){
 	super();
     }
 }
-class VeloxFilterSetElement extends VeloxElement {
+export class VeloxFilterSetElement extends VeloxElement {
     constructor(){
 	super();
     }
 }
-class VeloxFilterElement extends VeloxElement {
+export class VeloxFilterElement extends VeloxElement {
     constructor(){
 	super();
     }
 }
-class VeloxContainerElement extends VeloxElement {
+export class VeloxContainerElement extends VeloxElement {
     constructor(){
         super();
         this.veloxDataObject = null;
@@ -33,29 +33,29 @@ class VeloxContainerElement extends VeloxElement {
         
     }
 }
-class VeloxCardElement extends VeloxContainerElement {
+export class VeloxCardElement extends VeloxContainerElement {
     constructor(){
 	super();
     }
     
 }
-class VeloxTableElement extends VeloxContainerElement {
+export class VeloxTableElement extends VeloxContainerElement {
     constructor(){
 	super();
     }
 }
-class VeloxColumnElement extends VeloxElement {
+export class VeloxColumnElement extends VeloxElement {
     constructor(){
 	super();
     }
 }
-class VeloxCellElement extends VeloxElement {
+export class VeloxCellElement extends VeloxElement {
     constructor(){
 	super();
         this.tabOrder = 0;        
     }
 }
-class VeloxControl extends VeloxElement {
+export class VeloxControl extends VeloxElement {
     static formAssociated = true;
     constructor(){
 	super();
@@ -93,7 +93,7 @@ class VeloxControl extends VeloxElement {
         return this.internals_.reportValidity();
     }
 }
-class VeloxTextElement extends VeloxControl {
+export class VeloxTextElement extends VeloxControl {
     constructor(){
 	super();
         this._control = document.createElement("input");
@@ -120,25 +120,25 @@ class VeloxTextElement extends VeloxControl {
         this._control.value = value;
     }
 }
-class VeloxSelectElement extends VeloxControl {
+export class VeloxSelectElement extends VeloxControl {
     constructor(){
 	super();
         const elem = document.createElement("select");
     }
 }
-class VeloxFieldsetElement extends VeloxControl {
+export class VeloxFieldsetElement extends VeloxControl {
     constructor(){
 	super();
     }
 }
-class VeloxCheckboxElement extends VeloxControl {
+export class VeloxCheckboxElement extends VeloxControl {
     constructor(){
 	super();
         const elem = document.createElement("input");
         elem.type = "checkbox";
     }
 }
-class VeloxRadioElement extends VeloxControl {
+export class VeloxRadioElement extends VeloxControl {
     constructor(){
 	super();
         const elem = document.createElement("input");
