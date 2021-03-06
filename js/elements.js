@@ -145,3 +145,16 @@ class VeloxRadioElement extends VeloxControl {
         elem.type = "radio";
     }
 }
+
+//CustomElementRegistry element definitions
+window.customElements.define('vx-filterset',VeloxFilterSetElement);
+window.customElements.define('vx-filter',VeloxFilterElement);
+window.customElements.define('vx-card',VeloxCardElement);
+window.customElements.define('vx-table',VeloxTableElement);
+window.customElements.define('vx-column',VeloxColumnElement);
+window.customElements.define('vx-cell',VeloxCellElement);
+window.customElements.define('vx-text',VeloxTextElement);
+window.customElements.define('vx-select',VeloxSelectElement);
+window.customElements.define('vx-fieldset',VeloxFieldsetElement);
+window.customElements.define('vx-checkbox',VeloxCheckboxElement);
+window.customElements.define('vx-radio',VeloxRadioElement);
