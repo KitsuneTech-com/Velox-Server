@@ -24,13 +24,13 @@ The client-side component has yet to be fleshed out, but at minimum it will requ
 
 ### Possibly supported:
 * IOS Safari 13.7+ (may have issues with Shadow DOM [https://caniuse.com/shadowdomv1])
-* UC Browser for Android (unknown support for nullish coalescing operator, XMLHttpRequest - Fetch API is supported)
+* UC Browser for Android (unknown support for nullish coalescing operator, XMLHttpRequest [Fetch API is supported])
 * QQ Browser (unknown support for nullish coalescing operator, XMLHttpRequest - Fetch API is supported)
 
 ### Not currently supported:
 * Internet Explorer (dead browser)
 * Opera Mini (no support for Shadow DOM)
-* Opera Mobile (no support for nullish coalescing operator, autonomous custom elements, Fetch API - XMLHttpRequest support is unknown)
+* Opera Mobile (no support for nullish coalescing operator, autonomous custom elements, Fetch API [XMLHttpRequest support is unknown])
 * Samsung Internet (no support for nullish coalescing operator)
 * Baidu Browser (no support for Shadow DOM)
 * KaiOS Browser (no support for Shadow DOM or autonomous custom elements)
