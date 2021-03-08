@@ -38,7 +38,7 @@
 ### Database\Structures\ResultSet
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 28   | Specified key column does not exist                           | The columnname specified for the key column doesn't exist in the results            |
+| 28   | Specified key column does not exist                           | The column name specified for the key column doesn't exist in the results           |
 
 ### Database\Structures\Model
 | Code | Text                                                          | Explanation                                                                         |
