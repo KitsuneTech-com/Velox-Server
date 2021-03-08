@@ -5,6 +5,8 @@ export class VeloxElement extends HTMLElement {
     }
 }
 
+//Data filtering elements (non-rendering)
+//---------------------------------------------------------
 //<vx-filterset> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
 export class VeloxFilterSetElement extends VeloxElement {
     constructor(){
@@ -20,6 +22,7 @@ export class VeloxFilterElement extends VeloxElement {
 
 //Prototype class for Velox data containers
 //(This is the central binding element for Velox data sets)
+//---------------------------------------------------------
 export class VeloxContainerElement extends VeloxElement {
     constructor(){
         super();
@@ -71,7 +74,7 @@ export class VeloxCellElement extends VeloxElement {
 }
 
 //VeloxControl
-//----------------
+//---------------------------------------------------------
 //Prototype class for user-editable Velox elements
 export class VeloxControl extends VeloxElement {
     static formAssociated = true;
@@ -172,6 +175,7 @@ export class VeloxRadioElement extends VeloxControl {
 }
 
 //CustomElementRegistry element definitions
+//---------------------------------------------------------
 window.customElements.define('vx-filterset',VeloxFilterSetElement);
 window.customElements.define('vx-filter',VeloxFilterElement);
 window.customElements.define('vx-card',VeloxCardElement);
