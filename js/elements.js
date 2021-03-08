@@ -68,7 +68,7 @@ export class VeloxColumnElement extends VeloxElement {
 export class VeloxCellElement extends VeloxElement {
     constructor(){
 	    super();
-	    this.attachShadow({mode: open});
+        this.attachShadow({mode: open});
         this.tabOrder = 0;        
     }
 }
