@@ -1,7 +1,7 @@
 //Base class to establish prototype chain for Velox custom elements
 export class VeloxElement extends HTMLElement {
     constructor(){
-	super();
+        super();
     }
 }
 
@@ -10,13 +10,13 @@ export class VeloxElement extends HTMLElement {
 //<vx-filterset> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
 export class VeloxFilterSetElement extends VeloxElement {
     constructor(){
-	super();
+        super();
     }
 }
 //<vx-filter> - An individual data filtering rule. Must be used within a <vx-filterset>.
 export class VeloxFilterElement extends VeloxElement {
     constructor(){
-	super();
+        super();
     }
 }
 
@@ -46,29 +46,29 @@ export class VeloxContainerElement extends VeloxElement {
 //<vx-card> - VeloxContainer element that shows a single record at a time
 export class VeloxCardElement extends VeloxContainerElement {
     constructor(){
-	super();
+        super();
     }
 }
 
 //<vx-table> - VeloxContainer element that shows a formatted dataset
 export class VeloxTableElement extends VeloxContainerElement {
     constructor(){
-	super();
+        super();
     }
 }
 
 //<vx-column> - Column header for <vx-table> dataset
 export class VeloxColumnElement extends VeloxElement {
     constructor(){
-	super();
+        super();
     }
 }
 //<vx-cell> - Cell element for individual data
 //(user-defined as template and replicated as necessary by VeloxJS code)
 export class VeloxCellElement extends VeloxElement {
     constructor(){
-	super();
-	this.attachShadow({mode: open});
+	    super();
+	    this.attachShadow({mode: open});
         this.tabOrder = 0;        
     }
 }
@@ -79,10 +79,10 @@ export class VeloxCellElement extends VeloxElement {
 export class VeloxControl extends VeloxElement {
     static formAssociated = true;
     constructor(){
-	super();
+        super();
         this._internals = this.attachInternals();
         this._value = this.getAttribute("value");
-	this.attachShadow({mode: open});
+        this.attachShadow({mode: open});
     }
     get name(){
         return this.getAttribute("name");
@@ -117,7 +117,7 @@ export class VeloxControl extends VeloxElement {
 //<vx-text> - General equivalent to text-based <input>, but toggles to <span> on blur
 export class VeloxTextElement extends VeloxControl {
     constructor(){
-	super();
+        super();
         this._control = document.createElement("input");
         this._control.setAttribute("type",this.getAttribute("type"));
         this._span = document.createElement("span");
@@ -145,7 +145,7 @@ export class VeloxTextElement extends VeloxControl {
 //<vx-select> - Velox wrapper for <select>
 export class VeloxSelectElement extends VeloxControl {
     constructor(){
-	super();
+        super();
         const elem = document.createElement("select");
     }
 }
@@ -154,13 +154,13 @@ export class VeloxSelectElement extends VeloxControl {
 // sum of the elements within
 export class VeloxFieldsetElement extends VeloxControl {
     constructor(){
-	super();
+        super();
     }
 }
 //<vx-checkbox> - Velox wrapper for <input type="select">
 export class VeloxCheckboxElement extends VeloxControl {
     constructor(){
-	super();
+        super();
         const elem = document.createElement("input");
         elem.type = "checkbox";
     }
@@ -168,7 +168,7 @@ export class VeloxCheckboxElement extends VeloxControl {
 //<vx-radio> - Velox wrapper for <input type="radio">
 export class VeloxRadioElement extends VeloxControl {
     constructor(){
-	super();
+        super();
         const elem = document.createElement("input");
         elem.type = "radio";
     }
