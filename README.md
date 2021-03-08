@@ -10,7 +10,7 @@ The eventual goal is to make this framework as portable and platform-agnostic as
   * The xmlwriter extension, if the server-side component is to be used without the client-side component and XML output is needed
 * A web server that supports PHP server-side scripting (Apache 2.4+ is specifically supported, but NGINX, IIS, and others may work as well)
 
-The client-side component has yet to be fleshed out, but at minimum it will require JavaScript support for the nullish coalescing operator, Shadow DOM V1, form-associated custom elements, and AJAX communication (at present, the library uses XmlHttpRequest for this, but may be adapted to use the Fetch API instead). Web Sockets support may be built in later, when the corresponding server-side component is built, but this will not be a requirement. Put together, the supported browsers for this component (as determined from caniuse.com) are as follows:
+The client-side component has yet to be fleshed out, but at minimum it will require JavaScript support for the nullish coalescing operator, Shadow DOM V1, form-associated autonomous custom elements, and AJAX communication (at present, the library uses XmlHttpRequest for this, but may be adapted to use the Fetch API instead). Web Sockets support may be built in later, when the corresponding server-side component is built, but this will not be a requirement. Put together, the supported browsers for this component (as determined from caniuse.com) are as follows:
 
 ### Supported:
 * Edge 80+
@@ -18,7 +18,6 @@ The client-side component has yet to be fleshed out, but at minimum it will requ
 * Chrome 80+
 * Desktop Safari 13.1+
 * Desktop Opera 67+
-* IOS Safari 13.7+
 * Android Browser 81+
 * Chrome for Android 88+
 * Firefox for Android 85+
@@ -31,10 +30,10 @@ The client-side component has yet to be fleshed out, but at minimum it will requ
 ### Not currently supported:
 * Internet Explorer (dead browser)
 * Opera Mini (no support for Shadow DOM)
-* Opera Mobile (no support for nullish coalescing operator, custom elements, Fetch API - XMLHttpRequest support is unknown)
+* Opera Mobile (no support for nullish coalescing operator, autonomous custom elements, Fetch API - XMLHttpRequest support is unknown)
 * Samsung Internet (no support for nullish coalescing operator)
 * Baidu Browser (no support for Shadow DOM)
-* KaiOS Browser (no support for Shadow DOM or custom elements)
+* KaiOS Browser (no support for Shadow DOM or autonomous custom elements)
 
 Any browsers not listed here are not on the list provided by caniuse.com, and should be regarded as a "maybe." As of December 2020, W3C statistics report that the supported browsers and versions above account for over 94.2% of overall usage, and because of this no effort will be made to polyfill for missing functionality. If an issue does arise from a supported browser, it should be raised in Issues; if you absolutely must use an unsupported browser, you will have to build your own fork. This list may evolve as the client-side component is developed and other features are added.
 
