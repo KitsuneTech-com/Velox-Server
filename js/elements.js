@@ -11,12 +11,54 @@ export class VeloxElement extends HTMLElement {
 export class VeloxFilterSetElement extends VeloxElement {
     constructor(){
         super();
+        this.parent = null;
+    }
+    connectedCallback(){
+        //Find and assign the parent VeloxFilterSetElement
+        let parent = this.parentNode;
+        parent = parent.parentNode;
+        if (!(parent instanceof VeloxFilterSetElement) && !(parent instanceof VeloxContainerElement)){
+            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterElement or a VeloxContainerElement and will be ignored.");
+            return;
+        }
+        this.parent = parent;
+        while (parent instanceof VeloxFilterSetElement){
+            parent = parent.parent;
+        }
+        if (parent
+        updateDataset();
+    }
+    disconnectedCallback(){
+        this.parent.
+    updateDataset(){
+        
+        //Apply current filter set to parent VeloxContainer dataset
     }
 }
 //<vx-filter> - An individual data filtering rule. Must be used within a <vx-filterset>.
 export class VeloxFilterElement extends VeloxElement {
     constructor(){
         super();
+        this.filterset = null;
+    }
+    connectedCallback(){
+        //Find and assign the parent VeloxFilterSetElement
+        let parent = this.parentNode;
+        if (!this.parentNode instanceof VeloxFilterSetElement){
+            while (parent.parentNode && !(parent.parentNode instanceof VeloxFilterSetElement)){
+                parent = parent.parentNode;
+            }
+            if (!parent instanceof VeloxFilterSetElement){
+                console.warn("VeloxFilterElement is not a descendant of a VeloxFilterSetElement and will be ignored.");
+                return;
+            }
+        }
+        this.filterset = parent;
+        this.filterset.updateDataset();
+    }
+    disconnectedCallback(){
+        this.filterset.updateDataset();
+        this.filterset = null;
     }
 }
 
@@ -176,8 +218,8 @@ export class VeloxRadioElement extends VeloxControl {
 
 //CustomElementRegistry element definitions
 //---------------------------------------------------------
-window.customElements.define('vx-filterset',VeloxFilterSetElement);
 window.customElements.define('vx-filter',VeloxFilterElement);
+window.customElements.define('vx-filterset',VeloxFilterSetElement);
 window.customElements.define('vx-card',VeloxCardElement);
 window.customElements.define('vx-table',VeloxTableElement);
 window.customElements.define('vx-column',VeloxColumnElement);
