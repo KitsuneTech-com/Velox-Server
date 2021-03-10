@@ -123,7 +123,25 @@ class StatementSet implements \Iterator {
                     foreach ($variation['where'] as $andSet){
                         $andArray = [];
                         foreach ($andSet as $column => $details){
-                            $andArray[] = $column . " " . $details[0] ." :w_" . $column . ($details[0] == "BETWEEN" ? " AND :wb_" . $column : "");
+                            switch ($details[0]){
+                                case "=":
+                                case "<":
+                                case ">":
+                                case "<=":
+                                case ">=":
+                                case "<>":
+                                case "LIKE":
+                                case "NOT LIKE":
+                                case "RLIKE":
+                                case "NOT RLIKE":
+                                    $andArray[] = $column." ".$details[0]." :w_".$column;
+                                    break;
+                                case "BETWEEN":
+                                    $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
+                                    break;
+                                default:
+                                    throw new VeloxException("Unsupported operator",36);
+                            }
                         }
                         switch (count($andArray)){
                             case 0:
