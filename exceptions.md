@@ -28,6 +28,7 @@
 | 23   | Operand missing in 'where' array                              | The specified condition did not include an operand to check for.                    |
 | 24   | BETWEEN operator used without second operand                  | If BETWEEN is used as an operator, two operands must be specified in the array.     |
 | 25   | Criteria must be set before StatementSet can be executed.     | StatementSet cannot be executed without specifying at least one set of conditions.  |
+| 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |
@@ -53,4 +54,4 @@
 | 32   | Only one to-browser Export can be called per request.         | A TO_BROWSER Export() call cannot send more than one response at a time.                 |
 | 33   | Array contains elements other than instances of Model         | If an array is passed to Export, it must only contain Models.                            |
 | 34   | XML export requires the xmlwriter extension                   | The XML generated with an AS_XML Export() call is built with the xmlwriter extension.    |
-| 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification. |
+| 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification. 
