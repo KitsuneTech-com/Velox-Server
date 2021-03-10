@@ -12,27 +12,48 @@ export class VeloxFilterSetElement extends VeloxElement {
     constructor(){
         super();
         this.parent = null;
+        this.filters = [];
     }
     connectedCallback(){
         //Find and assign the parent VeloxFilterSetElement
         let parent = this.parentNode;
         parent = parent.parentNode;
         if (!(parent instanceof VeloxFilterSetElement) && !(parent instanceof VeloxContainerElement)){
-            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterElement or a VeloxContainerElement and will be ignored.");
+            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterSetElement or a VeloxContainerElement and will be ignored.");
             return;
         }
         this.parent = parent;
         while (parent instanceof VeloxFilterSetElement){
             parent = parent.parent;
         }
-        if (parent
-        updateDataset();
+        this.parent.updateFilters(true);
     }
     disconnectedCallback(){
-        this.parent.
-    updateDataset(){
-        
-        //Apply current filter set to parent VeloxContainer dataset
+        this.parent.updateFilters(true);
+    }
+    updateFilters(ignoreErrors){
+        this.filters = [];
+        if (this.parent){
+            //update filters property of this element
+            for(let i=0; i<this.childNodes.length; i++){
+                let currentChild = this.childNodes[i];
+                switch (currentChild.constructor.name){
+                    case "VeloxFilterSetElement":
+                        this.filters.push(currentChild.filters);
+                        break;
+                    case "VeloxFilterElement":
+                        break;
+                }
+            //Then update the parent 
+            this.parent.updateFilters(ignoreErrors);
+        }
+        else {
+            //If the FilterSetElement isn't within a VeloxContainerElement, it doesn't have a data set
+            //to filter.
+            if (!ignoreErrors){
+                throw new Error("FilterSetElement tree doesn't have a parent VeloxContainerElement.");
+            }
+        }
     }
 }
 //<vx-filter> - An individual data filtering rule. Must be used within a <vx-filterset>.
@@ -54,10 +75,10 @@ export class VeloxFilterElement extends VeloxElement {
             }
         }
         this.filterset = parent;
-        this.filterset.updateDataset();
+        this.filterset.updateFilters();
     }
     disconnectedCallback(){
-        this.filterset.updateDataset();
+        this.filterset.updateFilters();
         this.filterset = null;
     }
 }
@@ -81,6 +102,9 @@ export class VeloxContainerElement extends VeloxElement {
         }
     }
     generate(){
+        
+    }
+    updateFilters(ignoreErrors){
         
     }
 }
