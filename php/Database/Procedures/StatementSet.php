@@ -201,6 +201,7 @@ class StatementSet implements \Iterator {
             }
         
             $substitutedSQL = str_replace(["<<condition>>","<<columns>>","<<values>>"],[$whereStr,$columnsStr,$valuesStr],$this->_baseSql);
+            fwrite(STDERR,$substitutedSQL);
             $stmt = new PreparedStatement($this->conn, $substitutedSQL, null, $this->_queryType, VELOX_RESULT_UNION);
         
             foreach ($variation['data'] as $row){
