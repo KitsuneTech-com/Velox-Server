@@ -60,13 +60,13 @@ require_once $queryFileName;
 if (isset($QUERIES['SELECT'])){
     $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
-	$VELOX_MODEL->synchronize($DIFF);
+	    $VELOX_MODEL->synchronize($DIFF);
     }
     //Set the query version header (if it's set as a positive integer)
     if ($QUERY_VERSION ?? false){
-	if (!is_int($QUERY_VERSION)){
-	    throw new VeloxException('Incorrect version value set in query definition (query "'.$queryName.'"',4);
-	}
+	    if (!is_int($QUERY_VERSION)){
+	        throw new VeloxException('Incorrect version value set in query definition (query "'.$queryName.'"',4);
+	    }
     }
 }
 
@@ -76,4 +76,9 @@ if (function_exists("postProcessing")){
 }
 
 //Export JSON to browser
-$VELOX_MODEL->export();
+if (isset($VELOX_MODEL)){
+    $VELOX_MODEL->export();
+}
+else {
+    echo "{lastQuery: ".time().", columns: {}, data: {} }";
+}
