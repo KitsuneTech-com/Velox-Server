@@ -40,7 +40,7 @@ export class VeloxFilterGroupElement extends VeloxElement {
         }
     }
     addFilterSet(position){
-        const newFilterGroup = new FilterGroupElement;
+        const newFilterGroup = new VeloxFilterGroupElement;
         return newFilterGroup;
     }
     removeFilterSet(){
