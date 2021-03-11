@@ -13,7 +13,7 @@ class Diff {
         //(each row is an object with properties representing each field name)
         // {
         //  select:
-        //    [{where: [{col1: ["=","someValue"]}
+        //    [{where: [{col1: ["=","someValue"]}],
         //  insert:
         //    [{values: {col2: 'data', col3: 'data'},{col2: 'moredata', col3: 'moredata'}}],
         //  delete:
