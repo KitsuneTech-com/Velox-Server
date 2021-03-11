@@ -9,27 +9,35 @@ export class VeloxElement extends HTMLElement {
 //---------------------------------------------------------
 //<vx-filterset> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
 export class VeloxFilterSetElement extends VeloxElement {
+    filters = [];
+    _parent;
     constructor(){
         super();
-        this.parent = null;
-        this.filters = [];
+    }
+    get parent(){
+        return this.parentNode;
     }
     connectedCallback(){
-        //Find and assign the parent VeloxFilterSetElement
-        let parent = this.parentNode;
-        parent = parent.parentNode;
-        if (!(parent instanceof VeloxFilterSetElement) && !(parent instanceof VeloxContainerElement)){
-            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterSetElement or a VeloxContainerElement and will be ignored.");
+        if (!(this.parentNode instanceof VeloxFilterSetElement) && !(this.parentNode instanceof VeloxContainerElement)){
+            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterSetElement or a VeloxContainerElement. Filtering will not occur.");
             return;
         }
-        this.parent = parent;
-        while (parent instanceof VeloxFilterSetElement){
-            parent = parent.parent;
-        }
-        this.parent.updateFilters(true);
+        this.parentNode.updateFilters(true);
     }
     disconnectedCallback(){
         this.parent.updateFilters(true);
+    }
+    addFilter(){
+        
+    }
+    removeFilter(){
+        
+    }
+    addFilterSet(){
+        
+    }
+    removeFilterSet(){
+        
     }
     updateFilters(ignoreErrors){
         this.filters = [];
