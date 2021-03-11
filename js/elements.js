@@ -7,7 +7,7 @@ export class VeloxElement extends HTMLElement {
 
 //Data filtering elements (non-rendering)
 //---------------------------------------------------------
-//<vx-filterset> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
+//<vx-filtergroup> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
 export class VeloxFilterGroupElement extends VeloxElement {
     filters = [];
     _parent;
