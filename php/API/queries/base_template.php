@@ -9,7 +9,7 @@
 // Note: these classes are defined by way of the autoloader include in the API endpoint script. As such, this template is only
 // intended to be used in the context of the Velox API.
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\PreparedStatement as PreparedStatement;
+use KitsuneTech\Velox\Database\Procedures\StatementSet as StatementSet;
 
 /*
 $QUERY_VERSION should be incremented any time the result set schema changes. This will be sent as a header with the response
@@ -43,10 +43,10 @@ as a JSON-formatted array of objects in name-value pair format.
 */
 
 $QUERIES = [
-    'SELECT' => new PreparedStatement($conn, "SELECT * FROM myTable WHERE myColumn = :myData"),
-    'UPDATE' => new PreparedStatement($conn, "UPDATE myTable SET myColumn = :myData WHERE anotherColumn = :myCondition"),
-    'INSERT' => new PreparedStatement($conn, "INSERT INTO myTable (myColumn) VALUES (:myData)"),
-    'DELETE' => new PreparedStatement($conn, "DELETE FROM myTable WHERE myColumn = :myData")
+    'SELECT' => new StatementSet($conn, "SELECT * FROM myTable <<condition>>"),
+    'UPDATE' => new StatementSet($conn, "UPDATE myTable SET <<values>> <<condition>>"),
+    'INSERT' => new StatementSet($conn, "INSERT INTO myTable <<columns>> <<values>>"),
+    'DELETE' => new StatementSet($conn, "DELETE FROM myTable <<condition>>")
 ];
 
 function postProcessing($model){
