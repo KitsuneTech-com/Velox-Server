@@ -60,6 +60,7 @@ require_once $queryFileName;
 if (isset($QUERIES['SELECT'])){
     $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
+	    die '{test: "Hello there."}';
 	    $VELOX_MODEL->synchronize($DIFF);
     }
     //Set the query version header (if it's set as a positive integer)
