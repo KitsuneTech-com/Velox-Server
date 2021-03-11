@@ -8,7 +8,7 @@ export class VeloxElement extends HTMLElement {
 //Data filtering elements (non-rendering)
 //---------------------------------------------------------
 //<vx-filterset> - Contains a set of <vx-filter> elements to be applied to the parent VeloxContainer element
-export class VeloxFilterSetElement extends VeloxElement {
+export class VeloxFilterGroupElement extends VeloxElement {
     filters = [];
     _parent;
     constructor(){
@@ -18,8 +18,8 @@ export class VeloxFilterSetElement extends VeloxElement {
         return this.parentNode;
     }
     connectedCallback(){
-        if (!(this.parentNode instanceof VeloxFilterSetElement) && !(this.parentNode instanceof VeloxContainerElement)){
-            console.warn("VeloxFilterSetElement is not a child of either a VeloxFilterSetElement or a VeloxContainerElement. Filtering will not occur.");
+        if (!(this.parentNode instanceof VeloxFilterGroupElement) && !(this.parentNode instanceof VeloxContainerElement)){
+            console.warn("VeloxFilterGroupElement is not a child of either a VeloxFilterGroupElement or a VeloxContainerElement. Filtering will not occur.");
             return;
         }
         this.parentNode.updateFilters(true);
@@ -27,14 +27,21 @@ export class VeloxFilterSetElement extends VeloxElement {
     disconnectedCallback(){
         this.parent.updateFilters(true);
     }
-    addFilter(){
+    addFilter(column,operator,value1,value2,position){
+        position = position ?? this.filters.length;
         
     }
-    removeFilter(){
-        
+    removeFilter(column,operator,value1,value2){
+        if (!isNaN(column)){
+            let position = column;
+        }
+        else {
+            //get position of filter to be removed
+        }
     }
-    addFilterSet(){
-        
+    addFilterSet(position){
+        const newFilterGroup = new FilterGroupElement;
+        return newFilterGroup;
     }
     removeFilterSet(){
         
@@ -46,7 +53,7 @@ export class VeloxFilterSetElement extends VeloxElement {
             for(let i=0; i<this.childNodes.length; i++){
                 let currentChild = this.childNodes[i];
                 switch (currentChild.constructor.name){
-                    case "VeloxFilterSetElement":
+                    case "VeloxFilterGroupElement":
                         this.filters.push(currentChild.filters);
                         break;
                     case "VeloxFilterElement":
@@ -73,21 +80,21 @@ export class VeloxFilterElement extends VeloxElement {
     connectedCallback(){
         //Find and assign the parent VeloxFilterSetElement
         let parent = this.parentNode;
-        if (!this.parentNode instanceof VeloxFilterSetElement){
-            while (parent.parentNode && !(parent.parentNode instanceof VeloxFilterSetElement)){
+        if (!this.parentNode instanceof VeloxFilterGroupElement){
+            while (parent.parentNode && !(parent.parentNode instanceof VeloxFilterGroupElement)){
                 parent = parent.parentNode;
             }
-            if (!parent instanceof VeloxFilterSetElement){
-                console.warn("VeloxFilterElement is not a descendant of a VeloxFilterSetElement and will be ignored.");
+            if (!parent instanceof VeloxFilterGroupElement){
+                console.warn("VeloxFilterElement is not a descendant of a VeloxFilterGroupElement and will be ignored.");
                 return;
             }
         }
-        this.filterset = parent;
-        this.filterset.updateFilters();
+        this.filtergroup = parent;
+        this.filtergroup.updateFilters();
     }
     disconnectedCallback(){
-        this.filterset.updateFilters();
-        this.filterset = null;
+        this.filtergroup.updateFilters();
+        this.filtergroup = null;
     }
 }
 
@@ -251,7 +258,7 @@ export class VeloxRadioElement extends VeloxControl {
 //CustomElementRegistry element definitions
 //---------------------------------------------------------
 window.customElements.define('vx-filter',VeloxFilterElement);
-window.customElements.define('vx-filterset',VeloxFilterSetElement);
+window.customElements.define('vx-filtergroup',VeloxFilterGroupElement);
 window.customElements.define('vx-card',VeloxCardElement);
 window.customElements.define('vx-table',VeloxTableElement);
 window.customElements.define('vx-column',VeloxColumnElement);
