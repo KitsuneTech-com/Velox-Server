@@ -6,7 +6,7 @@ namespace KitsuneTech\Velox\Database\Procedures;
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, Transaction};
-use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
+use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 
 class StatementSet implements \Iterator {
     private string $_baseSql;
