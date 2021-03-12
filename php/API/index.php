@@ -33,11 +33,18 @@ if (!file_exists($queryFileName)){
     throw new VeloxException('Query definition file does not exist for query "'.$queryName.'"',2);
 }
 
-$SELECT = $_POST['select'] ?? null;
-$UPDATE = $_POST['update'] ?? null;
-$INSERT = $_POST['insert'] ?? null;
-$DELETE = $_POST['delete'] ?? null;
-$META = $_POST['meta'] ?? null;
+try {
+    $axios_post = json_decode(file_get_contents("php://input"),true);
+}
+catch(Exception $ex){
+    $axios_post = [];
+}
+
+$SELECT = $_POST['select'] ?? $axios_post['select'] ?? null;
+$UPDATE = $_POST['update'] ?? $axios_post['update'] ?? null;
+$INSERT = $_POST['insert'] ?? $axios_post['insert'] ?? null;
+$DELETE = $_POST['delete'] ?? $axios_post['delete'] ?? null;
+$META = $_POST['meta'] ?? $axios_post['meta'] ?? null;
 
 if ($SELECT || $UPDATE || $INSERT || $DELETE){
     $DIFF = new Diff();
