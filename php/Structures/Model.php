@@ -31,13 +31,7 @@ class Model {
         $this->select();
     }
     
-    public function select(array $where = [], bool $diff = false) : void {
-        if ($where){
-            foreach ($where as $conditions){
-            //TO DO - figure out best way to bind conditions (with operator) to prepared statement
-            // (operator may require dynamic SQL, unless passed to a stored procedure that handles it internally)
-            }
-        }
+    public function select(bool $diff = false) : void {
         if ($this->_select->execute()){
             $this->_lastQuery = time();
             if ($this->_select->results instanceof ResultSet){
