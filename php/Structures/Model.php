@@ -80,8 +80,18 @@ class Model {
                 if (!isset($row[$column])){
                     $row[$column] = null;
                 }
+                else {
+                    $criterion = (object) []
+                    $elem = (object)[ $column => $row[$column]]
+                    array_push($criterion, $elem)
+                }
             }
-            $this->_insert->addParameterSet($row);
+            if($this->_insert instanceof PreparedStatement) {
+                $this->_insert->addParameterSet($row);
+            }
+            else if($this->_insert instanceof StatementSet) { 
+                $this->_insert->addCriteria($criterion);
+            }
         }
         $this->_insert->execute();
         if (!$this->_delaySelect){
