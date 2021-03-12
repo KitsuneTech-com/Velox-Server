@@ -249,7 +249,7 @@ class StatementSet implements \Iterator {
         return true;
     }
     public function clear() : void {
-        this.rewind();
-        this._statements = [];
+        this->rewind();
+        this->_statements = [];
     }
 }
