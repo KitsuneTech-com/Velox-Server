@@ -8,7 +8,7 @@ class Diff {
     public array $update;
     public array $insert;
     public array $delete;
-    public function __construct(?string $json = null){
+    public function __construct(string $json = ""){
         //Expected JSON format (where col1 is an autoincrement field not set by this library):
         //(each row is an object with properties representing each field name)
         // {
@@ -21,7 +21,7 @@ class Diff {
         //  update:
         //    [{values: {col2: 'changeThis'}, where: {col2: 'fromThis'}},{values: {col2: 'thisToo'}, where: {col1: 2}}]
         // }
-        $diffObj = json_decode($json) ?? (object)[];
+        $diffObj = $json != "" ? json_decode($json) : (object)[];
         $this->select = $diffObj->select ?? [];
         $this->update = $diffObj->update ?? [];
         $this->insert = $diffObj->insert ?? [];
