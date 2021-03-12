@@ -8,7 +8,7 @@ class Diff {
     public array $update;
     public array $insert;
     public array $delete;
-    public function __construct(?string $json){
+    public function __construct(?string $json = null){
         //Expected JSON format (where col1 is an autoincrement field not set by this library):
         //(each row is an object with properties representing each field name)
         // {
