@@ -21,9 +21,9 @@ class PreparedStatement extends Query {
         }
         $this->setId = $setId;
     }
-    public function addParameterSet(array $paramArray) : void {
+    public function addParameterSet(array $paramArray, string $prefix = '') : void {
         foreach ($paramArray as $key => $value){
-            $paramArray[":".$key] = $value;
+            $paramArray[":".$prefix.$key] = $value;
             unset($paramArray[$key]);
         }
         $this->_paramArray[] = $paramArray;
