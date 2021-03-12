@@ -48,10 +48,10 @@ $META = $_POST['meta'] ?? $axios_post['meta'] ?? [];
 
 if ($SELECT || $UPDATE || $INSERT || $DELETE){
     $DIFF = new Diff();
-    $DIFF->select = is_array($SELECT) && count($SELECT) > 0 ? $SELECT : json_decode($SELECT);
-    $DIFF->update = is_array($UPDATE) && count($UPDATE) > 0 ? $UPDATE : json_decode($UPDATE);
-    $DIFF->insert = is_array($INSERT) && count($INSERT) > 0 ? $INSERT : json_decode($INSERT);
-    $DIFF->delete = is_array($DELETE) && count($DELETE) > 0 ? $DELETE : json_decode($DELETE);
+    $DIFF->select = is_array($SELECT) ? (count($SELECT) > 0 ? $SELECT : null) : json_decode($SELECT);
+    $DIFF->update = is_array($UPDATE) ? (count($UPDATE) > 0 ? $UPDATE : null) : json_decode($UPDATE);
+    $DIFF->insert = is_array($INSERT) ? (count($INSERT) > 0 ? $INSERT : null) : json_decode($INSERT);
+    $DIFF->delete = is_array($DELETE) ? (count($DELETE) > 0 ? $DELETE : null) : json_decode($DELETE);
 }
 else {
     $DIFF = null;
