@@ -64,6 +64,11 @@ require_once $queryFileName;
 
 ////////-- Query definition code execution --/////////
 
+//Allow pre-processing of data prior to query call (such as password hashing, etc.)
+if (function_exists("preProcessing")){
+    preProcessing($SELECT,$UPDATE,$INSERT,$DELETE);
+}
+
 if (isset($QUERIES['SELECT'])){
     $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
