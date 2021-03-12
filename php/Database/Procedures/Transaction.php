@@ -64,10 +64,10 @@ class Transaction {
             }
         }
     }
-    public function addParameterSet(array $paramArray) : void {
+    public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
         if (count($this->queries) > 0 && $this->queries[0] instanceof PreparedStatement){
-            $this->queries[0]->addParameterSet($paramArray);
+            $this->queries[0]->addParameterSet($paramArray,$prefix);
         }
     }
     public function getParams() : array {
