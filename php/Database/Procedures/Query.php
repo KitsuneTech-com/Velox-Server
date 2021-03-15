@@ -25,7 +25,7 @@ class Query {
     }
     
     public function execute() : bool {
-	echo $this->sql;
+	if ($this->queryType == QUERY_UPDATE) echo $this->sql;
 	$this->results = $this->conn->execute($this);
 	$this->_lastAffected = $this->conn->getLastAffected();
 	if ($this instanceof PreparedStatement){
