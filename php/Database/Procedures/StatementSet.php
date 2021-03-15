@@ -106,7 +106,6 @@ class StatementSet implements \Iterator {
             }
             for ($i=0; $i<count($criteria); $i++){
                 $criterion = $criteria[$i];
-                print_r($requiredKeys);
                 if (array_diff_key(array_flip($requiredKeys),$criterion) || array_diff_key($criterion,array_flip($requiredKeys))){
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
                 }
