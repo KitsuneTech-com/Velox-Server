@@ -97,7 +97,7 @@ class StatementSet implements \Iterator {
             switch ($this->_queryType){
                 case QUERY_INSERT:
                 case QUERY_UPDATE:
-                    $requiredKeys[] = "values"
+                    $requiredKeys[] = "values";
                     if ($this->_queryType == QUERY_INSERT) break;
                 case QUERY_SELECT:
                 case QUERY_DELETE:
