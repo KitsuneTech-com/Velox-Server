@@ -1,6 +1,7 @@
 <?php
 
 namespace KitsuneTech\Velox\Structures;
+use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
 
