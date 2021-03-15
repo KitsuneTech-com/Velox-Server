@@ -79,8 +79,6 @@ class Model {
             case "StatementSet":
                 $this->_update->addCriteria($rows);
                 break;
-            default:
-                echo 
         }
         
         $this->_update->execute();
