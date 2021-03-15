@@ -96,6 +96,7 @@ class Model {
         if (!$this->_delaySelect){
             $this->select(true);
         }
+        return true;
     }
     
     public function insert(array $rows) : bool {
@@ -119,6 +120,7 @@ class Model {
         if (!$this->_delaySelect){
             $this->select(true);
         }
+        return true;
     }
     
     public function delete(array $rows) : bool {
@@ -139,6 +141,7 @@ class Model {
         if (!$this->_delaySelect){
             $this->select(true);
         }
+        return true;
     }
     
     public function sort(...$args) : void {
