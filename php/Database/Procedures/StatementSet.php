@@ -54,7 +54,7 @@ class StatementSet implements \Iterator {
                recur_ksort($value);
                }
             }
-        return ksort($array);
+            return ksort($array);
         }
         $criterion = (array)$criterion;
         $valuesList = [];
