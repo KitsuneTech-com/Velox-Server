@@ -90,10 +90,25 @@ class StatementSet implements \Iterator {
                 case QUERY_DELETE:
                     $this->addCriteria($criteria->delete);
                     break;
-                }
+            }
         }
         else {
-            foreach($criteria as $criterion){
+            $requiredKeys = [];
+            switch ($this->_queryType){
+                case QUERY_INSERT:
+                case QUERY_UPDATE:
+                    $requiredKeys[] = "values"
+                    if ($this->_queryType == QUERY_INSERT) break;
+                case QUERY_SELECT:
+                case QUERY_DELETE:
+                    $requiredKeys[] = "where";
+                    break;
+            }
+            for ($i=0; $i<count($criteria); $i++){
+                $criterion = $criteria[$i];
+                if (array_diff_key($requiredKeys,$criterion) || array_diff_key($criterion,$requiredKeys){
+                    throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
+                }
                 $hashedKeys = $this->criterionHash($criterion);
                 if (!isset($this->_criteria[$hashedKeys])){
                     $this->_criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
