@@ -23,6 +23,15 @@ class Model {
     
     public function __construct(PreparedStatement|StatementSet $select, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
+        if ($update && !($update instanceof Transaction)) {
+            $update->queryType = QUERY_UPDATE;
+        }
+        if ($insert && !($insert instanceof Transaction)) {
+            $insert->queryType = QUERY_INSERT;
+        }
+        if ($delete && !($delete instanceof Transaction)) {
+            $delete->queryType = QUERY_DELETE;
+        }
         $this->_update = $update ?? new Transaction($this->_select->conn);
         $this->_insert = $insert ?? new Transaction($this->_select->conn);
         $this->_delete = $delete ?? new Transaction($this->_select->conn);
