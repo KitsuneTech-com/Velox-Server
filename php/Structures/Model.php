@@ -69,7 +69,8 @@ class Model {
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
         $this->_update->clear();
-        switch (new ReflectionClass($this->_update)->getShortName()){
+        $reflection = new ReflectionClass($this->_update);
+        switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
                     $this->_update->addParameterSet($row);
@@ -78,6 +79,8 @@ class Model {
             case "StatementSet":
                 $this->_update->addCriteria($rows);
                 break;
+            default:
+                echo 
         }
         
         $this->_update->execute();
