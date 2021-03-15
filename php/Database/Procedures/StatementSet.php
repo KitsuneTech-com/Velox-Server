@@ -106,7 +106,7 @@ class StatementSet implements \Iterator {
             }
             for ($i=0; $i<count($criteria); $i++){
                 $criterion = $criteria[$i];
-                if (array_diff_key($requiredKeys,$criterion) || array_diff_key($criterion,$requiredKeys){
+                if (array_diff_key($requiredKeys,$criterion) || array_diff_key($criterion,$requiredKeys)){
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
                 }
                 $hashedKeys = $this->criterionHash($criterion);
