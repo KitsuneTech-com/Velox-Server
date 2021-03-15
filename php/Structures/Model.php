@@ -19,6 +19,7 @@ class Model {
     private object $_diff;
     private string $_keyColumn = '';
     private ?int $_lastQuery;
+    private bool $_delaySelect = false;
     
     public ?string $instanceName;
     
@@ -59,7 +60,7 @@ class Model {
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->diff->delete[] = (object)$row;
+                        $this->_diff->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
