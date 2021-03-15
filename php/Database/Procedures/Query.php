@@ -25,7 +25,7 @@ class Query {
     }
     
     public function execute() : bool {
-	fwrite(STDERR, $this->sql);
+	echo $this->sql;
 	$this->results = $this->conn->execute($this);
 	$this->_lastAffected = $this->conn->getLastAffected();
 	if ($this instanceof PreparedStatement){
