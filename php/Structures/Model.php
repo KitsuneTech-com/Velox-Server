@@ -24,7 +24,7 @@ class Model {
     
     public function __construct(PreparedStatement|StatementSet $select, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
-        if ($update && !($update instanceof Transaction)) {
+        if ($update) {
             echo ("got here");
             $update->queryType = QUERY_UPDATE;
         }
