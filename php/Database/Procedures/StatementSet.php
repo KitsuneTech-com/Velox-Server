@@ -104,6 +104,7 @@ class StatementSet implements \Iterator {
                     $requiredKeys[] = "where";
                     break;
             }
+            print_r($criteria);
             for ($i=0; $i<count($criteria); $i++){
                 $criterion = $criteria[$i];
                 if (array_diff_key($requiredKeys,$criterion) || array_diff_key($criterion,$requiredKeys)){
