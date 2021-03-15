@@ -63,37 +63,66 @@ class Model {
             }
         }
     }
-    public function update(array $values, array $where) : bool {
+    
+    public function update(array $rows) : bool {
+        //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
+        // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
+        // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
         $this->_update->clear();
-        foreach ($values as $row){
-            $this->_update->addParameterSet($row);
+        switch (new ReflectionClass($this->_update)->getShortName()){
+            case "PreparedStatement":
+                foreach($rows as $row){
+                    $this->_update->addParameterSet($row);
+                }
+                break;
+            case "StatementSet":
+                $this->_update->addCriteria($rows);
+                break;
         }
+        
         $this->_update->execute();
         if (!$this->_delaySelect){
             $this->select(true);
         }
     }
-    public function insert(array $values) : bool {
+    
+    public function insert(array $rows) : bool {
         $this->_insert->clear();
-        foreach ($values as $row){
-           foreach ($this->_columns as $column){
-                if (!isset($row[$column])){
-                    $row[$column] = null;
+        
+        switch (new ReflectionClass($this->_insert)->getShortName()){
+            case "PreparedStatement":
+                foreach($rows as $row){
+                    if (!isset($row[$column])){
+                        $row[$column] = null;
+                    }
+                    $this->_insert->addParameterSet($row);
                 }
-            }
-            $this->_insert->addParameterSet($row);
+                break;
+            case "StatementSet":
+                $this->_insert->addCriteria($rows);
+                break;
         }
         $this->_insert->execute();
+        
         if (!$this->_delaySelect){
             $this->select(true);
         }
     }
     
-    public function delete(array $where) : bool {
+    public function delete(array $rows) : bool {
         $this->_delete->clear();
-        foreach ($where as $row){
-            $this->_delete->addParameterSet($row);
+        
+        switch (new ReflectionClass($this->_delete)->getShortName()){
+            case "PreparedStatement":
+                foreach ($rows as $row){
+                    $this->_delete->addParameterSet($row);
+                }
+                break;
+            case "StatementSet":
+                $this->_delete->addCriteria($rows);
+                break;
         }
+        
         $this->_delete->execute();
         if (!$this->_delaySelect){
             $this->select(true);
