@@ -89,8 +89,8 @@ class Model {
     
     public function insert(array $rows) : bool {
         $this->_insert->clear();
-        
-        switch (new ReflectionClass($this->_insert)->getShortName()){
+        $reflection = new ReflectionClass($this->_insert);
+        switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
                     if (!isset($row[$column])){
@@ -112,8 +112,8 @@ class Model {
     
     public function delete(array $rows) : bool {
         $this->_delete->clear();
-        
-        switch (new ReflectionClass($this->_delete)->getShortName()){
+        $reflection = new ReflectionClass($this->_delete);
+        switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach ($rows as $row){
                     $this->_delete->addParameterSet($row);
