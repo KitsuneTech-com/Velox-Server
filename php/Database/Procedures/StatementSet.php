@@ -104,10 +104,9 @@ class StatementSet implements \Iterator {
                     $requiredKeys[] = "where";
                     break;
             }
-            print_r($requiredKeys);
             for ($i=0; $i<count($criteria); $i++){
                 $criterion = $criteria[$i];
-                if (array_diff_key($requiredKeys,$criterion) || array_diff_key($criterion,$requiredKeys)){
+                if (array_diff_key(array_flip($requiredKeys),$criterion) || array_diff_key($criterion,array_flip($requiredKeys))){
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
                 }
                 $hashedKeys = $this->criterionHash($criterion);
