@@ -80,7 +80,7 @@ class Model {
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
         $this->_update->clear();
-        $reflection = new ReflectionClass($this->_update);
+        $reflection = new \ReflectionClass($this->_update);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
@@ -100,7 +100,7 @@ class Model {
     
     public function insert(array $rows) : bool {
         $this->_insert->clear();
-        $reflection = new ReflectionClass($this->_insert);
+        $reflection = new \ReflectionClass($this->_insert);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
@@ -123,7 +123,7 @@ class Model {
     
     public function delete(array $rows) : bool {
         $this->_delete->clear();
-        $reflection = new ReflectionClass($this->_delete);
+        $reflection = new \ReflectionClass($this->_delete);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach ($rows as $row){
