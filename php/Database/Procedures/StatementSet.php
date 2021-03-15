@@ -12,17 +12,17 @@ class StatementSet implements \Iterator {
     private string $_baseSql;
     public Connection $conn;
     private array $_criteria;
-    private int $_queryType;
     private array $_statements;
     private int $_position;
     public ResultSet|array|bool $results;
+    public int $queryType;  //This is public so that the default can be overridden when used as a parameter for Model
     
     public function __construct(Connection $conn, string $baseSql = "", int $queryType = QUERY_SELECT, array|Diff $criteria = []){
         $this->_baseSql = $baseSql;
         $this->conn = $conn;
         $this->_criteria = [];
         //stored procedures are handled differently due to lack of operators
-        $this->_queryType = $queryType;
+        $this->queryType = $queryType;
         $this->_statements = [];
         $this->_position = 0;
         if ($criteria instanceof Diff || count($criteria) > 0){
@@ -77,7 +77,7 @@ class StatementSet implements \Iterator {
     
     public function addCriteria (array|Diff $criteria) : void {
         if ($criteria instanceof Diff){
-            switch ($this->_queryType){
+            switch ($this->queryType){
                 case QUERY_SELECT:
                     $this->addCriteria($criteria->select);
                     break;
@@ -94,11 +94,11 @@ class StatementSet implements \Iterator {
         }
         else {
             $requiredKeys = [];
-            switch ($this->_queryType){
+            switch ($this->queryType){
                 case QUERY_INSERT:
                 case QUERY_UPDATE:
                     $requiredKeys[] = "values";
-                    if ($this->_queryType == QUERY_INSERT) break;
+                    if ($this->queryType == QUERY_INSERT) break;
                 case QUERY_SELECT:
                 case QUERY_DELETE:
                     $requiredKeys[] = "where";
@@ -133,7 +133,7 @@ class StatementSet implements \Iterator {
             $valuesStr = "";
             $columnsStr = "";
         
-            switch ($this->_queryType){
+            switch ($this->queryType){
                 case QUERY_SELECT:
                 case QUERY_DELETE:
                 case QUERY_UPDATE:
@@ -186,7 +186,7 @@ class StatementSet implements \Iterator {
                             $whereStr = "(".implode(" OR ",$orArray).")";
                             break;
                     }
-                    if ($this->_queryType != QUERY_UPDATE && $this->_queryType != QUERY_PROC){
+                    if ($this->queryType != QUERY_UPDATE && $this->queryType != QUERY_PROC){
                         break;
                     }
 
@@ -196,7 +196,7 @@ class StatementSet implements \Iterator {
                     $valuesStrArray = [];
                     $columnsStrArray = [];
                     foreach (array_keys($valuesArray) as $column){
-                        switch ($this->_queryType){
+                        switch ($this->queryType){
                             case QUERY_INSERT:
                                 $columnsStrArray[] = $column;
                                 $valuesStrArray[] = ":v_".$column;
@@ -211,14 +211,14 @@ class StatementSet implements \Iterator {
                     break;
             }
         
-            if ($this->_queryType == QUERY_INSERT){
+            if ($this->queryType == QUERY_INSERT){
                 $valuesStr = "(".$columnsStr.") VALUES (".$valuesStr.")";
                 $columnsStr = "";
             }
         
             $substitutedSQL = str_replace(["<<condition>>","<<columns>>","<<values>>"],[$whereStr,$columnsStr,$valuesStr],$this->_baseSql);
             fwrite(STDERR,$substitutedSQL);
-            $stmt = new PreparedStatement($this->conn, $substitutedSQL, null, $this->_queryType, VELOX_RESULT_UNION);
+            $stmt = new PreparedStatement($this->conn, $substitutedSQL, null, $this->queryType, VELOX_RESULT_UNION);
         
             foreach ($variation['data'] as $row){
                 $parameterSet = [];
