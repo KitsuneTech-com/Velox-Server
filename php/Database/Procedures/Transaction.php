@@ -17,7 +17,7 @@ class Transaction {
     private array $_lastAffected = [];
     private array $_paramArray = [];
     
-    public function __construct(?Connection $conn) {
+    public function __construct(?Connection &$conn) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
@@ -26,7 +26,7 @@ class Transaction {
     }
     
     //Assembly
-    public function addQuery(string|Query|StatementSet $query, ?string $keyColumn = null, ?int $resultType = VELOX_RESULT_NONE) : void {
+    public function addQuery(string|Query|StatementSet &$query, ?string $keyColumn = null, ?int $resultType = VELOX_RESULT_NONE) : void {
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
                 throw new VeloxException("Transaction has no active connection",26);
