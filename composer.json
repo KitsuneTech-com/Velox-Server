@@ -23,6 +23,7 @@
             "php/Support/ErrorHandling.php",
             "php/Support/Utility.php",
             "php/Transport/Export.php",
-            "config/config.php",]
+            "config/config.php"
+        ]
     }
 }
