@@ -66,8 +66,7 @@ class Connection {
                         throw new VeloxException("Unidentified database engine or incorrect parameters",16);
                     }
                 }
-        
-                $this->_conn = sqlsrv_connect(DB_PL["host"], array_slice(DB_PL,1));
+                $this->_conn = sqlsrv_connect($host,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd]);
                 if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
                     if (!$this->_serverType){
                         throw new VeloxException("Unidentified database engine or incorrect parameters",16);
