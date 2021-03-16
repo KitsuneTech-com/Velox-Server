@@ -142,7 +142,7 @@ class Connection {
                 $success = sqlsrv_commit($this->_conn);
                 break;
         }
-        $this->_inTransaction = $success;
+        $this->_inTransaction = !$success;
         return (bool)$success;
     }
     public function serverType() : int {
