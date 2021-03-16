@@ -79,7 +79,9 @@ class Model {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
-        $this->_update->clear();
+        if (!$this->update instanceof Transaction){
+            $this->_update->clear();
+        }
         $reflection = new \ReflectionClass($this->_update);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
@@ -100,7 +102,9 @@ class Model {
     }
     
     public function insert(array $rows) : bool {
-        $this->_insert->clear();
+        if (!$this->insert instanceof Transaction){
+            $this->_insert->clear();
+        }
         $reflection = new \ReflectionClass($this->_insert);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
@@ -124,7 +128,9 @@ class Model {
     }
     
     public function delete(array $rows) : bool {
-        $this->_delete->clear();
+        if (!$this->delete instanceof Transaction){
+            $this->_delete->clear();
+        }
         $reflection = new \ReflectionClass($this->_delete);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
