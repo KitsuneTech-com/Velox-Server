@@ -18,7 +18,7 @@ class StatementSet implements \Iterator {
     public ResultSet|array|bool $results;
     public int $queryType;  //This is public so that the default can be overridden when used as a parameter for Model
     
-    public function __construct(Connection $conn, string $baseSql = "", int $queryType = QUERY_SELECT, array|Diff $criteria = []){
+    public function __construct(Connection &$conn, string $baseSql = "", int $queryType = QUERY_SELECT, array|Diff $criteria = []){
         $this->_baseSql = $baseSql;
         $this->conn = $conn;
         $this->_criteria = [];
