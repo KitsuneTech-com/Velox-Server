@@ -249,6 +249,7 @@ class StatementSet implements \Iterator {
             }
         }
         if (!$this->conn->inTransaction()){
+            echo("got here");
             $transaction = new Transaction($this->conn);
             $transaction->addQuery($this);
             $transaction->executeAll();
