@@ -11,7 +11,7 @@ class Connection {
     private string $_host;
     private string $_db;
     private int $_serverType;
-    private bool $_inTransaction;
+    private bool $_inTransaction = false;
     private array $_lastAffected = [];
     private string $_timestampFileLoc;
     public function __construct (
@@ -144,7 +144,7 @@ class Connection {
                 break;
         }
         $this->_inTransaction = $success;
-        return $success;
+        return (bool)$success;
     }
     public function serverType() : int {
         return $this->_serverType;
