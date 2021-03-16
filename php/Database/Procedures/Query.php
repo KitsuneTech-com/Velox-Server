@@ -16,7 +16,7 @@ class Query {
     private array $_lastAffected = [];
     public array $tables = [];
     
-    public function __construct(Connection $conn, string $sql, ?string $keyColumn = null, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) {
+    public function __construct(Connection &$conn, string $sql, ?string $keyColumn = null, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) {
 	$this->sql = $sql;
 	$this->conn = $conn;
 	$this->keyColumn = $keyColumn;
