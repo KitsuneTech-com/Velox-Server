@@ -7,6 +7,7 @@ use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
+use function KitsuneTech\Velox\Utility\recur_ksort;
 
 class StatementSet implements \Iterator {
     private string $_baseSql;
@@ -48,14 +49,6 @@ class StatementSet implements \Iterator {
     }
     
     private function criterionHash(object|array $criterion) : string {
-        function recur_ksort(&$array) {
-            foreach ($array as &$value) {
-               if (is_array($value)) {
-               recur_ksort($value);
-               }
-            }
-            return ksort($array);
-        }
         $criterion = (array)$criterion;
         $valuesList = [];
         if (isset($criterion['values'])){
