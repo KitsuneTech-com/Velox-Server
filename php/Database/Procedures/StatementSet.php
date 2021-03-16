@@ -209,7 +209,7 @@ class StatementSet implements \Iterator {
             }
         
             $substitutedSQL = str_replace(["<<condition>>","<<columns>>","<<values>>"],[$whereStr,$columnsStr,$valuesStr],$this->_baseSql);
-            fwrite(STDERR,$substitutedSQL);
+            
             $stmt = new PreparedStatement($this->conn, $substitutedSQL, null, $this->queryType, VELOX_RESULT_UNION);
         
             foreach ($variation['data'] as $row){
@@ -249,7 +249,6 @@ class StatementSet implements \Iterator {
             }
         }
         if (!$this->conn->inTransaction()){
-            echo("got here");
             $transaction = new Transaction($this->conn);
             $transaction->addQuery($this);
             $transaction->executeAll();
