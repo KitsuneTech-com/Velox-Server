@@ -59,6 +59,7 @@ export class VeloxFilterGroupElement extends VeloxElement {
                     case "VeloxFilterElement":
                         break;
                 }
+            }
             //Then update the parent 
             this.parent.updateFilters(ignoreErrors);
         }
