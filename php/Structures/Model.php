@@ -27,12 +27,15 @@ class Model {
         $this->_select = $select;
         if ($update && !($update instanceof Transaction)) {
             $update->queryType = QUERY_UPDATE;
+            $update->resultType = VELOX_RESULT_NONE;
         }
         if ($insert && !($insert instanceof Transaction)) {
             $insert->queryType = QUERY_INSERT;
+            $insert->resultType = VELOX_RESULT_NONE;
         }
         if ($delete && !($delete instanceof Transaction)) {
             $delete->queryType = QUERY_DELETE;
+            $delete->resultType = VELOX_RESULT_NONE;
         }
         $this->_update = $update ?? new Transaction($this->_select->conn);
         $this->_insert = $insert ?? new Transaction($this->_select->conn);
