@@ -23,7 +23,7 @@ class Model {
     
     public ?string $instanceName;
     
-    public function __construct(PreparedStatement|StatementSet $select, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
+    public function __construct(PreparedStatement|StatementSet &$select, PreparedStatement|StatementSet|Transaction &$update = null, PreparedStatement|StatementSet|Transaction &$insert = null, PreparedStatement|StatementSet|Transaction &$delete = null){
         $this->_select = $select;
         if ($update && !($update instanceof Transaction)) {
             $update->queryType = QUERY_UPDATE;
