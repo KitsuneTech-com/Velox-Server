@@ -10,18 +10,18 @@ class Model {
     // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd together.
     // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
     // in the model. In Model::insert(), any columns not specified are set as NULL.
-    private PreparedStatement|StatementSet $_select;
-    private PreparedStatement|StatementSet|Transaction $_update;
-    private PreparedStatement|StatementSet|Transaction $_insert;
-    private PreparedStatement|StatementSet|Transaction $_delete;
+    private PreparedStatement|StatementSet|null $_select;
+    private PreparedStatement|StatementSet|Transaction|null $_update;
+    private PreparedStatement|StatementSet|Transaction|null $_insert;
+    private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns;
     private array $_data;
     private object $_diff;
     private string $_keyColumn = '';
-    private ?int $_lastQuery;
+    private int|null $_lastQuery;
     private bool $_delaySelect = false;
     
-    public ?string $instanceName;
+    public string|null $instanceName;
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
