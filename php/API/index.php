@@ -72,25 +72,25 @@ if (function_exists("preProcessing")){
 if ($QUERIES['SELECT'] ?? false){
     $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
-	    $VELOX_MODEL->synchronize($DIFF);
+        $VELOX_MODEL->synchronize($DIFF);
     }
     //Set the query version header (if it's set as a positive integer)
     if ($QUERY_VERSION ?? false){
-	    if (!is_int($QUERY_VERSION)){
-	        throw new VeloxException('Incorrect version value set in query definition (query "'.$queryName.'"',4);
-	    }
+        if (!is_int($QUERY_VERSION)){
+            throw new VeloxException('Incorrect version value set in query definition (query "'.$queryName.'"',4);
+        }
     }
 }
 else {
-	if (isset($QUERIES['UPDATE'])){
-		$QUERIES['UPDATE']->execute();	
-	}
-	if (isset($QUERIES['INSERT'])){
-		$QUERIES['INSERT']->execute();
-	}
-	if (isset($QUERIES['DELETE'])){
-		$QUERIES['DELETE']->execute();
-	}
+    if (isset($QUERIES['UPDATE'])){
+        $QUERIES['UPDATE']->execute();    
+    }
+    if (isset($QUERIES['INSERT'])){
+        $QUERIES['INSERT']->execute();
+    }
+    if (isset($QUERIES['DELETE'])){
+        $QUERIES['DELETE']->execute();
+    }
 }
 
 //Run any custom post-processing code
