@@ -27,27 +27,20 @@ class Transaction {
     
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?string $keyColumn = null, ?int $resultType = VELOX_RESULT_NONE) : void {
+        //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
+                //If no base connection exists, we haven't set one yet. Query needs this.
                 throw new VeloxException("Transaction has no active connection",26);
             }
+            //Build it and add it to the $this->queries array
             $this->queries[] = new Query($this->_baseConn,$query,$keyColumn,$resultType);
         }
+        //Otherwise, if an instance of Query (or its subclasses) or StatementSet is passed...
         elseif ($query instanceof Query || $query instanceof StatementSet){
-            $connectionExists = false;
-            if (count($this->_connections) == 0){
-                $this->_connections[] = $this->_baseConn = $query->conn;
-            }
-            else {
-                foreach($this->_connections as $conn){
-                    if ($query->conn === $conn){
-                        $connectionExists = true;
-                        break;
-                    }
-                }
-            }
-            if (!$connectionExists){
+            if (!in_array($query->conn,$this->_connections,true)){
                 $this->_connections[] = $query->conn;
+                $this->_baseConn = $this->_baseConn ?? $query->conn;
             }
             if ($query instanceof PreparedStatement){
                 if (count($this->queries) == 0 && count($this->_paramArray) > 0){
