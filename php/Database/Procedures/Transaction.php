@@ -25,6 +25,21 @@ class Transaction {
         $this->queries = [];
     }
     
+       public function checkConnection(Query|StatementSet &$query) : bool {
+        $connectionExists = false;
+        if (count($this->_connections) == 0){
+            $this->_connections[] = $this->_baseConn = $query->conn;
+            return $connectionExists
+        }
+        else {
+            foreach($this->_connections as $conn){
+                if ($query->conn === $conn){
+                    $connectionExists = true;
+                    return $connectionExists
+                }
+            }
+        }
+    }
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?string $keyColumn = null, ?int $resultType = VELOX_RESULT_NONE) : void {
         if (gettype($query) == "string"){
@@ -33,22 +48,8 @@ class Transaction {
             }
             $this->queries[] = new Query($this->_baseConn,$query,$keyColumn,$resultType);
         }
-        elseif ($query instanceof Query || $query instanceof StatementSet){
-            $connectionExists = false;
-            if (count($this->_connections) == 0){
-                $this->_connections[] = $this->_baseConn = $query->conn;
-            }
-            else {
-                foreach($this->_connections as $conn){
-                    if ($query->conn === $conn){
-                        $connectionExists = true;
-                        break;
-                    }
-                }
-            }
-            if (!$connectionExists){
-                $this->_connections[] = $query->conn;
-            }
+        elseif ($query instanceof Query){
+            checkConnection($query)
             if ($query instanceof PreparedStatement){
                 if (count($this->queries) == 0 && count($this->_paramArray) > 0){
                     foreach ($this->_paramArray as $paramSet){
@@ -56,17 +57,15 @@ class Transaction {
                     }
                 }
             }
-            elseif ($query instanceof StatementSet){
-                //do the same thing as above   
+        }
+        elseif ($query instanceof StatementSet) {
+            checkConnection($query)
+            foreach ($query as $stmt){
+                $this->queries[] = $stmt;
             }
-            if ($query instanceof StatementSet){
-                foreach ($query as $stmt){
-                    $this->queries[] = $stmt;
-                }
-            }
-            else {
-                $this->queries[] = $query;
-            }
+        }
+        else {
+            $this->queries[] = $query;
         }
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
