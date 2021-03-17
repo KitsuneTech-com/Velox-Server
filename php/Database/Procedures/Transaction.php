@@ -36,29 +36,36 @@ class Transaction {
             //Build it and add it to the $this->queries array
             $this->queries[] = new Query($this->_baseConn,$query,$keyColumn,$resultType);
         }
-        //Otherwise, if an instance of Query (or its subclasses) or StatementSet is passed...
-        elseif ($query instanceof Query || $query instanceof StatementSet){
+        else {
             if (!in_array($query->conn,$this->_connections,true)){
                 $this->_connections[] = $query->conn;
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
             }
-            if ($query instanceof PreparedStatement){
-                if (count($this->queries) == 0 && count($this->_paramArray) > 0){
-                    foreach ($this->_paramArray as $paramSet){
-                        $query->addParameterSet($paramSet);
+            
+            //Get class name for following switch
+            $refl = new \ReflectionObject($query);
+            $className = $refl->getShortName();
+            
+            //Class-specific handling
+            switch ($className){
+                case "PreparedStatement":
+                    if (count($this->queries) == 0 && count($this->_paramArray) > 0){
+                        foreach ($this->_paramArray as $paramSet){
+                            $query->addParameterSet($paramSet);
+                        }
                     }
-                }
-            }
-            elseif ($query instanceof StatementSet){
-                //do the same thing as above   
-            }
-            if ($query instanceof StatementSet){
-                foreach ($query as $stmt){
-                    $this->queries[] = $stmt;
-                }
-            }
-            else {
-                $this->queries[] = $query;
+                    break;
+                case "StatementSet":
+                    //do the same thing as above, except with addCriteria (needs code for this)
+                
+                    //add each PreparedStatement in StatementSet into $this->queries[]
+                    foreach ($query as $stmt){
+                        $this->queries[] = $stmt;
+                    }
+                    break;
+                case "Query":
+                    $this->queries[] = $query;
+                    break;
             }
         }
     }
