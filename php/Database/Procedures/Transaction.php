@@ -37,6 +37,7 @@ class Transaction {
             $this->queries[] = new Query($this->_baseConn,$query,$keyColumn,$resultType);
         }
         else {
+            //Add the query connection to $this->_connections if it doesn't already exist
             if (!in_array($query->conn,$this->_connections,true)){
                 $this->_connections[] = $query->conn;
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
