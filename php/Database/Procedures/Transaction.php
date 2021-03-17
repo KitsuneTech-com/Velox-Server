@@ -49,10 +49,15 @@ class Transaction {
             if (!$connectionExists){
                 $this->_connections[] = $query->conn;
             }
-            if (count($this->queries) == 0 && count($this->_paramArray) > 0){
-                foreach ($this->_paramArray as $paramSet){
-                    $query->addParameterSet($paramSet);
+            if ($query instanceof PreparedStatement){
+                if (count($this->queries) == 0 && count($this->_paramArray) > 0){
+                    foreach ($this->_paramArray as $paramSet){
+                        $query->addParameterSet($paramSet);
+                    }
                 }
+            }
+            elseif ($query instanceof StatementSet){
+                //do the same thing as above   
             }
             if ($query instanceof StatementSet){
                 foreach ($query as $stmt){
