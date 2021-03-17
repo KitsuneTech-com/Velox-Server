@@ -69,8 +69,8 @@ if (function_exists("preProcessing")){
     preProcessing($SELECT,$UPDATE,$INSERT,$DELETE);
 }
 
-if (isset($QUERIES['SELECT'])){
-    $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
+if ($QUERIES['SELECT'] ?? false){
+    $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
 	    $VELOX_MODEL->synchronize($DIFF);
     }
@@ -81,10 +81,21 @@ if (isset($QUERIES['SELECT'])){
 	    }
     }
 }
+else {
+	if (isset($QUERIES['UPDATE'])){
+		$QUERIES['UPDATE']->execute();	
+	}
+	if (isset($QUERIES['INSERT'])){
+		$QUERIES['INSERT']->execute();
+	}
+	if (isset($QUERIES['DELETE'])){
+		$QUERIES['DELETE']->execute();
+	}
+}
 
 //Run any custom post-processing code
 if (function_exists("postProcessing")){
-    postProcessing($VELOX_MODEL);
+    postProcessing($VELOX_MODEL ?? null);
 }
 
 //Export JSON to browser
