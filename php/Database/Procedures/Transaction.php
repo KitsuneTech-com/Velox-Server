@@ -36,7 +36,7 @@ class Transaction {
         elseif ($query instanceof Query || $query instanceof StatementSet){
             $connectionExists = false;
             if (count($this->_connections) == 0){
-                $this->queries[] = $this->_baseConn = $query->conn;
+                $this->_connections[] = $this->_baseConn = $query->conn;
             }
             else {
                 foreach($this->_connections as $conn){
