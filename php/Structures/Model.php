@@ -53,12 +53,21 @@ class Model {
         }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
-            if ($this->_select->results instanceof ResultSet){
-                $results = $this->_select->results->getRawData();
+            if (is_array($this->_select->results){
+                $count = count($this->_select->results);
+                switch ($count){
+                    case 0:
+                        $results = [];
+                        break;
+                    case 1:
+                        $results = $this->_select->results[0];
+                        break;
+                    default:
+                        throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
+                }
             }
-            else {
-                echo json_encode($this->_select->dumpQueries());
-                //throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
+            elseif ($this->_select->results instanceof ResultSet){
+                $results = $this->_select->results->getRawData();
             }
             if (!$diff){
                 $this->_data = $results;
