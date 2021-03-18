@@ -45,6 +45,7 @@
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
+| 37   | No select procedure is defined for this Model.                | In order to call Model->select(), a PreparedStatement or StatementSet must have been defined for the first argument of the constructor. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
