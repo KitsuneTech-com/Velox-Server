@@ -37,9 +37,11 @@ class Model {
             $delete->queryType = QUERY_DELETE;
             $delete->resultType = VELOX_RESULT_NONE;
         }
-        $this->_update = $update ?? new Transaction($this->_select->conn);
-        $this->_insert = $insert ?? new Transaction($this->_select->conn);
-        $this->_delete = $delete ?? new Transaction($this->_select->conn);
+        $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
+        $this->_select = $select ?? new Transaction($conn);
+        $this->_update = $update ?? new Transaction($conn);
+        $this->_insert = $insert ?? new Transaction($conn);
+        $this->_delete = $delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
         $this->instanceName = null;
         $this->select();
