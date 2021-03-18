@@ -38,7 +38,7 @@ class Model {
             $delete->resultType = VELOX_RESULT_NONE;
         }
         $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
-        $this->_select = $select ?? new Transaction($conn);
+        $this->_select = $select ?? null;
         $this->_update = $update ?? new Transaction($conn);
         $this->_insert = $insert ?? new Transaction($conn);
         $this->_delete = $delete ?? new Transaction($conn);
