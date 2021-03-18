@@ -9,7 +9,7 @@ use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\recur_ksort;
 
-class StatementSet implements \Iterator {
+class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private string $_baseSql;
     public Connection $conn;
     private array $_criteria;
@@ -31,6 +31,11 @@ class StatementSet implements \Iterator {
         }
     }
     
+    // Countable implementation
+    public function count() : int {
+        return count($this->_keys);
+    }
+    
     //Iterator implementation
     public function current() : PreparedStatement {
         return $this->_statements[$this->_position];
@@ -48,6 +53,26 @@ class StatementSet implements \Iterator {
         return isset($this->_statements[$this->_position]);
     }
     
+    //ArrayAccess implementation
+    public function offsetSet(mixed $offset, mixed $stmt) : void {
+        if (is_null($offset)){
+            $this->_statements[] = $stmt;
+        }
+        else {
+            $this->_statements[$offset] = $stmt;
+        }
+    }
+    public function offsetExists(mixed $offset) : bool {
+	    return isset($this->_statements[$offset]);
+    }
+    public function offsetUnset(mixed $offset) : void {
+	    unset($this->_statements[$offset]);
+    }
+    public function offsetGet(mixed $offset) : PreparedStatement {
+	    return $this->_statements[$offset] ?? null;
+    }
+    
+    //Class-specific methods
     private function criterionHash(object|array $criterion) : string {
         $criterion = (array)$criterion;
         $valuesList = [];
