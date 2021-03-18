@@ -53,7 +53,7 @@ class Model {
         }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
-            if (is_array($this->_select->results){
+            if (is_array($this->_select->results)){
                 $count = count($this->_select->results);
                 switch ($count){
                     case 0:
