@@ -287,7 +287,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
     public function dumpQueries() : array {
         $queries = [];
-        foreach ($stmt in $this->_statements){
+        foreach ($this->_statements as $stmt){
             $queries[] = $stmt->dumpQuery();
         }
         return $queries;
