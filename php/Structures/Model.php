@@ -69,6 +69,9 @@ class Model {
             elseif ($this->_select->results instanceof ResultSet){
                 $results = $this->_select->results->getRawData();
             }
+            else {
+                $results = [];
+            }
             if (!$diff){
                 $this->_data = $results;
                 $this->_columns = $this->_select->results->columns();
