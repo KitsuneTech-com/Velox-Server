@@ -57,7 +57,7 @@ class Model {
                 $results = $this->_select->results->getRawData();
             }
             else {
-                echo json_encode($this->_select->dumpQuery());
+                echo json_encode($this->_select->dumpQueries());
                 //throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
             }
             if (!$diff){
