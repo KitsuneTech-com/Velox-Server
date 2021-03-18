@@ -285,4 +285,11 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $this->rewind();
         $this->_statements = [];
     }
+    public function dumpQueries() : array {
+        $queries = [];
+        foreach ($stmt in $this->_statements){
+            $queries[] = $stmt->dumpQuery();
+        }
+        return $queries;
+    }
 }
