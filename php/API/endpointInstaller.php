@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 //Necessary utility functions
-function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR) : string {
+function relativePath(string $from, string $to, string $ps = DIRECTORY_SEPARATOR) : string {
     $arFrom = explode($ps, rtrim($from, $ps));
     $arTo = explode($ps, rtrim($to, $ps));
     while(count($arFrom) && count($arTo) && ($arFrom[0] == $arTo[0])){
@@ -11,7 +11,19 @@ function relativePath($from, $to, $ps = DIRECTORY_SEPARATOR) : string {
     return str_pad("", count($arFrom) * 3, '..'.$ps).implode($ps, $arTo);
 }
 
-function copy_dir($src,$dst) : bool {
+function overwriteConfirmation(string $destFile) : bool {
+    echo $destFile." already exists. Overwrite? [y/n] (n)\n";
+    switch (trim(fgets(STDIN))){
+        case "y":
+            return true;
+        case "n":
+            return false;
+        default:
+            //Invalid response - repeat the question
+            return overwriteConfirmation($destFile);
+    }
+}
+function copy_dir(string $src, string $dst, bool $overwritePrompt = true) : bool {
     $dir = opendir($src);
     if (!is_dir($dst)){
         echo "Creating directory ".$dst."...\n";
@@ -20,20 +32,31 @@ function copy_dir($src,$dst) : bool {
             return false;
         }
     }
+    else {
+        echo "Directory ".$dst." exists. Copying contents into existing directory...\n";
+    }
     while( ( $file = readdir($dir)) !== false ) {
         $sourceFile = $src."/".$file;
         $destFile = $dst."/".$file;
         if (( $file != '.' ) && ( $file != '..' )) {
             if ( is_dir($sourceFile) ) {
-                if (!copy_dir($sourceFile,$destFile)){
+                if (!copy_dir($sourceFile,$destFile,$overwritePrompt)){
                     return false;
                 }
             }
             else {
-                echo "Copying ".$sourceFile." to ".$destFile."...\n";
-                if (!copy($sourceFile,$destFile)){
-                    echo "Failed to copy.\n";
-                    return false;
+                if (file_exists($destFile) && $overwritePrompt){
+                    $write = overwriteConfirmation($destFile);
+                }
+                else {
+                    $write = true;
+                }
+                if ($write){
+                    echo "Copying ".$sourceFile." to ".$destFile."...\n";
+                    if (!copy($sourceFile,$destFile)){
+                        echo "Failed to copy.\n";
+                        return false;
+                    }
                 }
             }
         }
@@ -83,7 +106,7 @@ while (true){
                 file_put_contents($endpointPath,$endpointFile);
                     
                 echo "Copying queries directory...\n";
-                $queries = copy_dir(__DIR__.$sep."queries",$queriesPath);
+                $queries = copy_dir(__DIR__.$sep."queries",$queriesPath,true);
                 if ($queries){
                     echo "Queries subdirectory created at ".$queriesPath."\n\n";
                 }
