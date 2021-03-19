@@ -219,7 +219,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 $valuesStrArray[] = ":v_".$column;
                                 break;
                             case QUERY_UPDATE:
-                                $valuesStrArray[] = $column."= :v_".$column;
+                                $valuesStrArray[] = $column." = :v_".$column;
                                 break;
                         }
                     }
