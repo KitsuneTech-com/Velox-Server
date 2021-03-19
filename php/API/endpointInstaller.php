@@ -81,14 +81,12 @@ while (true){
     if ($apiPath != ""){
         echo "\n";
         $fullPath = rtrim($webpath,$sep).$sep.$apiPath;
-        $directory = false;
+        $directory = true;
         if (!is_dir($fullPath)){
             echo "Directory ".$fullPath." does not exist. Creating...\n";
             if (!mkdir($fullPath)){
+                $directory = false;
                 echo "Error: Could not create directory ".$fullPath.".\n\n";
-            }
-            else {
-                $directory = true;
             }
         }
         if ($directory){
