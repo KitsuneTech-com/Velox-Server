@@ -285,6 +285,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $this->rewind();
         $this->_statements = [];
     }
+    public function getLastAffected() : array {
+        $affected = [];
+        foreach ($this->_statements as $stmt){
+            $affected = array_merge($affected,$stmt->getLastAffected());
+        }
+        return $affected;
+    }
     public function dumpQueries() : array {
         $queries = [];
         foreach ($this->_statements as $stmt){
