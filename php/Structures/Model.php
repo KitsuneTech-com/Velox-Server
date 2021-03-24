@@ -9,7 +9,7 @@ class Model {
     
     // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd together.
     // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
-    // in the model. In Model::insert(), any columns not specified are set as NULL.
+    // in the model. In Model::insert(), any columns not specified are set as NULL.   
     private PreparedStatement|StatementSet|null $_select;
     private PreparedStatement|StatementSet|Transaction|null $_update;
     private PreparedStatement|StatementSet|Transaction|null $_insert;
@@ -22,6 +22,7 @@ class Model {
     private bool $_delaySelect = false;
     
     public string|null $instanceName;
+    public Diff|array $filter;
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
@@ -47,7 +48,7 @@ class Model {
         $this->select();
     }
     
-    public function select(bool $diff = false) : void {
+    public function select(bool $diff = false) : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -92,6 +93,20 @@ class Model {
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
+            }
+            if ($this->filter){
+                $indices = [];
+                $whereArray = $this->filter instanceof Diff ? $this->filter->select['where'] : $this->filter['where'];
+                foreach ($whereArray as $orArray){
+                    foreach ($this->_data as $row){
+                        foreach ($orArray as $column => $criteria){
+                            if (!in_array($column,$this->_columns)){
+                                throw new VeloxException("Column '".$column."' does not exist in result set.",38);
+                            }
+                            
+                        }
+                    }
+                }
             }
         }
     }
