@@ -161,6 +161,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                         $andArray = [];
                         foreach ($andSet as $column => $details){
                             switch ($details[0]){
+								case "IS NULL":
+								case "IS NOT NULL":
+									$andArray[] = $column." ".$details[0];
+									break;
                                 case "=":
                                 case "<":
                                 case ">":
