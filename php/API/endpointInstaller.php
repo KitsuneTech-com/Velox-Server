@@ -11,18 +11,21 @@ function relativePath(string $from, string $to, string $ps = DIRECTORY_SEPARATOR
     return str_pad("", count($arFrom) * 3, '..'.$ps).implode($ps, $arTo);
 }
 
-function overwriteConfirmation(string $destFile) : bool {
-    echo $destFile." already exists. Overwrite? [y/n] (n)\n";
-    switch (trim(fgets(STDIN))){
-        case "y":
-            return true;
-        case "n":
-            return false;
-        default:
-            //Invalid response - repeat the question
-            return overwriteConfirmation($destFile);
+function confirmation(string $message, array $options, ?string $default = null) : string {
+    echo "\n".$message." [".implode("/",$options)."]".($default ? " (".$default.")" : "")."\n";
+    $response = trim(fgets(STDIN));
+    if (in_array($response,$options)){
+        return $response;
+    }
+    elseif ($default && !$response){
+        return $default;
+    }
+    else {
+        echo "Invalid response.\n";
+        return confirmation($message, $options);
     }
 }
+
 function copy_dir(string $src, string $dst, bool $overwritePrompt = true) : bool {
     $dir = opendir($src);
     if (!is_dir($dst)){
@@ -46,7 +49,7 @@ function copy_dir(string $src, string $dst, bool $overwritePrompt = true) : bool
             }
             else {
                 if (file_exists($destFile) && $overwritePrompt){
-                    $write = overwriteConfirmation($destFile);
+                    $write = confirmation($destFile." already exists. Overwrite?",["y","n"],"n") == "y";
                 }
                 else {
                     $write = true;
@@ -74,12 +77,24 @@ if (!isset($webpath)){
     echo "Enter the full absolute path of your website root.\n";
     $webpath = trim(fgets(STDIN));
 }
+$keepSettings = null;
+$firstRun = true;
+$configFile = '';
 while (true){
     echo "Enter the site-relative endpoint path for each endpoint you wish ";
     echo "to create, or hit Enter to finish.\n";
     $apiPath = trim(fgets(STDIN));
+        
     if ($apiPath != ""){
-        echo "\n";
+        if (!$firstRun && is_null($keepSettings)){
+            $keepSettings = confirmation("Would you like to reuse the settings you specified on the first endpoint for all further endpoints?",["y","n"],"n") == "y";
+        }
+        $cors = $keepSettings ? $cors : confirmation("Do you want to enable CORS on this endpoint? (required for access from external domains)",["y","n"],"y") == "y";
+        $inc = $keepSettings ? $inc : confirmation("Do you have a custom configuration file you would like to require?",["y","n"],"n") == "y";
+        if (!$keepSettings && $inc){
+            echo "Enter the full path of the configuration file, or hit Enter to skip. (Note: PHP must be able to read the file.)\n";
+            $configFile = trim(fgets(STDIN));
+        }
         $fullPath = rtrim($webpath,$sep).$sep.$apiPath;
         $directory = true;
         if (!is_dir($fullPath)){
@@ -96,13 +111,33 @@ while (true){
             $index = copy(__DIR__.$sep."index.php",$endpointPath);
             if ($index){
                 echo "API endpoint created at ".$fullPath.".\n";
-                    
+                $endpointFile = file_get_contents($endpointPath);
+                
+                //---- Endpoint code modification ----//
+                if ($cors){
+                    echo "Setting CORS headers...\n";
+                    $headers = <<<'CODE'
+                    header("Access-Control-Allow-Origin: *");
+                    header("Access-Control-Allow-Methods: GET, POST");
+                    header("Access-Control-Allow-Headers: X-Requested-With");
+
+                    if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { exit(); } //Return CORS preflight headers
+                    CODE;
+                    $endpointFile = str_replace('//*CORS placeholder*//',$headers,$endpointFile);
+                }
+                if ($inc && $configFile){
+                    echo "Adding reference to custom configuration file...\n";
+                    $configCode = "require_once ('$configFile');";
+                    $endpointFile = str_replace('//*Custom configuration placeholder*//',$configCode,$endpointFile);
+                }
                 echo "Setting relative path to autoloader...\n";
                 $relPath = relativePath($fullPath,realpath(__DIR__."$sep..$sep..$sep..$sep..$sep")).$sep."autoload.php";
-                $endpointFile = file_get_contents($endpointPath);
                 $endpointFile = str_replace('/path/to/autoloader',$relPath,$endpointFile);
+                
+                echo "Saving modifications...\n";
                 file_put_contents($endpointPath,$endpointFile);
-                    
+                
+                //---- Copying queries directory to endpoint path ----//
                 echo "Copying queries directory...\n";
                 $queries = copy_dir(__DIR__.$sep."queries",$queriesPath,true);
                 if ($queries){
@@ -111,6 +146,7 @@ while (true){
                 else {
                     echo "Error: Could not create queries subdirectory at ".$queriesPath."\n\n";
                 }
+                $firstRun = false;
             }
             else {
                 echo "Error: could not create API endpoint at ".$endpointPath.".\n\n";
