@@ -12,7 +12,7 @@ function relativePath(string $from, string $to, string $ps = DIRECTORY_SEPARATOR
 }
 
 function confirmation(string $message, array $options, ?string $default = null) : string {
-    echo "\n".$message." [".implode("/",$options)."]".($default ? " (".$default.")" : "")."\n";
+    echo $message." [".implode("/",$options)."]".($default ? " (".$default.")" : "")."\n";
     $response = trim(fgets(STDIN));
     if (in_array($response,$options)){
         return $response;
