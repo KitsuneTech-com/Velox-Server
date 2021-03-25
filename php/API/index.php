@@ -1,10 +1,6 @@
 <?php
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST");
-header("Access-Control-Allow-Headers: X-Requested-With");
-
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { exit(); } //Return CORS preflight headers
+//*CORS placeholder*//
 
 //Path to autoloader substituted by post-install script. If you are editing this file because you received the
 //exception below, replace the following path with the absolute path of the autoloader file.
@@ -14,6 +10,8 @@ if ((@include_once $autoloaderPath) === false){
     throw new Exception("Autoloader not found. If this endpoint was not installed with the Composer installer, ".
                         "or if the autoloader was moved, you will need to edit this file to correct the path.");
 }
+
+//*Custom configuration placeholder*//
 
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\{Model, Diff};
