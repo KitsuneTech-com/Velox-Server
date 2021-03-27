@@ -242,6 +242,8 @@ class Model {
             $direction = $flags = null;
         }
         $sortArray[] = &$this->_data;
+        
+        //This may need to be reworked to use sqllike_comp() as a custom comparison function (for consistency with expected SQL sorting)
         array_multisort(...$sortArray);
     }
     
