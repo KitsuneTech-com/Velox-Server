@@ -197,7 +197,8 @@ class Model {
     
     public function sort(...$args) : void {
         $sortArray = [];
-        for ($i=0; $i<count($args); $i++){
+        $argCount = count($args);
+        for ($i=0; $i<$argCount; $i++){
             if (!in_array($args[$i],$this->_columns)){
                 throw new VeloxException("Invalid column specified",29);
             }
@@ -227,7 +228,7 @@ class Model {
                         $direction = $args[$i+1];
                         $i++;
                     }
-                    else {
+                    else { 
                         $direction = SORT_ASC;
                     }
                     break;
@@ -243,7 +244,7 @@ class Model {
         }
         $sortArray[] = &$this->_data;
         
-        //This may need to be reworked to use sqllike_comp() as a custom comparison function (for consistency with expected SQL sorting)
+        //This may need to be reworked to use sqllike_comp() as a custom comparison function for consistency with expected SQL sorting)
         array_multisort(...$sortArray);
     }
     
