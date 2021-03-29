@@ -243,7 +243,8 @@ class Connection {
                                             break;
                                         case VELOX_RESULT_FIELDS:
                                             $currentResult = [];
-                                            for ($i=0; $i<$stmt->columnCount-1; $i++){
+                                            $columnCount = $stmt->columnCount;
+                                            for ($i=0; $i<$columnCount-1; $i++){
                                                 $currentResult[] = $stmt->getColumnMeta($i); 
                                             }
                                             $results[] = $currentResult;
@@ -258,7 +259,8 @@ class Connection {
                     case DB_MSSQL:
                         foreach ($paramArray as $paramSet){
                             $keys = array_keys($paramSet);
-                            for ($i=0; $i<count($placeholders); $i++){
+                            $placeholderCount = count($placeholders);
+                            for ($i=0; $i<$placeholderCount; $i++){
                                 $placeholders[$i] = $paramSet[$keys[$i]];
                             }
                             if (!sqlsrv_execute($stmt)){
@@ -320,7 +322,8 @@ class Connection {
                                 break;
                             case VELOX_RESULT_FIELDS:
                                 $currentResult = [];
-                                for ($i=0; $i<$stmt->columnCount-1; $i++){
+                                $columnCount = $stmt->columnCount;
+                                for ($i=0; $i<$columnCount-1; $i++){
                                     $currentResult[] = $stmt->getColumnMeta($i); 
                                 }
                                 $results[] = $currentResult;
