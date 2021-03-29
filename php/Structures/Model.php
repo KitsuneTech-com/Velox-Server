@@ -77,11 +77,13 @@ class Model {
             else {
                 $results = [];
             }
-            if (!$diff){
-                $this->_data = $results;
-                $this->_columns = $this->_select->results->columns();
+            $this->_data = $results;
+            $this->_columns = $this->_select->results->columns();
+            
+            if ($this->_filter){
+                $this->setFilter($this->_filter);
             }
-            else {
+            if ($diff) {
                 $this->_diff = new Diff();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
@@ -97,9 +99,10 @@ class Model {
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
+                return $this->_diff;
             }
-            if ($this->_filter){
-                $this->setFilter($this->_filter);
+            else {
+                return true;
             }
         }
     }
