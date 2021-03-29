@@ -256,6 +256,7 @@ class Model {
             $this->insert($diff->insert);
         }
         if ($diff->select) {
+            echo "Got here";
             $this->setFilter($diff);
         }
         $this->select(true);
@@ -303,7 +304,6 @@ class Model {
                 if (!in_array($idx,$this->_filteredIndices)) $this->_filteredIndices[] = $idx;
             }
         }
-        sort($this->_filteredIndices);
         print_r($this->_filteredIndices);
     }
     public function lastQuery() : ?int {
