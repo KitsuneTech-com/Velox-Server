@@ -122,7 +122,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     $requiredKeys[] = "where";
                     break;
             }
-            for ($i=0; $i<count($criteria); $i++){
+            $criteriaCount = $criteriaCount;
+            for ($i=0; $i<$criteriaCount; $i++){
                 $criterion = (array)$criteria[$i];
                 if (array_diff_key(array_flip($requiredKeys),$criterion) || array_diff_key($criterion,array_flip($requiredKeys))){
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
@@ -273,6 +274,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
     public function execute() : bool {
         if (count($this->_statements) == 0){
+		    //if no statements are set, try setting them and recheck
             $this->setStatements();
             if (count($this->_statements) == 0){
                 throw new VeloxException('Criteria must be set before StatementSet can be executed.',25);
