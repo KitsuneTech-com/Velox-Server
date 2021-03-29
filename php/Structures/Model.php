@@ -265,7 +265,6 @@ class Model {
         return $this->_columns;
     }
     public function data() : array {
-        echo $this->_filter;
         if ($this->_filter){
             return array_intersect_key($this->_data,array_flip($this->_filteredIndices));
         }
@@ -305,6 +304,7 @@ class Model {
             }
         }
         sort($this->_filteredIndices);
+        print_r($this->_filteredIndices);
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
