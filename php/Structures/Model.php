@@ -18,7 +18,7 @@ class Model {
     private array $_columns;
     private array $_data;
     private object $_diff;
-    private Diff|array|null $_filter;
+    private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
     private string $_keyColumn = '';
     private int|null $_lastQuery;
