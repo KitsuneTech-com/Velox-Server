@@ -265,7 +265,7 @@ class Model {
         return $this->_columns;
     }
     public function data() : array {
-        echo (!!$this->_filter);
+        echo $this->_filter;
         if ($this->_filter){
             return array_intersect_key($this->_data,array_flip($this->_filteredIndices));
         }
