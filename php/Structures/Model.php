@@ -255,6 +255,9 @@ class Model {
         if ($diff->insert) {
             $this->insert($diff->insert);
         }
+        if ($diff->select) {
+            $this->setFilter($diff);
+        }
         $this->select(true);
         $this->_delaySelect = false;
     }
