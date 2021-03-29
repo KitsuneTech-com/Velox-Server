@@ -178,6 +178,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                     $andArray[] = $column." ".$details[0]." :w_".$column;
                                     break;
                                 case "BETWEEN":
+                                case "NOT BETWEEN":
                                     $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
                                     break;
                                 default:
@@ -251,12 +252,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                         catch (Exception $ex){
                             throw new VeloxException("Operand missing in 'where' array",23);
                         }
-                        if ($data[0] == "BETWEEN") {
+                        if ($data[0] == "BETWEEN" || $data[0] == "NOT BETWEEN") {
                             try {
                                 $parameterSet['wb_'.$column] = $data[2];
                             }
                             catch (Exception $ex){
-                                throw new VeloxException('BETWEEN operator used without second operand',24);
+                                throw new VeloxException($data[0].' operator used without second operand',24);
                             }
                         }
                     }
