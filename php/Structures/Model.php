@@ -4,6 +4,7 @@ namespace KitsuneTech\Velox\Structures;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
+use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 class Model {
     
@@ -17,12 +18,15 @@ class Model {
     private array $_columns;
     private array $_data;
     private object $_diff;
+    private Diff|array|null $_filter;
+    private array $_filteredIndices = [];
     private string $_keyColumn = '';
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     
-    public string|null $instanceName;
-    public Diff|array $filter;
+    //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
+    //(such as when several Models are stored in an array)
+    public string|null $instanceName = null;
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
@@ -94,19 +98,8 @@ class Model {
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
             }
-            if ($this->filter){
-                $indices = [];
-                $whereArray = $this->filter instanceof Diff ? $this->filter->select['where'] : $this->filter['where'];
-                foreach ($whereArray as $orArray){
-                    foreach ($this->_data as $row){
-                        foreach ($orArray as $column => $criteria){
-                            if (!in_array($column,$this->_columns)){
-                                throw new VeloxException("Column '".$column."' does not exist in result set.",38);
-                            }
-                            
-                        }
-                    }
-                }
+            if ($this->_filter){
+                $this->setFilter($this->_filter);
             }
         }
     }
@@ -196,6 +189,8 @@ class Model {
     }
     
     public function sort(...$args) : void {
+        //Note: this sorting will use the default case-sensitive PHP sorting behavior, since the default
+        //SQL ORDER BY behavior is case-sensitive as well.
         $sortArray = [];
         $argCount = count($args);
         for ($i=0; $i<$argCount; $i++){
@@ -228,7 +223,7 @@ class Model {
                         $direction = $args[$i+1];
                         $i++;
                     }
-                    else { 
+                    else {
                         $direction = SORT_ASC;
                     }
                     break;
@@ -243,8 +238,6 @@ class Model {
             $direction = $flags = null;
         }
         $sortArray[] = &$this->_data;
-        
-        //This may need to be reworked to use sqllike_comp() as a custom comparison function for consistency with expected SQL sorting)
         array_multisort(...$sortArray);
     }
     
@@ -266,7 +259,45 @@ class Model {
         return $this->_columns;
     }
     public function data() : array {
-        return $this->_data;
+        if ($this->_filter){
+            return array_intersect_key($this->_data,array_flip($this->_filteredIndices));
+        }
+        else {
+            return $this->_data;
+        }
+    }
+    public function setFilter(Diff|array|null $filter) : void {
+        $this->_filter = $filter;
+        $this->_filteredIndices = [];
+        $whereArray = $this->_filter instanceof Diff ? $this->filter->select['where'] : !is_null($filter) ? $this->filter['where'] : [];
+        foreach ($whereArray as $orArray){
+            foreach ($this->_data as $idx => $row){
+                foreach ($orArray as $column => $criteria){
+                    if (!in_array($column,$this->_columns)){
+                        throw new VeloxException("Column '".$column."' does not exist in result set.",38);
+                    }
+                    switch ($criteria[0]){
+                        case "BETWEEN":
+                            if (sqllike_comp($row[$column],"<",$criteria[1]) || sqllike_comp($row[$column],">",$criteria[2])){
+                                continue 3;
+                            }
+                            break;
+                        case "NOT BETWEEN":
+                            if (sqllike_comp($row[$column],">=",$criteria[1]) && sqllike_comp($row[$column],"<=",$criteria[2])){
+                                continue 3;
+                            }
+                            break;
+                        default:
+                            if (!sqllike_comp($row[$column],$criteria[0],$criteria[1])){
+                                continue 3;
+                            }
+                            break;
+                    }
+                }
+                if (!in_array($idx,$this->_filteredIndices)) $this->_filteredIndices[] = $idx;
+            }
+        }
+        sort($this->_filteredIndices);
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
