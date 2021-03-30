@@ -273,11 +273,11 @@ class Model {
         }
     }
     public function setFilter(Diff|array|null $filter) : void {
-        $this->_filter = $filter;
+        print_r($filter);
+        $this->_filter = $filter instanceof Diff ? $filter->select[0]['where'] : (!is_null($filter) ? $filter[0][0]['where'] : []);
         $this->_filteredIndices = [];
-        $whereArray = $this->_filter instanceof Diff ? $this->_filter->select[0]['where'] : (!is_null($filter) ? $this->_filter[0][0]['where'] : []);
-        echo ($whereArray);
-        foreach ($whereArray as $orArray){
+        print_r($this->_filter);
+        foreach ($this->_filter as $orArray){
             foreach ($this->_data as $idx => $row){
                 foreach ($orArray as $column => $criteria){
                     if (!in_array($column,$this->_columns)){
