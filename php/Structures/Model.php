@@ -276,6 +276,7 @@ class Model {
         $this->_filter = $filter;
         $this->_filteredIndices = [];
         $whereArray = $this->_filter instanceof Diff ? $this->_filter->select[0]['where'] : (!is_null($filter) ? $this->_filter[0][0]['where'] : []);
+        echo ($whereArray);
         foreach ($whereArray as $orArray){
             foreach ($this->_data as $idx => $row){
                 foreach ($orArray as $column => $criteria){
