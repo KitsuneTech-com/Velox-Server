@@ -274,7 +274,6 @@ class Model {
         }
     }
     public function setFilter(Diff|array|null $filter) : void {
-        print_r($filter);
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
         $whereArray = $this->_filter[0]['where'];
