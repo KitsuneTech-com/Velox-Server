@@ -267,7 +267,7 @@ class Model {
     }
     public function data() : array {
         if ($this->_filter){
-            return array_intersect_key($this->_data,array_flip($this->_filteredIndices));
+            return array_values(array_intersect_key($this->_data,array_flip($this->_filteredIndices)));
         }
         else {
             return $this->_data;
