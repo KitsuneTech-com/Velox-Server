@@ -122,7 +122,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     $requiredKeys[] = "where";
                     break;
             }
-            $criteriaCount = $criteriaCount;
+            $criteriaCount = count($criteria);
             for ($i=0; $i<$criteriaCount; $i++){
                 $criterion = (array)$criteria[$i];
                 if (array_diff_key(array_flip($requiredKeys),$criterion) || array_diff_key($criterion,array_flip($requiredKeys))){
