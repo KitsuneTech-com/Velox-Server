@@ -256,7 +256,6 @@ class Model {
             $this->insert($diff->insert);
         }
         if ($diff->select) {
-            echo "Got here";
             $this->setFilter($diff);
         }
         $this->select(true);
