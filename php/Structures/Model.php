@@ -303,7 +303,6 @@ class Model {
                 if (!in_array($idx,$this->_filteredIndices)) $this->_filteredIndices[] = $idx;
             }
         }
-        print_r($this->_filteredIndices);
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
