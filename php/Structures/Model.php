@@ -15,8 +15,8 @@ class Model {
     private PreparedStatement|StatementSet|Transaction|null $_update;
     private PreparedStatement|StatementSet|Transaction|null $_insert;
     private PreparedStatement|StatementSet|Transaction|null $_delete;
-    private array $_columns;
-    private array $_data;
+    private array $_columns = [];
+    private array $_data = [];
     private object $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
@@ -78,8 +78,9 @@ class Model {
                 $results = [];
             }
             $this->_data = $results;
-            $this->_columns = $this->_select->results->columns();
-            
+            if ($this->_select->results instanceof ResultSet){
+                $this->_columns = $this->_select->results->columns();
+            }
             if ($this->_filter){
                 $this->setFilter($this->_filter);
             }
