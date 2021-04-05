@@ -8,7 +8,7 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 class Model {
     
-    // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd together.
+    // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
     // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
     // in the model. In Model::insert(), any columns not specified are set as NULL.   
     private PreparedStatement|StatementSet|null $_select;
@@ -150,6 +150,7 @@ class Model {
                 $namedParams = $this->_insert->getNamedParams();
                 foreach($rows as $row){
                     foreach($namedParams as $param){
+                        echo($param);
                         if (!isset($row->$param)){
                             $row->$param = null;
                         }
