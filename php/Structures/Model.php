@@ -147,12 +147,14 @@ class Model {
         $reflection = new \ReflectionClass($this->_insert);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
+                $namedParams = $this->_insert->getNamedParams();
                 foreach($rows as $row){
-                    foreach($this->columns
-                    if (!isset($row[$column])){
-                        $row[$column] = null;
+                    foreach($namedParams as $param){
+                        if (!isset($row[$param])){
+                            $row[$param] = null;
+                        }
+                        $this->_insert->addParameterSet($row);
                     }
-                    $this->_insert->addParameterSet($row);
                 }
                 break;
             case "StatementSet":
