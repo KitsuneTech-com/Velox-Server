@@ -28,7 +28,7 @@ class PreparedStatement extends Query {
         }
         $this->_paramArray[] = $paramArray;
     }
-    public function getNamedParams : array {
+    public function getNamedParams() : array {
         return $this->_namedParams;
     }
     public function getParams() : array {
