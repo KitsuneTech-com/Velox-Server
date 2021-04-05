@@ -26,7 +26,7 @@ class Transaction {
     }
     
     //Assembly
-    public function addQuery(string|Query|StatementSet &$query, ?string $keyColumn = null, ?int $resultType = VELOX_RESULT_NONE) : void {
+    public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -34,7 +34,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->queries[] = new Query($this->_baseConn,$query,$keyColumn,$resultType);
+            $this->queries[] = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
