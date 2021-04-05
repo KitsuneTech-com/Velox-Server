@@ -3,13 +3,13 @@
         <title>Velox endpoint tester</title>
         <script type="text/javascript">
             function $(id){
-            const elem = document.getElementById(id);
-            if (elem){
-                return elem;
-            }
-            else {
-                throw new Error("Element '"+id+"' does not exist.");
-            }
+                const elem = document.getElementById(id);
+                if (elem){
+                    return elem;
+                }
+                else {
+                    throw new Error("Element '"+id+"' does not exist.");
+                }
             }
             window.onload = function(){
                 $("submit").onclick = async function(e){
