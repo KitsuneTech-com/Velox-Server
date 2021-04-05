@@ -14,7 +14,7 @@ class PreparedStatement extends Query {
     public function __construct(Connection &$conn, string $sql, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_UNION, ?string $setId = null) {
         parent::__construct($conn,$sql,$queryType,$resultType);
         $paramMatch = [];
-        if (preg_match_all("/:[A-Za-z0-9]+/",$sql,$paramMatch) > 0){
+        if (preg_match_all("/:[A-Za-z0-9_]+/",$sql,$paramMatch) > 0){
             $this->_namedParams = $paramMatch[0];
             $this->_paramCount = count($this->_namedParams);
         }
