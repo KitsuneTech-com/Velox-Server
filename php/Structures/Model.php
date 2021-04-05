@@ -20,7 +20,6 @@ class Model {
     private object $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
-    private string $_keyColumn = '';
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     
@@ -149,6 +148,7 @@ class Model {
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
+                    foreach($this->columns
                     if (!isset($row[$column])){
                         $row[$column] = null;
                     }
