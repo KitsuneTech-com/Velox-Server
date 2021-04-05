@@ -7,24 +7,15 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private array $_resultArray = [];
     private array $_keys = [];
     private array $_columns = [];
-    private ?string $_keyColumn = null;
     private int $_position = 0;
     
-    public function __construct(?array $resultArray, ?string $keyColumn = null) {
+    public function __construct(?array $resultArray) {
         if ($resultArray){
             $this->_resultArray = $resultArray;
             $this->_columns = array_keys($resultArray[0]);
         }
         else {
             $this->_resultArray = [];
-        }
-        if ($keyColumn){
-            if (in_array($keyColumn,$this->_columns) || !$resultArray){
-                $this->_keyColumn = $keyColumn;
-            }
-            else {
-                throw new VeloxException("Specified key column does not exist",28);
-            }
         }
         $this->_keys = array_keys($this->_resultArray);
     }
