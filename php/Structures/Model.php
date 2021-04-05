@@ -150,7 +150,7 @@ class Model {
                 $namedParams = $this->_insert->getNamedParams();
                 foreach($rows as $row){
                     foreach($namedParams as $param){
-                        echo($param);
+                        print_r($param);
                         if (!isset($row->$param)){
                             $row->$param = null;
                         }
