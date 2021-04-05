@@ -16,8 +16,8 @@
                     e.preventDefault();
                     const url = $("endpointURL").value + "/?q=" + $("query").value;
                     const serverResponse = await fetch(url,{
-                    method: "post",
-                    body: $("postData").value
+                        method: "post",
+                        body: $("postData").value
                     });
                     $("url").innerHTML = url;
                     $("response").innerHTML = JSON.stringify(await serverResponse.json(),null,4);
