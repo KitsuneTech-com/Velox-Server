@@ -165,12 +165,11 @@ class Connection {
         }
     }
     
-    public function execute(string|Query $query, ?string $keyColumn = null, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) : ResultSet|array|bool {
+    public function execute(string|Query $query, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) : ResultSet|array|bool {
         if (gettype($query) == "string"){
-            $query = new Query($this,$query,$keyColumn,$queryType,$resultType);
+            $query = new Query($this,$query,$queryType,$resultType);
         }
         else {
-            $keyColumn = $query->keyColumn;
             $queryType = $query->queryType;
             $resultType = $query->resultType;
         }
@@ -233,7 +232,7 @@ class Connection {
                                         case VELOX_RESULT_UNION:
                                         case VELOX_RESULT_UNION_ALL:
                                             $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                            $currentResult = new ResultSet($resultArray,$keyColumn);
+                                            $currentResult = new ResultSet($resultArray);
                                             if ($firstExecution || $resultType == VELOX_RESULT_ARRAY){
                                                 $results[] = $currentResult;
                                             }
@@ -278,7 +277,7 @@ class Connection {
                                         case VELOX_RESULT_ARRAY:
                                         case VELOX_RESULT_UNION:
                                         case VELOX_RESULT_UNION_ALL:
-                                            $currentResult = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC),$keyColumn);
+                                            $currentResult = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
                                             while ($nextRow = sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC)){
                                                 $currentResult[] = $nextRow;
                                             }
@@ -318,7 +317,7 @@ class Connection {
                             case VELOX_RESULT_ARRAY:
                             case VELOX_RESULT_UNION:
                             case VELOX_RESULT_UNION_ALL:
-                                $results = new ResultSet($stmt->fetchAll(\PDO::FETCH_ASSOC),$keyColumn);
+                                $results = new ResultSet($stmt->fetchAll(\PDO::FETCH_ASSOC));
                                 break;
                             case VELOX_RESULT_FIELDS:
                                 $currentResult = [];
@@ -346,7 +345,7 @@ class Connection {
                                     case VELOX_RESULT_ARRAY:
                                     case VELOX_RESULT_UNION:
                                     case VELOX_RESULT_UNION_ALL:
-                                        $results = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC),$keyColumn);
+                                        $results = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
                                         while ($nextRow = sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC)){
                                             $results[] = $nextRow;
                                         }
