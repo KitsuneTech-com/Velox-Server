@@ -150,8 +150,8 @@ class Model {
                 $namedParams = $this->_insert->getNamedParams();
                 foreach($rows as $row){
                     foreach($namedParams as $param){
-                        if (!isset($row[$param])){
-                            $row[$param] = null;
+                        if (!isset($row->$param)){
+                            $row->$param = null;
                         }
                         $this->_insert->addParameterSet($row);
                     }
