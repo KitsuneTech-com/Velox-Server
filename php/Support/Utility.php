@@ -1,5 +1,6 @@
 <?php
 namespace KitsuneTech\Velox\Utility;
+use KitsuneTech\Velox\VeloxException as VeloxException;
 
 function recur_ksort(&$array) {
     foreach ($array as &$value) {
@@ -14,7 +15,7 @@ function isAscii($str) {
     return preg_match('/[^\x00-\x7F]/', $str) == 0;
 }
 
-function sqllike_comp(mixed $value1, string $op, mixed $value2) : bool {
+function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
     //This is based on and functionally equivalent to MySQL comparison operations.
     $v1_type = gettype($value1);
     $v2_type = gettype($value2);
