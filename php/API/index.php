@@ -84,7 +84,7 @@ if ($QUERIES['SELECT'] ?? false){
 }
 else {
     if (isset($QUERIES['UPDATE'])){
-        $QUERIES['UPDATE']->execute();    
+        $QUERIES['UPDATE']->execute();
     }
     if (isset($QUERIES['INSERT'])){
         $QUERIES['INSERT']->execute();
