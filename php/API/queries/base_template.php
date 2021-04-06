@@ -43,10 +43,10 @@ as a JSON-formatted array of objects in name-value pair format.
 */
 
 $QUERIES = [
-    'SELECT' => new StatementSet($conn, "SELECT * FROM myTable <<condition>>"),
-    'UPDATE' => new StatementSet($conn, "UPDATE myTable SET <<values>> <<condition>>"),
-    'INSERT' => new StatementSet($conn, "INSERT INTO myTable <<columns>> <<values>>"),
-    'DELETE' => new StatementSet($conn, "DELETE FROM myTable <<condition>>")
+    'SELECT' => new StatementSet($conn, "SELECT * FROM myTable WHERE <<condition>>"),
+    'UPDATE' => new StatementSet($conn, "UPDATE myTable SET <<values>> WHERE <<condition>>"),
+    'INSERT' => new StatementSet($conn, "INSERT INTO myTable (<<columns>>) VALUES (<<values>>)"),
+    'DELETE' => new StatementSet($conn, "DELETE FROM myTable WHERE <<condition>>")
 ];
 
 function postProcessing($model){
