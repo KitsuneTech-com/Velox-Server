@@ -297,6 +297,16 @@ class Model {
                                 continue 3;
                             }
                             break;
+                        case "IS NULL":
+                            if (!is_null($row[$column])){
+                                continue 3;
+                            }
+                            break;
+                        case "IS NOT NULL":
+                            if (is_null($row[$column])){
+                                continue 3;
+                            }
+                            break;
                         default:
                             if (!sqllike_comp($row[$column],$criteria[0],$criteria[1])){
                                 continue 3;
