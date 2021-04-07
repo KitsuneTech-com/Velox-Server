@@ -10,24 +10,14 @@ use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\recur_ksort;
 
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
-    private string $_baseSql;
-    public Connection $conn;
-    private array $_criteria;
-    private array $_statements;
-    private int $_position;
+    private array $_statements = [];
+    private int $_position = 0;
     public ResultSet|array|bool $results;
     public int $queryType;  //This is public so that the default can be overridden when used as a parameter for Model
     
-    public function __construct(Connection &$conn, string $baseSql = "", int $queryType = QUERY_SELECT, array|Diff $criteria = []){
-        $this->_baseSql = $baseSql;
-        $this->conn = $conn;
-        $this->_criteria = [];
-        //stored procedures are handled differently due to lack of operators
-        $this->queryType = $queryType;
-        $this->_statements = [];
-        $this->_position = 0;
-        if ($criteria instanceof Diff || count($criteria) > 0){
-            $this->addCriteria($criteria);
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
+        if ($_criteria instanceof Diff || count($_criteria) > 0){
+            $this->addCriteria($_criteria);
         }
     }
     
