@@ -9,7 +9,7 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 class Transaction {
-    public array $queries;
+    private array $_executionOrder;
     private Connection $_baseConn;
     private array $_connections = [];
     private array $_results = [];
@@ -22,7 +22,7 @@ class Transaction {
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
         }
-        $this->queries = [];
+        $this->_executionOrder = [];
     }
     
     //Assembly
@@ -34,7 +34,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->queries[] = new Query($this->_baseConn,$query,$resultType);
+            $this->_executionOrder[] = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -50,7 +50,7 @@ class Transaction {
             //Class-specific handling
             switch ($className){
                 case "PreparedStatement":
-                    if (count($this->queries) == 0 && count($this->_paramArray) > 0){
+                    if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
                         foreach ($this->_paramArray as $paramSet){
                             $query->addParameterSet($paramSet);
                         }
@@ -72,8 +72,8 @@ class Transaction {
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
-        if (count($this->queries) > 0 && $this->queries[0] instanceof PreparedStatement){
-            $this->queries[0]->addParameterSet($paramArray,$prefix);
+        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
+            $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
         }
     }
     public function getParams() : array {
@@ -87,11 +87,11 @@ class Transaction {
         }
     }
     public function executeNext() : array|bool {
-        if (!(isset($this->queries[$this->_currentIndex]))){
+        if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
-        $currentQuery = $this->queries[$this->_currentIndex];
-        $lastQuery = $this->queries[$this->_currentIndex-1] ?? null;
+        $currentQuery = $this->_executionOrder[$this->_currentIndex];
+        $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
         try {
             $currentQuery->conn->setSavepoint();
             $currentQuery->execute();
@@ -120,7 +120,7 @@ class Transaction {
   
     public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
         if (is_null($queryIndex)){
-            $queryIndex = count($this->queries)-1;
+            $queryIndex = count($this->_executionOrder)-1;
         }
         return $this->_results[$queryIndex];
     }
@@ -151,7 +151,7 @@ class Transaction {
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
-        foreach ($this->queries as $query){
+        foreach ($this->_executionOrder as $query){
             $queryDumpArray[] = $query->dumpQuery();
         }
         return $queryDumpArray;
