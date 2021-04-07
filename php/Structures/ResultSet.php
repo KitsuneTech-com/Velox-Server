@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Structures;
 
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
-    private array $_resultArray = [];
     private array $_columns = [];
     private int $_position = 0;
     
