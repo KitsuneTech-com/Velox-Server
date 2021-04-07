@@ -4,18 +4,12 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Structures;
 
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
-    private array $_resultArray = [];
-    private array $_keys = [];
     private array $_columns = [];
     private int $_position = 0;
     
-    public function __construct(?array $resultArray) {
-        if ($resultArray){
-            $this->_resultArray = $resultArray;
-            $this->_columns = array_keys($resultArray[0]);
-        }
-        else {
-            $this->_resultArray = [];
+    public function __construct(private array $_resultArray = []) {
+        if (count($this->_resultArray) > 0){
+            $this->_columns = array_keys($this->_resultArray[0]);
         }
         $this->_keys = array_keys($this->_resultArray);
     }
