@@ -15,8 +15,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public ResultSet|array|bool $results;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
-        if ($_criteria instanceof Diff || count($_criteria) > 0){
-            $this->addCriteria($_criteria);
+        if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
+            $this->addCriteria($this->_criteria);
         }
     }
     
