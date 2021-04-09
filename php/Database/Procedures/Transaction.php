@@ -9,24 +9,24 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 class Transaction {
-    private array $_executionOrder;
     private Connection $_baseConn;
     private array $_connections = [];
     private array $_results = [];
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
     private array $_paramArray = [];
+    private array $_executionOrder = []
     
     public function __construct(?Connection &$conn) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
         }
-        $this->_executionOrder = [];
     }
     
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
+        $executionCount = count($this->_executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -61,14 +61,20 @@ class Transaction {
                 
                     //add each PreparedStatement in StatementSet into $this->queries[]
                     foreach ($query as $stmt){
-                        $this->queries[] = $stmt;
+                        $this->_executionOrder[] = $stmt;
                     }
                     break;
                 case "Query":
-                    $this->queries[] = $query;
+                    $this->_executionOrder[] = $query;
                     break;
             }
-        }
+        }   
+    }
+    public function addFunction(callable $function) : void {
+        $scopedFunction = function() use ($this){
+            $function();
+        };
+        $this->_executionOrder[] = $scopedFunction;
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
@@ -79,6 +85,8 @@ class Transaction {
     public function getParams() : array {
         return $this->_paramArray;
     }
+    
+    
     
     //Execution
     public function begin() : void {
