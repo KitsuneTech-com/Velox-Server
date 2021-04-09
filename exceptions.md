@@ -35,6 +35,7 @@
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | 26   | Transaction has no active connection                          | A query string was passed to Transaction::addQuery() without first setting a connection to use. |
 | 27   | Query in transaction failed                                   | The transaction was rolled back after a failed query. See the chained exception for details.    |
+| 39   | User-defined function failed                                  | A custom function added to the Transaction failed. Check the chained exception for details.    |
 
 ### Database\Structures\ResultSet
 | Code | Text                                                          | Explanation                                                                         |
