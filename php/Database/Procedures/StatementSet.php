@@ -277,6 +277,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         return true;
     }
+    public function __invoke() : bool {
+	    return $this->execute();
+    }
     public function clear() : void {
         $this->rewind();
         $this->_statements = [];
