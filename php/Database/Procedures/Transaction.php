@@ -15,7 +15,7 @@ class Transaction {
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
     private array $_paramArray = [];
-    private array $_executionOrder = []
+    private array $_executionOrder = [];
     
     public function __construct(?Connection &$conn) {
         if (isset($conn)){
