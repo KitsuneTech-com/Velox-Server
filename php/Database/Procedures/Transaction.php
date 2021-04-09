@@ -70,9 +70,27 @@ class Transaction {
             }
         }   
     }
-    public function addFunction(callable $function) : void {
-        $scopedFunction = function() use ($this){
-            $function();
+    public function addFunction(callable &$function) : void {
+        // Any functions added with this method are passed three arguments (in order):
+        //  * A reference to the defining Transaction instance,
+        //  * A reference to the previous function or Velox procedure (if any),
+        //  * and a reference to the following function or Velox procedure (if any).
+        // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
+        // ------------------
+        // $transactionInstance = new Transaction();
+        // $myFunction = function(Transaction &$transactionRef, Query|callable|null &$previous, Query|callable|null &$next) : void {
+        //     //function code goes here
+        // }
+        // $transactionInstance.addFunction($myFunction);
+        // -------------------
+        // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
+        // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
+        
+        $currentIndex = count($this->_executionOrder);
+        $scopedFunction = function() use (&$this,&$function,$currentIndex){
+            $previous = &$this->_executionOrder[$currentIndex-1] ?? null;
+            $next = &$this->_executionOrder[$currentIndex+1] ?? null;
+            $function($this,$previous,$next);
         };
         $this->_executionOrder[] = $scopedFunction;
     }
@@ -85,8 +103,6 @@ class Transaction {
     public function getParams() : array {
         return $this->_paramArray;
     }
-    
-    
     
     //Execution
     public function begin() : void {
