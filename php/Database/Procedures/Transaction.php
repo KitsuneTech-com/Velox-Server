@@ -87,7 +87,7 @@ class Transaction {
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
         
         $currentIndex = count($this->_executionOrder);
-        $scopedFunction = function() use (&$this,&$function,$currentIndex){
+        $scopedFunction = function() use (&$function,$currentIndex){
             $previous = &$this->_executionOrder[$currentIndex-1] ?? null;
             $next = &$this->_executionOrder[$currentIndex+1] ?? null;
             $function($this,$previous,$next);
