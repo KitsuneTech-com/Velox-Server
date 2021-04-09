@@ -21,6 +21,11 @@ class Query {
         }
         return true;
     }
+    //Magic method wrapper for execute() to make Query instance callable
+    public function __invoke() : bool {
+        return $this->execute();
+    }
+    
     public function getResults() : array|ResultSet|bool {
         if (!isset($this->results)){
             throw new VeloxException("Query results not yet available",22);
