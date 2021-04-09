@@ -117,10 +117,12 @@ class Transaction {
         $currentQuery = $this->_executionOrder[$this->_currentIndex];
         $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
         try {
-            $currentQuery->conn->setSavepoint();
-            $currentQuery->execute();
-        
-            if ($lastQuery && $lastQuery->getSetId() == $currentQuery->getSetId()){
+            if ($currentQuery instanceof Query) {
+                $currentQuery->conn->setSavepoint();
+            }
+            $currentQuery();
+            
+            if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
                 $lastQueryResults = $lastQuery->getQueryResults();
                 if ($lastQueryResults instanceof ResultSet){
                     $lastQueryResults->merge($currentQuery->getResults());
@@ -129,7 +131,7 @@ class Transaction {
                     $lastQueryResults += $currentQuery->getResults();
                 }
             }
-            else {
+            elseif ($currentQuery instanceof Query) {
                 $this->_results[] = $currentQuery->results;
             }
             $this->_currentIndex++;
@@ -137,8 +139,13 @@ class Transaction {
             return $this->_lastAffected;
         }
         catch (Exception $ex){
-            $currentQuery->conn->rollBack(true);
-            throw new VeloxException("Query in transaction failed",27,$ex);
+            if ($currentQuery instanceof Query){
+                $currentQuery->conn->rollBack(true);
+                throw new VeloxException("Query in transaction failed",27,$ex);
+            }
+            else {
+                throw new VeloxException("User-defined function failed",39,$ex);
+            }
         }
     }
   
