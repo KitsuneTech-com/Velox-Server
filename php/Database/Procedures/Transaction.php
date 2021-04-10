@@ -60,7 +60,10 @@ class Transaction {
                     break;
                 case "StatementSet":
                     //do the same thing as above, except with addCriteria (needs code for this)
-                
+                    
+                    //Generate statements
+                    $query->setStatements();
+                    
                     //add each PreparedStatement in StatementSet into $this->queries[]
                     foreach ($query as $stmt){
                         $this->_executionOrder[] = &$stmt;
