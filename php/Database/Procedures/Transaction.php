@@ -88,9 +88,9 @@ class Transaction {
         
         $currentIndex = count($this->_executionOrder);
         $scopedFunction = function() use (&$function,$currentIndex){
+            echo $currentIndex;
             $previous = &$this->_executionOrder[$currentIndex-1] ?? null;
             $next = &$this->_executionOrder[$currentIndex+1] ?? null;
-            echo (get_class($previous));
             $function($this,$previous,$next);
         };
         $this->_executionOrder[] = $scopedFunction;
