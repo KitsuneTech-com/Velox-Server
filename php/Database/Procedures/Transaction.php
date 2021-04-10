@@ -86,7 +86,8 @@ class Transaction {
         // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
         
-        static $currentIndex = count($this->_executionOrder);
+        $currentIndex = count($this->_executionOrder);
+        echo ($currentIndex);
         $scopedFunction = function() use (&$function,$currentIndex){
             echo $currentIndex;
             $previous = &$this->_executionOrder[$currentIndex-1] ?? null;
