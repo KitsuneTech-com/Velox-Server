@@ -27,7 +27,6 @@ class Transaction {
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
         $executionCount = count($this->_executionOrder);
-        echo ($executionCount);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -92,7 +91,6 @@ class Transaction {
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
         
         $executionCount = count($this->_executionOrder);
-        echo ($executionCount);
         $scopedFunction = function() use (&$function,$executionCount){
             $previous = &$this->_executionOrder[$executionCount-1] ?? null;
             $next = &$this->_executionOrder[$executionCount+1] ?? null;
