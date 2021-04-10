@@ -70,7 +70,7 @@ class Transaction {
             }
         }   
     }
-    public function addFunction(callable &$function) : void {
+    public function addFunction(callable $function) : void {
         // Any functions added with this method are passed three arguments (in order):
         //  * A reference to the defining Transaction instance,
         //  * A reference to the previous function or Velox procedure (if any),
