@@ -56,18 +56,18 @@ class Transaction {
                             $query->addParameterSet($paramSet);
                         }
                     }
-                    $this->_executionOrder[] = $query;
+                    $this->_executionOrder[] = &$query;
                     break;
                 case "StatementSet":
                     //do the same thing as above, except with addCriteria (needs code for this)
                 
                     //add each PreparedStatement in StatementSet into $this->queries[]
                     foreach ($query as $stmt){
-                        $this->_executionOrder[] = $stmt;
+                        $this->_executionOrder[] = &$stmt;
                     }
                     break;
                 case "Query":
-                    $this->_executionOrder[] = $query;
+                    $this->_executionOrder[] = &$query;
                     break;
             }
         }   
