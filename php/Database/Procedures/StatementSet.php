@@ -139,7 +139,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $whereStr = "";
             $valuesStr = "";
             $columnsStr = "";
-            print_r($variation);
             switch ($this->queryType){
                 case QUERY_SELECT:
                 case QUERY_DELETE:
@@ -204,6 +203,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
                 case QUERY_INSERT:  //and fall-through for QUERY_UPDATE and QUERY_PROC
                     //format values
+                    print_r($variation);
                     $valuesArray = $variation['values'];
                     $valuesStrArray = [];
                     $columnsStrArray = [];
