@@ -122,6 +122,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     $this->_criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
                 }
                 $this->_criteria[$hashedKeys]['data'][] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? []];
+                print_r($this->_criteria);
             }
         }
     }
@@ -278,7 +279,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         return true;
     }
     public function __invoke() : bool {
-	    return $this->execute();
+	return $this->execute();
     }
     public function clear() : void {
         $this->rewind();
