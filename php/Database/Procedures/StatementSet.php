@@ -132,6 +132,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
         if (count($criteria) == 0){
             $criteria[0]['where'] = [];
+            $criteria[0]['values'] = [];
             $criteria[0]['data'] = [];
         }
         foreach($criteria as $variation){
