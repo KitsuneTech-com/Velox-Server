@@ -52,13 +52,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
     }
     public function offsetExists(mixed $offset) : bool {
-	    return isset($this->_statements[$offset]);
+        return isset($this->_statements[$offset]);
     }
     public function offsetUnset(mixed $offset) : void {
-	    unset($this->_statements[$offset]);
+        unset($this->_statements[$offset]);
     }
     public function offsetGet(mixed $offset) : PreparedStatement {
-	    return $this->_statements[$offset] ?? null;
+        return $this->_statements[$offset] ?? null;
     }
     
     //Class-specific methods
@@ -129,13 +129,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $setId = uniqid();
         $statements = [];
         $criteria = $this->_criteria;
-    
+
         if (count($criteria) == 0){
             $criteria[0]['where'] = [];
             $criteria[0]['data'] = [];
         }
         foreach($criteria as $variation){
-        	
             $whereStr = "";
             $valuesStr = "";
             $columnsStr = "";
@@ -264,7 +263,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
     public function execute() : bool {
         if (count($this->_statements) == 0){
-		    //if no statements are set, try setting them and recheck
+            //if no statements are set, try setting them and recheck
             $this->setStatements();
             if (count($this->_statements) == 0){
                 throw new VeloxException('Criteria must be set before StatementSet can be executed.',25);
@@ -279,7 +278,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         return true;
     }
     public function __invoke() : bool {
-	return $this->execute();
+        return $this->execute();
     }
     public function clear() : void {
         $this->rewind();
