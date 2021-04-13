@@ -43,35 +43,26 @@ class Transaction {
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
             }
             
-            //Get class name for following switch
-            $refl = new \ReflectionObject($query);
-            $className = $refl->getShortName();
-            
-            //Class-specific handling
-            switch ($className){
-                case "PreparedStatement":
-                    if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
+            //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
+            if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
+                //Get class name for following switch
+                $refl = new \ReflectionObject($query);
+                $className = $refl->getShortName();
+                
+                switch ($className){
+                    case "PreparedStatement":
                         foreach ($this->_paramArray as $paramSet){
                             $query->addParameterSet($paramSet);
                         }
-                    }
-                    $this->_executionOrder[] = &$query;
-                    break;
-                case "StatementSet":
-                    //do the same thing as above, except with addCriteria (needs code for this)
-                    
-                    //Generate statements
-                    $query->setStatements();
-                    
-                    //add each PreparedStatement in StatementSet into $this->queries[]
-                    foreach ($query as $stmt){
-                        $this->_executionOrder[] = &$stmt;
-                    }
-                    break;
-                case "Query":
-                    $this->_executionOrder[] = &$query;
-                    break;
+                        break;
+                    case "StatementSet":
+                        foreach ($this->_paramArray as $criteria){
+                            $query->addCriteria($criteria);
+                        }
+                        break;
+                }
             }
+            $this->_executionOrder[] = &$query;
         }   
     }
     public function addFunction(callable $function) : void {
@@ -121,7 +112,7 @@ class Transaction {
         $currentQuery = $this->_executionOrder[$this->_currentIndex];
         $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
         try {
-            if ($currentQuery instanceof Query) {
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
             }
             $currentQuery();
@@ -143,7 +134,7 @@ class Transaction {
             return $this->_lastAffected;
         }
         catch (Exception $ex){
-            if ($currentQuery instanceof Query){
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
                 $currentQuery->conn->rollBack(true);
                 throw new VeloxException("Query in transaction failed",27,$ex);
             }
