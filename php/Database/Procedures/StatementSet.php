@@ -274,6 +274,24 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $transaction->executeAll();
             $this->results = $transaction->getQueryResults();
         }
+        else {
+            $this->results = null;
+            foreach ($this->_statements as $stmt){
+                $stmt->execute();
+                $results = $stmt->getResults();
+                if (!$this->results){
+                    $this->results = $stmt->getResults();
+                }
+                else {
+                    if ($this->results instanceof ResultSet){
+                        $this->results->merge($stmt->results);
+                    }
+                    elseif (is_array($this->results)){
+                        $this->results[] = $stmt->getResults();
+                    }
+                }
+            }
+        }
         return true;
     }
     public function __invoke() : bool {
