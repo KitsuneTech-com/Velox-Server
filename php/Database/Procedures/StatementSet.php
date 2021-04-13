@@ -203,8 +203,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
                 case QUERY_INSERT:  //and fall-through for QUERY_UPDATE and QUERY_PROC
                     //format values
-                    print_r($variation);
-                    echo ("<br>");
                     $valuesArray = $variation['values'];
                     $valuesStrArray = [];
                     $columnsStrArray = [];
