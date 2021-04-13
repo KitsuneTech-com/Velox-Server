@@ -130,8 +130,12 @@ class Transaction {
                 $this->_results[] = $currentQuery->results;
             }
             $this->_currentIndex++;
-            $this->_lastAffected = $currentQuery->getLastAffected();
-            return $this->_lastAffected;
+            if ($lastQuery instanceof Closure){
+                return true;
+            }
+            else {
+                return $this->_lastAffected;
+            }
         }
         catch (Exception $ex){
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
