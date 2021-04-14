@@ -82,7 +82,6 @@ class Transaction {
         
         $executionCount = count($this->_executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
-            echo "Got here";
             $previous = &$this->_executionOrder[$executionCount-1] ?? null;
             $next = &$this->_executionOrder[$executionCount+1] ?? null;
             $boundFunction = $function->bindTo($this);
