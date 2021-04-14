@@ -115,7 +115,7 @@ class Transaction {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
             }
-            echo ($currentQuery instanceof Closure);
+            echo "got here";
             $currentQuery();
             
             if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
