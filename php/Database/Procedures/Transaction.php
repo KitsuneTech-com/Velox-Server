@@ -66,14 +66,13 @@ class Transaction {
         }   
     }
     public function addFunction(callable $function) : void {
-        // Any functions added with this method are passed three arguments (in order):
-        //  * A reference to the defining Transaction instance,
+        // Any functions added with this method are passed two arguments (in order):
         //  * A reference to the previous function or Velox procedure (if any),
         //  * and a reference to the following function or Velox procedure (if any).
         // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
         // ------------------
         // $transactionInstance = new Transaction();
-        // $myFunction = function(Transaction &$transactionRef, Query|callable|null &$previous, Query|callable|null &$next) : void {
+        // $myFunction = function(Query|callable|null &$previous, Query|callable|null &$next) : void {
         //     //function code goes here
         // }
         // $transactionInstance.addFunction($myFunction);
@@ -116,6 +115,7 @@ class Transaction {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
             }
+            echo ($currentQuery instanceof Closure);
             $currentQuery();
             
             if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
