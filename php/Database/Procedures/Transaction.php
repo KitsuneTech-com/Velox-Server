@@ -82,6 +82,7 @@ class Transaction {
         
         $executionCount = count($this->_executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
+            echo "Got here";
             $previous = &$this->_executionOrder[$executionCount-1] ?? null;
             $next = &$this->_executionOrder[$executionCount+1] ?? null;
             $boundFunction = $function->bindTo($this);
@@ -156,7 +157,7 @@ class Transaction {
   
     public function executeAll() : bool {
         try {
-            while ($next = $this->executeNext()){echo "Got here";}
+            while ($next = $this->executeNext()){}
             foreach ($this->_connections as $conn){
                 $conn->commit();
             }
