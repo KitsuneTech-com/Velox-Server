@@ -105,7 +105,7 @@ class Transaction {
             $conn->beginTransaction();
         }
     }
-    public function executeNext() : array|bool {
+    public function executeNext() : bool {
         if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
@@ -130,13 +130,9 @@ class Transaction {
             elseif ($currentQuery instanceof Query) {
                 $this->_results[] = $currentQuery->results;
             }
+            $this->_lastAffected = $currentQuery->getLastAffected();
             $this->_currentIndex++;
-            if ($lastQuery instanceof Closure){
-                return true;
-            }
-            else {
-                return $this->_lastAffected;
-            }
+            return true;
         }
         catch (Exception $ex){
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
