@@ -159,6 +159,7 @@ class Transaction {
     public function executeAll() : bool {
         try {
             while ($next = $this->executeNext()){}
+            echo "executeAll";
             foreach ($this->_connections as $conn){
                 $conn->commit();
             }
