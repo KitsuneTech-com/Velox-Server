@@ -106,7 +106,6 @@ class Transaction {
         }
     }
     public function executeNext() : array|bool {
-        echo "Got here";
         if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
@@ -159,7 +158,7 @@ class Transaction {
   
     public function executeAll() : bool {
         try {
-            while ($next = $this->executeNext()){}
+            while ($next = $this->executeNext()){echo "Got here";}
             foreach ($this->_connections as $conn){
                 $conn->commit();
             }
