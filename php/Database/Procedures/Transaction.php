@@ -109,6 +109,7 @@ class Transaction {
         if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
+        echo ($this->_currentIndex);
         $currentQuery = $this->_executionOrder[$this->_currentIndex];
         $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
         try {
@@ -156,7 +157,6 @@ class Transaction {
     }
   
     public function executeAll() : bool {
-        $this->begin();
         try {
             echo count($this->_executionOrder);
             while ($this->executeNext()){}
