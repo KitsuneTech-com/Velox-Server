@@ -85,9 +85,9 @@ class Transaction {
         $scopedFunction = function() use (&$function,$executionCount){
             $previous = &$this->_executionOrder[$executionCount-1] ?? null;
             $next = &$this->_executionOrder[$executionCount+1] ?? null;
-            $boundFunction = $function->bindTo($this,$this);
+            $boundFunction = $function->bindTo($this);
             $boundFunction($previous,$next);
-        }
+        };
         $this->_executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
