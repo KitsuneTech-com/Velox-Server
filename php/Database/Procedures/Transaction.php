@@ -106,10 +106,11 @@ class Transaction {
         }
     }
     public function executeNext() : array|bool {
+        echo ($this->_currentIndex);
         if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
-        echo ($this->_currentIndex);
+        
         $currentQuery = $this->_executionOrder[$this->_currentIndex];
         $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
         try {
@@ -158,7 +159,6 @@ class Transaction {
   
     public function executeAll() : bool {
         try {
-            echo count($this->_executionOrder);
             while ($this->executeNext()){}
             foreach ($this->_connections as $conn){
                 $conn->commit();
