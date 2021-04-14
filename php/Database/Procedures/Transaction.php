@@ -130,7 +130,7 @@ class Transaction {
             elseif ($currentQuery instanceof Query) {
                 $this->_results[] = $currentQuery->results;
             }
-            if (!$currentQuery instanceof Closure){
+            if (!($currentQuery instanceof Closure)){
                 $this->_lastAffected = $currentQuery->getLastAffected();
             }
             $this->_currentIndex++;
