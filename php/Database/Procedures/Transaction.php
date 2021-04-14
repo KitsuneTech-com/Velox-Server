@@ -115,7 +115,6 @@ class Transaction {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
             }
-            echo "got here";
             $currentQuery();
             
             if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
@@ -159,6 +158,7 @@ class Transaction {
     public function executeAll() : bool {
         $this->begin();
         try {
+            echo count($this->_executionOrder);
             while ($this->executeNext()){}
             foreach ($this->_connections as $conn){
                 $conn->commit();
