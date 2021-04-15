@@ -12,7 +12,7 @@ use function KitsuneTech\Velox\Utility\recur_ksort;
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
-    public ResultSet|array|bool $results;
+    public ResultSet|array|bool|null $results;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
         if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
@@ -52,13 +52,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
     }
     public function offsetExists(mixed $offset) : bool {
-	    return isset($this->_statements[$offset]);
+        return isset($this->_statements[$offset]);
     }
     public function offsetUnset(mixed $offset) : void {
-	    unset($this->_statements[$offset]);
+        unset($this->_statements[$offset]);
     }
     public function offsetGet(mixed $offset) : PreparedStatement {
-	    return $this->_statements[$offset] ?? null;
+        return $this->_statements[$offset] ?? null;
     }
     
     //Class-specific methods
@@ -129,17 +129,16 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $setId = uniqid();
         $statements = [];
         $criteria = $this->_criteria;
-    
+
         if (count($criteria) == 0){
             $criteria[0]['where'] = [];
+            $criteria[0]['values'] = [];
             $criteria[0]['data'] = [];
         }
         foreach($criteria as $variation){
-        
             $whereStr = "";
             $valuesStr = "";
             $columnsStr = "";
-        
             switch ($this->queryType){
                 case QUERY_SELECT:
                 case QUERY_DELETE:
@@ -263,7 +262,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
     public function execute() : bool {
         if (count($this->_statements) == 0){
-		    //if no statements are set, try setting them and recheck
+            //if no statements are set, try setting them and recheck
             $this->setStatements();
             if (count($this->_statements) == 0){
                 throw new VeloxException('Criteria must be set before StatementSet can be executed.',25);
@@ -275,7 +274,28 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $transaction->executeAll();
             $this->results = $transaction->getQueryResults();
         }
+        else {
+            $this->results = null;
+            foreach ($this->_statements as $stmt){
+                $stmt->execute();
+                $results = $stmt->getResults();
+                if (!$this->results){
+                    $this->results = $stmt->getResults();
+                }
+                else {
+                    if ($this->results instanceof ResultSet){
+                        $this->results->merge($stmt->results);
+                    }
+                    elseif (is_array($this->results)){
+                        $this->results[] = $stmt->getResults();
+                    }
+                }
+            }
+        }
         return true;
+    }
+    public function __invoke() : bool {
+        return $this->execute();
     }
     public function clear() : void {
         $this->rewind();

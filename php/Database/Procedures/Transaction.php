@@ -9,24 +9,24 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 class Transaction {
-    public array $queries;
     private Connection $_baseConn;
     private array $_connections = [];
     private array $_results = [];
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
     private array $_paramArray = [];
+    private array $_executionOrder = [];
     
     public function __construct(?Connection &$conn) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
         }
-        $this->queries = [];
     }
     
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
+        $executionCount = count($this->_executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -34,7 +34,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->queries[] = new Query($this->_baseConn,$query,$resultType);
+            $this->_executionOrder[] = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -43,37 +43,56 @@ class Transaction {
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
             }
             
-            //Get class name for following switch
-            $refl = new \ReflectionObject($query);
-            $className = $refl->getShortName();
-            
-            //Class-specific handling
-            switch ($className){
-                case "PreparedStatement":
-                    if (count($this->queries) == 0 && count($this->_paramArray) > 0){
+            //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
+            if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
+                //Get class name for following switch
+                $refl = new \ReflectionObject($query);
+                $className = $refl->getShortName();
+                
+                switch ($className){
+                    case "PreparedStatement":
                         foreach ($this->_paramArray as $paramSet){
                             $query->addParameterSet($paramSet);
                         }
-                    }
-                    break;
-                case "StatementSet":
-                    //do the same thing as above, except with addCriteria (needs code for this)
-                
-                    //add each PreparedStatement in StatementSet into $this->queries[]
-                    foreach ($query as $stmt){
-                        $this->queries[] = $stmt;
-                    }
-                    break;
-                case "Query":
-                    $this->queries[] = $query;
-                    break;
+                        break;
+                    case "StatementSet":
+                        foreach ($this->_paramArray as $criteria){
+                            $query->addCriteria($criteria);
+                        }
+                        break;
+                }
             }
-        }
+            $this->_executionOrder[] = &$query;
+        }   
+    }
+    public function addFunction(callable $function) : void {
+        // Any functions added with this method are passed two arguments (in order):
+        //  * A reference to the previous function or Velox procedure (if any),
+        //  * and a reference to the following function or Velox procedure (if any).
+        // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
+        // ------------------
+        // $transactionInstance = new Transaction();
+        // $myFunction = function(Query|callable|null &$previous, Query|callable|null &$next) : void {
+        //     //function code goes here
+        // }
+        // $transactionInstance.addFunction($myFunction);
+        // -------------------
+        // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
+        // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
+        
+        $executionCount = count($this->_executionOrder);
+        $scopedFunction = function() use (&$function,$executionCount){
+            $previous = &$this->_executionOrder[$executionCount-1] ?? null;
+            $next = &$this->_executionOrder[$executionCount+1] ?? null;
+            $boundFunction = $function->bindTo($this);
+            $boundFunction($previous,$next);
+        };
+        $this->_executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
-        if (count($this->queries) > 0 && $this->queries[0] instanceof PreparedStatement){
-            $this->queries[0]->addParameterSet($paramArray,$prefix);
+        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
+            $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
         }
     }
     public function getParams() : array {
@@ -86,17 +105,20 @@ class Transaction {
             $conn->beginTransaction();
         }
     }
-    public function executeNext() : array|bool {
-        if (!(isset($this->queries[$this->_currentIndex]))){
+    public function executeNext() : bool {
+        if (!(isset($this->_executionOrder[$this->_currentIndex]))){
             return false;
         }
-        $currentQuery = $this->queries[$this->_currentIndex];
-        $lastQuery = $this->queries[$this->_currentIndex-1] ?? null;
-        try {
-            $currentQuery->conn->setSavepoint();
-            $currentQuery->execute();
         
-            if ($lastQuery && $lastQuery->getSetId() == $currentQuery->getSetId()){
+        $currentQuery = $this->_executionOrder[$this->_currentIndex];
+        $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
+        try {
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
+                $currentQuery->conn->setSavepoint();
+            }
+            $currentQuery();
+            
+            if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
                 $lastQueryResults = $lastQuery->getQueryResults();
                 if ($lastQueryResults instanceof ResultSet){
                     $lastQueryResults->merge($currentQuery->getResults());
@@ -105,30 +127,36 @@ class Transaction {
                     $lastQueryResults += $currentQuery->getResults();
                 }
             }
-            else {
+            elseif ($currentQuery instanceof Query) {
                 $this->_results[] = $currentQuery->results;
             }
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
+                $this->_lastAffected = $currentQuery->getLastAffected();
+            }
             $this->_currentIndex++;
-            $this->_lastAffected = $currentQuery->getLastAffected();
-            return $this->_lastAffected;
+            return true;
         }
         catch (Exception $ex){
-            $currentQuery->conn->rollBack(true);
-            throw new VeloxException("Query in transaction failed",27,$ex);
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
+                $currentQuery->conn->rollBack(true);
+                throw new VeloxException("Query in transaction failed",27,$ex);
+            }
+            else {
+                throw new VeloxException("User-defined function failed",39,$ex);
+            }
         }
     }
   
     public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
         if (is_null($queryIndex)){
-            $queryIndex = count($this->queries)-1;
+            $queryIndex = count($this->_executionOrder)-1;
         }
         return $this->_results[$queryIndex];
     }
   
     public function executeAll() : bool {
-        $this->begin();
         try {
-            while ($this->executeNext()){}
+            while ($next = $this->executeNext()){}
             foreach ($this->_connections as $conn){
                 $conn->commit();
             }
@@ -151,7 +179,7 @@ class Transaction {
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
-        foreach ($this->queries as $query){
+        foreach ($this->_executionOrder as $query){
             $queryDumpArray[] = $query->dumpQuery();
         }
         return $queryDumpArray;
