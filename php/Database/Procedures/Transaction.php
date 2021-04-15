@@ -151,7 +151,12 @@ class Transaction {
         if (is_null($queryIndex)){
             $queryIndex = count($this->_executionOrder)-1;
         }
-        return $this->_results[$queryIndex];
+        if (isset($this->_results[$queryIndex])){
+            return $this->_results[$queryIndex];
+        }
+        else {
+            return false;
+        }
     }
   
     public function executeAll() : bool {
