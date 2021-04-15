@@ -153,7 +153,6 @@ class Model {
                         if (!isset($row[$param])){
                             $row[$param] = null;
                         }
-                        print_r($row);
                         $this->_insert->addParameterSet($row);
                     }
                 }
