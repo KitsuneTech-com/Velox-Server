@@ -271,6 +271,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         if (!$this->conn->inTransaction()){
             $transaction = new Transaction($this->conn);
             $transaction->addQuery($this);
+            $transaction->begin();
             $transaction->executeAll();
             $this->results = $transaction->getQueryResults();
         }
