@@ -104,5 +104,5 @@ if (isset($VELOX_MODEL)){
     $VELOX_MODEL->export();
 }
 else {
-    echo "{lastQuery: ".time().", columns: {}, data: {} }";
+    echo json_encode((object)["lastQuery"=>time(), "columns"=>(object)[], "data"=>(object)[]]);
 }
