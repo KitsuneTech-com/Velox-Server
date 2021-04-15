@@ -104,5 +104,6 @@ if (isset($VELOX_MODEL)){
     $VELOX_MODEL->export();
 }
 else {
+    header("Content-Type: text/json");
     echo json_encode((object)["lastQuery"=>time(), "columns"=>(object)[], "data"=>(object)[]]);
 }
