@@ -130,7 +130,7 @@ class Transaction {
             elseif ($currentQuery instanceof Query) {
                 $this->_results[] = $currentQuery->results;
             }
-            if (!is_function($currentQuery)){
+            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
                 $this->_lastAffected = $currentQuery->getLastAffected();
             }
             $this->_currentIndex++;
