@@ -116,23 +116,14 @@ class Transaction {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
             }
+            
             $currentQuery();
             
-            if ($lastQuery instanceof PreparedStatement && $currentQuery instanceof PreparedStatement && $lastQuery->getSetId() == $currentQuery->getSetId()){
-                $lastQueryResults = $lastQuery->getQueryResults();
-                if ($lastQueryResults instanceof ResultSet){
-                    $lastQueryResults->merge($currentQuery->getResults());
-                }
-                elseif (is_array($lastQueryResults)){
-                    $lastQueryResults += $currentQuery->getResults();
-                }
-            }
-            elseif ($currentQuery instanceof Query) {
-                $this->_results[] = $currentQuery->results;
-            }
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
+                $this->_results[] = $currentQuery->results;
                 $this->_lastAffected = $currentQuery->getLastAffected();
             }
+            
             $this->_currentIndex++;
             return true;
         }
