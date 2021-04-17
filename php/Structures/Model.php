@@ -16,6 +16,7 @@ class Model {
     private PreparedStatement|StatementSet|Transaction|null $_insert;
     private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns = [];
+    private array $_submodels = []; 
     private array $_data = [];
     private object $_diff;
     private Diff|array|null $_filter = null;
@@ -275,6 +276,10 @@ class Model {
         else {
             return $this->_data;
         }
+    }
+    public function addSubmodel(Model $submodel, string $name) : void {
+        $submodel->instanceName = $name
+        $this->_submodels[$name] = $submodel;
     }
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
