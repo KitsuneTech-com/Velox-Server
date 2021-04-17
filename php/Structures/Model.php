@@ -16,7 +16,6 @@ class Model {
     private PreparedStatement|StatementSet|Transaction|null $_insert;
     private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns = [];
-    private array $_submodels = []; 
     private array $_data = [];
     private object $_diff;
     private Diff|array|null $_filter = null;
@@ -27,6 +26,9 @@ class Model {
     //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
     //(such as when several Models are stored in an array)
     public string|null $instanceName = null;
+    
+    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
+    public array $submodels = []; 
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
