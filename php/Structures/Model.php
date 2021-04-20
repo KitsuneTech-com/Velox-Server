@@ -289,7 +289,7 @@ class Model {
         return $this->_diff;
     }
     public function addSubmodel(Model $submodel, string $name) : void {
-        $submodel->instanceName = $name
+        $submodel->instanceName = $name;
         $this->_submodels[$name] = $submodel;
     }
     public function setFilter(Diff|array|null $filter) : void {
