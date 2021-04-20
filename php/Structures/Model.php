@@ -257,7 +257,7 @@ class Model {
         array_multisort(...$sortArray);
     }
     
-    public function synchronize(Diff $diff){
+    public function synchronize(Diff $diff) : void {
         $this->_delaySelect = true;
         if ($diff->update) {
             $this->update($diff->update);
