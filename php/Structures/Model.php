@@ -274,7 +274,7 @@ class Model {
         $this->select();
         $this->_delaySelect = false;
     }
-    public function colums() : array {
+    public function columns() : array {
         return $this->_columns;
     }
     public function data() : array {
