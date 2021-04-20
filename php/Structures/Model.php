@@ -17,7 +17,7 @@ class Model {
     private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns = [];
     private array $_data = [];
-    private array $_diff = [];
+    private Diff $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery;
