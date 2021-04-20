@@ -17,7 +17,7 @@ class Model {
     private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns = [];
     private array $_data = [];
-    private object $_diff;
+    private array $_diff = [];
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery;
@@ -27,10 +27,14 @@ class Model {
     //(such as when several Models are stored in an array)
     public string|null $instanceName = null;
     
-    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
-    public array $submodels = []; 
+    //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
+    // (false by default: returns full resultset)
+    public bool $returnDiff = false;
     
-    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
+    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
+    public array $submodels = [];
+    
+    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null, bool $deferSelect = true){
         $this->_select = $select;
         if ($update && !($update instanceof Transaction)) {
             $update->queryType = QUERY_UPDATE;
@@ -51,10 +55,12 @@ class Model {
         $this->_delete = $delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
         $this->instanceName = null;
-        $this->select();
+        if (!$deferSelect) {
+            $this->select();
+        }
     }
     
-    public function select(bool $diff = false) : Diff|bool {
+    public function select() : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -79,15 +85,12 @@ class Model {
             else {
                 $results = [];
             }
-            $this->_data = $results;
+            
             if ($this->_select->results instanceof ResultSet){
                 $this->_columns = $this->_select->results->columns();
             }
-            if ($this->_filter){
-                $this->setFilter($this->_filter);
-            }
             
-            if ($diff) {
+            if ($this->returnDiff) {
                 $this->_diff = new Diff();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
@@ -103,11 +106,14 @@ class Model {
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_diff;
             }
             else {
-                return true;
+                $this->_data = $results;
             }
+            if ($this->_filter){
+                $this->setFilter($this->_filter);
+            }
+            return true;
         }
     }
     
@@ -135,12 +141,12 @@ class Model {
         
         $this->_update->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
     
-    public function insert(array $rows) : bool {
+    public function insert(array $rows, bool $diff = false) : bool {
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
         }
@@ -167,7 +173,7 @@ class Model {
         $this->_insert->execute();
         
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -193,7 +199,7 @@ class Model {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -265,10 +271,10 @@ class Model {
         if ($diff->select) {
             $this->setFilter($diff);
         }
-        $this->select(true);
+        $this->select();
         $this->_delaySelect = false;
     }
-    public function columns() : array {
+    public function colums() : array {
         return $this->_columns;
     }
     public function data() : array {
@@ -278,6 +284,9 @@ class Model {
         else {
             return $this->_data;
         }
+    }
+    public function diff() : Diff {
+        return $this->_diff;
     }
     public function addSubmodel(Model $submodel, string $name) : void {
         $submodel->instanceName = $name
