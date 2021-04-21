@@ -8,13 +8,9 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 class Model {
     
-    // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
-    // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
-    // in the model. In Model::insert(), any columns not specified are set as NULL.   
-    private PreparedStatement|StatementSet|null $_select;
-    private PreparedStatement|StatementSet|Transaction|null $_update;
-    private PreparedStatement|StatementSet|Transaction|null $_insert;
-    private PreparedStatement|StatementSet|Transaction|null $_delete;
+    // Note: in Model->update() and Model->delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
+    // In Model->update() and Model->insert(), $values is an array of associative arrays, the keys of which are the column names represented
+    // in the model. In Model->insert(), any columns not specified are set as NULL.   
     private array $_columns = [];
     private array $_data = [];
     private Diff $_diff;
@@ -34,30 +30,34 @@ class Model {
     //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
     public array $submodels = [];
     
-    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null, bool $deferSelect = true){
-        $this->_select = $select;
-        if ($update && !($update instanceof Transaction)) {
-            $update->queryType = QUERY_UPDATE;
-            $update->resultType = VELOX_RESULT_NONE;
+    //Used to join nested Models by a specific column.
+    public ?string $primaryKey = null;
+    private array $foreignKeys = [];
+    
+    public function __construct(
+            private PreparedStatement|StatementSet $_select = null,
+            private PreparedStatement|StatementSet|Transaction $_update = null,
+            private PreparedStatement|StatementSet|Transaction $_insert = null,
+            private PreparedStatement|StatementSet|Transaction $_delete = null,
+            public ?string $instanceName = null
+        ){
+        if ($this->_update && !($this->_update instanceof Transaction)) {
+            $this->_update->queryType = QUERY_UPDATE;
+            $this->_update->resultType = VELOX_RESULT_NONE;
         }
-        if ($insert && !($insert instanceof Transaction)) {
-            $insert->queryType = QUERY_INSERT;
-            $insert->resultType = VELOX_RESULT_NONE;
+        if ($this->_insert && !($this->_insert instanceof Transaction)) {
+            $this->_insert->queryType = QUERY_INSERT;
+            $this->_insert->resultType = VELOX_RESULT_NONE;
         }
-        if ($delete && !($delete instanceof Transaction)) {
-            $delete->queryType = QUERY_DELETE;
-            $delete->resultType = VELOX_RESULT_NONE;
+        if ($this->_delete && !($this->_delete instanceof Transaction)) {
+            $this->_delete->queryType = QUERY_DELETE;
+            $this->_delete->resultType = VELOX_RESULT_NONE;
         }
-        $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
-        $this->_select = $select ?? null;
-        $this->_update = $update ?? new Transaction($conn);
-        $this->_insert = $insert ?? new Transaction($conn);
-        $this->_delete = $delete ?? new Transaction($conn);
+        $conn = $this->_select->conn ?? $this->_update->conn ?? $this->_insert->conn ?? $this->_delete->conn ?? null;
+        $this->_update = $this->_update ?? new Transaction($conn);
+        $this->_insert = $this->_insert ?? new Transaction($conn);
+        $this->_delete = $this->_delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
-        $this->instanceName = null;
-        if (!$deferSelect) {
-            $this->select();
-        }
     }
     
     public function select() : Diff|bool {
