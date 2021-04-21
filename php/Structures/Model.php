@@ -19,10 +19,6 @@ class Model {
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     
-    //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
-    //(such as when several Models are stored in an array)
-    public string|null $instanceName = null;
-    
     //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
     // (false by default: returns full resultset)
     public bool $returnDiff = false;
@@ -30,7 +26,7 @@ class Model {
     //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
     public array $submodels = [];
     
-    //Used to join nested Models by a specific column.
+    //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
     public ?string $primaryKey = null;
     private array $foreignKeys = [];
     
