@@ -28,7 +28,6 @@ class Model {
     
     //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
     public ?string $primaryKey = null;
-    private array $foreignKeys = [];
     
     public function __construct(
             private PreparedStatement|StatementSet $_select = null,
@@ -75,15 +74,29 @@ class Model {
                         throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
                 }
             }
-            elseif ($this->_select->results instanceof ResultSet){
+            if ($this->_select->results instanceof ResultSet){
                 $results = $this->_select->results->getRawData();
+                $this->_columns = $this->_select->results->columns();
             }
             else {
                 $results = [];
             }
             
-            if ($this->_select->results instanceof ResultSet){
-                $this->_columns = $this->_select->results->columns();
+            foreach ($this->submodels as $fk => $submodel){
+                $submodel->select();
+                $pk = $submodel->primaryKey;
+                $submodel->sort($pk,SORT_ASC);
+                $pk_column = array_column($submodel->data(),$pk);
+                $this->sort($fk,SORT_ASC);
+                foreach ($this->_data as $index => $row){
+                    $fk_value = $this->_data[$fk];
+                    $pk_indices = array_keys($pk_column,$fk_value);
+                    $subdata = [];
+                    foreach ($pk_indices as $idx){
+                        $subdata[] = $submodel->data()[$idx];
+                    }
+                    $this->_data[$fk] = $subdata;
+                }
             }
             
             if ($this->returnDiff) {
@@ -284,7 +297,7 @@ class Model {
     public function diff() : Diff {
         return $this->_diff;
     }
-    public function addSubmodel(Model $submodel, string $name) : void {
+    public function addSubmodel(Model $submodel, string $column) : void {
         $submodel->instanceName = $name;
         $this->_submodels[$name] = $submodel;
     }
