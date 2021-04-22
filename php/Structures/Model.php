@@ -82,20 +82,21 @@ class Model {
                 $results = [];
             }
             
-            foreach ($this->submodels as $fk => $submodel){
+            foreach ($this->submodels as $name => $submodel){
                 $submodel->select();
-                $pk = $submodel->primaryKey;
-                $submodel->sort($pk,SORT_ASC);
-                $pk_column = array_column($submodel->data(),$pk);
-                $this->sort($fk,SORT_ASC);
+                $pk = $this->primaryKey;
+                $fk = $submodel->foreignKey;
+                $submodel->object->sort($fk,SORT_ASC);
+                $fk_column = array_column($submodel->object->data(),$fk);
+                $this->sort($pk,SORT_ASC);
                 foreach ($this->_data as $index => $row){
-                    $fk_value = $this->_data[$fk];
-                    $pk_indices = array_keys($pk_column,$fk_value);
+                    $fk_value = $this->_data[$pk];
+                    $fk_indices = array_keys($fk_column,$fk_value);
                     $subdata = [];
-                    foreach ($pk_indices as $idx){
-                        $subdata[] = $submodel->data()[$idx];
+                    foreach ($fk_indices as $idx){
+                        $subdata[] = $submodel->object->data()[$idx];
                     }
-                    $this->_data[$fk] = $subdata;
+                    $this->_data[$name] = $subdata;
                 }
             }
             
@@ -137,13 +138,35 @@ class Model {
             $this->_update->clear();
         }
         $reflection = new \ReflectionClass($this->_update);
+        $submodelCount = count($this->submodels);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
+                    if ($submodelCount > 0){
+                        foreach ($row as $name => $value){
+                            if (is_array($value)){
+                                $submodels[$name]->object->addParameterSet($value);
+                                unset($row[$column]);
+                            }
+                        }
+                    }
                     $this->_update->addParameterSet($row);
                 }
                 break;
             case "StatementSet":
+                if ($submodelCount > 0){
+                    foreach ($rows as &$row){
+                        foreach ($row as $column => $subcriteria){
+                            if (is_array($subcriteria)){
+                                foreach ($subcriteria as $row){
+                                    $row->where[$submodels[$column]->primaryKey] = ["=",$
+                                }
+                                $submodels[$column]->addCriteria($value);
+                                unset ($row[$column]);
+                            }
+                        }
+                    }
+                }
                 $this->_update->addCriteria($rows);
                 break;
         }
@@ -297,9 +320,12 @@ class Model {
     public function diff() : Diff {
         return $this->_diff;
     }
-    public function addSubmodel(Model $submodel, string $column) : void {
+    public function addSubmodel(string $name, Model $submodel, string $foreignKey) : void {
+        //$name is the desired column name for export
+        //$submodel is the Model object to be used as the submodel
+        //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column 
         $submodel->instanceName = $name;
-        $this->_submodels[$name] = $submodel;
+        $this->_submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
     }
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
