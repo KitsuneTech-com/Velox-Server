@@ -33,30 +33,16 @@ if (!file_exists($queryFileName)){
 
 //Generate array (try decoding JSON request first; if it's not JSON, fallback to standard POST
 try {
-    $post_array = json_decode(file_get_contents("php://input"),true,512,JSON_THROW_ON_ERROR);
+    $test = json_decode(file_get_contents("php://input"),true,512,JSON_THROW_ON_ERROR);
+    //If the test succeeds, then we got valid JSON, so use that string
+    $post = file_get_contents("php://input");
 }
 catch(Exception $ex){
-    $post_array = $_POST;
+    //If the test for valid JSON fails, then we expect standard form-encoded POST. JSON encode that.
+    $post = json_encode($_POST);
 }
 
-//Assign variables from array
-$SELECT = $post_array['select'] ?? [];
-$UPDATE = $post_array['update'] ?? [];
-$INSERT = $post_array['insert'] ?? [];
-$DELETE = $post_array['delete'] ?? [];
-$META = $post_array['meta'] ?? [];
-
-
-if ($SELECT || $UPDATE || $INSERT || $DELETE){
-    $DIFF = new Diff();
-    $DIFF->select = is_array($SELECT) ? $SELECT : json_decode($SELECT);
-    $DIFF->update = is_array($UPDATE) ? $UPDATE : json_decode($UPDATE);
-    $DIFF->insert = is_array($INSERT) ? $INSERT : json_decode($INSERT);
-    $DIFF->delete = is_array($DELETE) ? $DELETE : json_decode($DELETE);
-}
-else {
-    $DIFF = null;
-}
+$DIFF = new Diff($post);
 
 $QUERIES = [];
 
@@ -67,7 +53,7 @@ require_once $queryFileName;
 
 //Allow pre-processing of data prior to query call (such as password hashing, etc.)
 if (function_exists("preProcessing")){
-    preProcessing($SELECT,$UPDATE,$INSERT,$DELETE);
+    preProcessing($DIFF);
 }
 
 if ($QUERIES['SELECT'] ?? false){
