@@ -16,6 +16,33 @@ if ((@include_once $autoloaderPath) === false){
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\{Model, Diff};
 
+function createSubmodel(Model &$parentModel, array $queries, string $name) : void {
+    foreach ($queries as $key => &$procedure){
+        $nested = [];
+        switch ($key){
+            case 'SELECT':
+            case 'INSERT':
+            case 'UPDATE':
+            case 'DELETE':
+            case 'PK':
+            case 'FK':
+                $$key = &$procedure;
+                break;
+            default:
+                if (is_array($procedure)){
+                    $nested[$key] = $procedure;
+                }
+                break;
+        }
+        $submodel = new Model($SELECT,$UPDATE,$INSERT,$DELETE);
+        $submodel->primaryKey = $PK;
+        foreach ($nested as $name => $queries){
+            createSubmodel($submodel,$queries,$name);
+        }
+        $parentModel->addSubmodel($name,$submodel,$FK);
+    }
+}
+
 //The endpoint uses the 'q' GET parameter to find the appropriate query definition, so this parameter must be sent on the request.
 if (!isset($_GET['q'])){
     throw new VeloxException("No query name specified. Name must be specified as a '?q=' GET parameter on the request.",1);
@@ -58,6 +85,11 @@ if (function_exists("preProcessing")){
 
 if ($QUERIES['SELECT'] ?? false){
     $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
+    foreach ($QUERIES as $key => $value){
+        if (is_array($value)){
+            createSubmodel($VELOX_MODEL,$value,$key);
+        }
+    }
     if ($DIFF){
         $VELOX_MODEL->synchronize($DIFF);
     }
