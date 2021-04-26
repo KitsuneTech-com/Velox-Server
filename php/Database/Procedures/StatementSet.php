@@ -298,9 +298,14 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function __invoke() : bool {
         return $this->execute();
     }
+    public function __clone() : void {
+        //Cloned instances should not retain generated statements or results
+        $this->clear();
+    }
     public function clear() : void {
         $this->rewind();
         $this->_statements = [];
+        $this->results = [];
     }
     public function getLastAffected() : array {
         $affected = [];
