@@ -44,7 +44,7 @@ class Transaction {
             }
             
             //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
+            if (!$this->_executionOrder && !!$this->_paramArray){
                 //Get class name for following switch
                 $refl = new \ReflectionObject($query);
                 $className = $refl->getShortName();
@@ -91,7 +91,7 @@ class Transaction {
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
-        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
+        if (!!$this->_executionOrder && $this->_executionOrder[0] instanceof PreparedStatement){
             $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
         }
     }
