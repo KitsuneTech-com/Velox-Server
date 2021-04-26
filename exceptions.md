@@ -51,6 +51,7 @@
 | 40   | Select query required for DML queries on nested Models        | A nested Model was defined without a select query set on the parent Model. Submodels need this in order to match the parent's primary key. |
 | 41   | primaryKey missing on parent of nested Model                  | A query was attempted on a nested Model without a primaryKey property set. This needs to be set in order to join the submodel(s). |
 | 42   | Foreign key cannot be empty                                   | The foreign key argument on addSubquery() cannot be an empty string.                |
+| 43   | Foreign key column 'xxxx' does not exist in submodel.         | The specified foreign key isn't a column in the submodel it was defined for. Make sure the key matches a column in the underlying query. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
