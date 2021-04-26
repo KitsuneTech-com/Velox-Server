@@ -1,4 +1,5 @@
 ## VeloxException codes/descriptions (subject to change during development)
+Note: exceptions are not necessarily sequential per class. Numbers are added as needed during development.
 
 ### Database\Connection
 | Code | Text                                                          | Explanation                                                                         |
@@ -29,6 +30,7 @@
 | 24   | BETWEEN operator used without second operand                  | If BETWEEN is used as an operator, two operands must be specified in the array.     |
 | 25   | Criteria must be set before StatementSet can be executed.     | StatementSet cannot be executed without specifying at least one set of conditions.  |
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
+| 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
 
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |
