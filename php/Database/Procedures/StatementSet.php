@@ -15,7 +15,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public ResultSet|array|bool|null $results;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
-        if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
+        if ($this->_criteria instanceof Diff || !!$this->_criteria){
             $this->addCriteria($this->_criteria);
         }
     }
@@ -130,7 +130,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $statements = [];
         $criteria = $this->_criteria;
 
-        if (count($criteria) == 0){
+        if (!$criteria){
             $criteria[0]['where'] = [];
             $criteria[0]['values'] = [];
             $criteria[0]['data'] = [];
@@ -261,10 +261,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $this->_statements = $statements;
     }
     public function execute() : bool {
-        if (count($this->_statements) == 0){
+        if (!$this->_statements){
             //if no statements are set, try setting them and recheck
             $this->setStatements();
-            if (count($this->_statements) == 0){
+            if (!$this->_statements){
                 throw new VeloxException('Criteria must be set before StatementSet can be executed.',25);
             }
         }
