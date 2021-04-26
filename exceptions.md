@@ -48,7 +48,9 @@
 | 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
 | 37   | The associated procedure for xxxx has not been defined.       | In order to call the given Model method, the corresponding procedure must have been defined in the constructor call. |
 | 38   | Column 'xxxx' does not exist in result set.                   | Attempted to filter on a column that doesn't exist in the result set.               |
-| 40   | Select query required for DML queries on nested Models        | A nested Model was defined without a SELECT query set on the parent Model. Submodels need this in order to match the parent's primary key. |
+| 40   | Select query required for DML queries on nested Models        | A nested Model was defined without a select query set on the parent Model. Submodels need this in order to match the parent's primary key. |
+| 41   | primaryKey missing on parent of nested Model                  | A select was attempted on a nested Model without a primaryKey property set. This needs to be set in order to join the submodel(s). |
+| 42   | Foreign key cannot be empty                                   | The foreign key argument on addSubquery() cannot be an empty string.                |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
