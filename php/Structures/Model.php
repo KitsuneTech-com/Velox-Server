@@ -134,6 +134,12 @@ class Model {
         if (!$this->_update){
             throw new VeloxException('The associated procedure for update has not been defined.',37);
         }
+        elseif (count($this->_submodels) > 0){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
+        }
         elseif ($this->_update instanceof PreparedStatement){
             $this->_update->clear();
         }
@@ -182,6 +188,12 @@ class Model {
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
         }
+        elseif (count($this->_submodels) > 0){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
+        }
         elseif ($this->_insert instanceof PreparedStatement){
             $this->_insert->clear();
         }
@@ -213,6 +225,12 @@ class Model {
     public function delete(array $rows) : bool {
         if (!$this->_delete){
             throw new VeloxException('The associated procedure for delete has not been defined.',37);
+        }
+        elseif (count($this->_submodels) > 0){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
         }
         elseif ($this->_delete instanceof PreparedStatement){
             $this->_delete->clear();
