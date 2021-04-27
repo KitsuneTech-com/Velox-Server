@@ -149,33 +149,20 @@ class Model {
             $this->_select();
             //Hold on to the current filter to reapply later
             $currentFilter = $this->_filter;
-            //Make sure the nested Models are cleared
+            //Cache updated submodel names so we only query the ones needed
+            $updatedSubmodels = [];
         }
         elseif ($this->_update instanceof PreparedStatement){
             $this->_update->clear();
         }
         $reflection = new \ReflectionClass($this->_update);
+        $statementType = $reflection->getShortName();
         
-        switch ($reflection->getShortName()){
+        switch ($statementType){
             case "PreparedStatement":
                 foreach($rows as $row){
-                    if ($hasSubmodels){
-                        foreach ($row as $name => $value){
-                            if (is_array($value)){
-                                $this->setFilter($value);
-                                $filteredResults = $this->data();
-                                $filteredKeys = array_column($filteredResults,$this->primaryKey);
-                                $fk = $submodels[$name]->object->foreignKey;
-                                foreach ($filteredKeys as $key){
-                                    foreach ($value as $idx => $paramSet){
-                                        $value[$idx][":".$fk] = $key;
-                                    }
-                                }
-                                $submodels[$name]->object->addParameterSet($value);
-                                unset($row[$column]);
-                            }
-                        }
-                    }
+                    //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
+                    //PreparedStatement placeholders do not supply the necessary criteria for filtering.
                     $this->_update->addParameterSet($row);
                 }
                 break;
@@ -183,11 +170,13 @@ class Model {
                 if ($hasSubmodels){
                     foreach ($rows as &$row){
                         foreach ($row as $column => $subcriteria){
-                            if (is_array($subcriteria)){
-                                foreach ($subcriteria as $row){
-                                    
-                                }
-                                $submodels[$column]->addCriteria($value);
+                            if (is_object($subcriteria)){
+                                $this->setFilter($subcriteria);
+                                $filteredResults = $this->data();
+                                $filteredKeys = array_column($filteredResults,$this->primaryKey);
+                                $fk = $this->submodels[$name]->foreignKey;
+                                $subcriteria->where->$fk = ["IN",$filteredKeys];
+                                $this->submodels[$column]->addCriteria($subcriteria);
                                 unset ($row[$column]);
                             }
                         }
@@ -198,6 +187,11 @@ class Model {
         }
         
         $this->_update->execute();
+        if ($hasSubmodels){
+            foreach ($cachedSubmodels as $name){
+                $this->submodels[$name]->object->update();
+            }
+        }
         if (!$this->_delaySelect){
             $this->select();
         }
@@ -361,9 +355,15 @@ class Model {
     public function addSubmodel(string $name, Model $submodel, string $foreignKey) : void {
         //$name is the desired column name for export
         //$submodel is the Model object to be used as the submodel
-        //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column 
+        //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
         if ($foreignKey == ""){
             throw new VeloxException('Foreign key cannot be empty',42);   
+        }
+        if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update']){
+            throw new VeloxException('Submodel updates are not allowed when the parent Model update is a PreparedStatement',45);
+        }
+        if ($this->_delete instanceof PreparedStatement && isset($submodel->getDefinedQueries()['delete']){
+            throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
         }
         $submodel->instanceName = $name;
         $this->_submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
@@ -422,6 +422,9 @@ class Model {
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
+    }
+    public function getDefinedQueries() : array {
+        return ['select'=>&$this->_select, 'update'=>&$this->_update, 'insert'=>&$this->_insert, 'delete'=>&$this->_delete];
     }
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
