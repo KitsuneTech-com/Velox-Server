@@ -15,7 +15,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public ResultSet|array|bool|null $results;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
-        if ($this->_criteria instanceof Diff || !!$this->_criteria){
+        if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
             $this->addCriteria($this->_criteria);
         }
     }
@@ -74,6 +74,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         if (isset($criterion['where'])){
             foreach ($criterion['where'] as $or){
                 foreach ($or as $column => $condition){
+                    if ($condition[0] == "IN" || $condition[0] == "NOT IN"){
+                        //IN / NOT IN conditions also need to take into account unique number of elements
+                        $condition[0] .= count($condition[1]);
+                    }
                     $criterion['where'][$column] = $condition[0];
                 }
             }
@@ -130,7 +134,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $statements = [];
         $criteria = $this->_criteria;
 
-        if (!$criteria){
+        if (count($criteria) == 0){
             $criteria[0]['where'] = [];
             $criteria[0]['values'] = [];
             $criteria[0]['data'] = [];
@@ -169,6 +173,15 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 case "BETWEEN":
                                 case "NOT BETWEEN":
                                     $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
+                                    break;
+                                case "IN":
+                                case "NOT IN":
+                                    $inList = [];
+                                    $inCount = count($variation['data']['where'][0][$column][1]);
+                                    for ($i=0; $i<$inCount; $i++){
+                                        $inList[] = ":w".$i."_".$column;
+                                    }
+                                    $andArray[] = $column." ".$details[0]." (".implode(",",$inList).")";
                                     break;
                                 default:
                                     throw new VeloxException("Unsupported operator",36);
@@ -235,19 +248,36 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 $parameterSet = [];
                 foreach ($row['where'] as $or){
                     foreach ($or as $column => $data){
-                        try {
-                            $parameterSet['w_'.$column] = $data[1];
-                        }
-                        catch (Exception $ex){
-                            throw new VeloxException("Operand missing in 'where' array",23);
-                        }
-                        if ($data[0] == "BETWEEN" || $data[0] == "NOT BETWEEN") {
-                            try {
-                                $parameterSet['wb_'.$column] = $data[2];
-                            }
-                            catch (Exception $ex){
-                                throw new VeloxException($data[0].' operator used without second operand',24);
-                            }
+                        switch ($data[0]){
+                            case "BETWEEN":
+                            case "NOT BETWEEN":
+                                try {
+                                    $parameterSet['wb_'.$column] = $data[2];
+                                }
+                                catch (Exception $ex){
+                                    throw new VeloxException($data[0].' operator used without second operand',24);
+                                }
+                                break;
+                            case "IN":
+                            case "NOT IN":
+                                try {
+                                    $valueCount = count($data[1]);
+                                    for ($i=0; $i<$valueCount; $i++){
+                                        $parameterSet['w'.$i."_".$column] = $data[1][$i];
+                                    }
+                                }
+                                catch (Exception $ex){
+                                    throw new VeloxException("IN operand must be in the form of an array",44);
+                                }
+                                break;
+                            default:
+                                try {
+                                    $parameterSet['w_'.$column] = $data[1];
+                                }
+                                catch (Exception $ex){
+                                    throw new VeloxException("Operand missing in 'where' array",23);
+                                }
+                                break;
                         }
                     }
                 }
@@ -261,10 +291,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $this->_statements = $statements;
     }
     public function execute() : bool {
-        if (!$this->_statements){
+        if (count($this->_statements) == 0){
             //if no statements are set, try setting them and recheck
             $this->setStatements();
-            if (!$this->_statements){
+            if (count($this->_statements) == 0){
                 throw new VeloxException('Criteria must be set before StatementSet can be executed.',25);
             }
         }
@@ -298,14 +328,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function __invoke() : bool {
         return $this->execute();
     }
-    public function __clone() : void {
-        //Cloned instances should not retain generated statements or results
-        $this->clear();
-    }
     public function clear() : void {
         $this->rewind();
         $this->_statements = [];
-        $this->results = [];
     }
     public function getLastAffected() : array {
         $affected = [];
