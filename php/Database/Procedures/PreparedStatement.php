@@ -33,7 +33,7 @@ class PreparedStatement extends Query {
     public function getNamedParams() : array {
         return $this->_namedParams;
     }
-    public function getParams() : array {
+    public function &getParams() : array {
         return $this->_paramArray;
     }
     public function getParamCount() : int {
