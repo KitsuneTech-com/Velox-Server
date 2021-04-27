@@ -54,6 +54,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 41   | primaryKey missing on parent of nested Model                  | A query was attempted on a nested Model without a primaryKey property set. This needs to be set in order to join the submodel(s). |
 | 42   | Foreign key cannot be empty                                   | The foreign key argument on addSubquery() cannot be an empty string.                |
 | 43   | Foreign key column 'xxxx' does not exist in submodel.         | The specified foreign key isn't a column in the submodel it was defined for. Make sure the key matches a column in the underlying query. |
+| 45   | Submodel updates are not allowed when the parent Model update is a PreparedStatement | PreparedStatement placeholders don't supply the necessary column names. Only a StatementSet can do this. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
