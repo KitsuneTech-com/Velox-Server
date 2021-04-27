@@ -23,7 +23,7 @@ class Model {
     // (false by default: returns full resultset)
     public bool $returnDiff = false;
     
-    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly.
+    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly by user-defined code.
     public array $submodels = [];
     
     //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
@@ -83,11 +83,17 @@ class Model {
             }
             
             foreach ($this->submodels as $name => $submodel){
+                if (!$this->primaryKey){
+                    throw new VeloxException('primaryKey missing on parent of nested Model',41);
+                }
                 $submodel->select();
                 $pk = $this->primaryKey;
                 $fk = $submodel->foreignKey;
                 $submodel->object->sort($fk,SORT_ASC);
                 $fk_column = array_column($submodel->object->data(),$fk);
+                if (!$fk_column){
+                    throw new VeloxException("Foreign key column '".$fk."' does not exist in submodel.",43);
+                }
                 $this->sort($pk,SORT_ASC);
                 foreach ($this->_data as $index => $row){
                     $fk_value = $this->_data[$pk];
@@ -131,26 +137,36 @@ class Model {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
+        $hasSubmodels = !!$this->submodels;
+        
         if (!$this->_update){
             throw new VeloxException('The associated procedure for update has not been defined.',37);
         }
-        elseif (count($this->_submodels) > 0){
+        elseif ($hasSubmodels){
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
             $this->_select();
+            //Hold on to the current filter to reapply later
+            $currentFilter = $this->_filter;
         }
         elseif ($this->_update instanceof PreparedStatement){
             $this->_update->clear();
         }
         $reflection = new \ReflectionClass($this->_update);
-        $submodelCount = count($this->submodels);
+        
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 foreach($rows as $row){
-                    if ($submodelCount > 0){
+                    if ($hasSubmodels){
                         foreach ($row as $name => $value){
                             if (is_array($value)){
+                                $this->setFilter($value);
+                                $filteredResults = $this->data();
+                                $filteredKeys = array_column($filteredResults,$this->primaryKey);
+                                foreach($filteredKeys as $key){
+                                    
+                                }
                                 $submodels[$name]->object->addParameterSet($value);
                                 unset($row[$column]);
                             }
@@ -160,12 +176,12 @@ class Model {
                 }
                 break;
             case "StatementSet":
-                if ($submodelCount > 0){
+                if ($hasSubmodels){
                     foreach ($rows as &$row){
                         foreach ($row as $column => $subcriteria){
                             if (is_array($subcriteria)){
                                 foreach ($subcriteria as $row){
-                                    $row->where[$submodels[$column]->primaryKey] = ["=",$
+                                    
                                 }
                                 $submodels[$column]->addCriteria($value);
                                 unset ($row[$column]);
@@ -188,7 +204,7 @@ class Model {
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
         }
-        elseif (count($this->_submodels) > 0){
+        elseif (!!$this->_submodels){
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
@@ -226,7 +242,7 @@ class Model {
         if (!$this->_delete){
             throw new VeloxException('The associated procedure for delete has not been defined.',37);
         }
-        elseif (count($this->_submodels) > 0){
+        elseif (!!$this->_submodels){
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
@@ -342,6 +358,9 @@ class Model {
         //$name is the desired column name for export
         //$submodel is the Model object to be used as the submodel
         //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column 
+        if ($foreignKey == ""){
+            throw new VeloxException('Foreign key cannot be empty',42);   
+        }
         $submodel->instanceName = $name;
         $this->_submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
     }
@@ -366,6 +385,16 @@ class Model {
                                 continue 3;
                             }
                             break;
+                        case "IN":
+                            if (!in_array($row[$column],$criteria[2]){
+                                continue 3;
+                            }
+                            break;
+                        case "NOT IN":
+                            if (in_array($row[$column],$criteria[2]){
+                                continue 3;
+                            }
+                            break;   
                         case "IS NULL":
                             if (!is_null($row[$column])){
                                 continue 3;
