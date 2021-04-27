@@ -149,6 +149,7 @@ class Model {
             $this->_select();
             //Hold on to the current filter to reapply later
             $currentFilter = $this->_filter;
+            //Make sure the nested Models are cleared
         }
         elseif ($this->_update instanceof PreparedStatement){
             $this->_update->clear();
@@ -164,8 +165,11 @@ class Model {
                                 $this->setFilter($value);
                                 $filteredResults = $this->data();
                                 $filteredKeys = array_column($filteredResults,$this->primaryKey);
-                                foreach($filteredKeys as $key){
-                                    
+                                $fk = $submodels[$name]->object->foreignKey;
+                                foreach ($filteredKeys as $key){
+                                    foreach ($value as $idx => $paramSet){
+                                        $value[$idx][":".$fk] = $key;
+                                    }
                                 }
                                 $submodels[$name]->object->addParameterSet($value);
                                 unset($row[$column]);
