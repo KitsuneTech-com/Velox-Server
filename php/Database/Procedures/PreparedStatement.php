@@ -21,12 +21,16 @@ class PreparedStatement extends Query {
             $this->_paramCount = preg_match_all("/\?/",$sql);
         }
     }
-    public function addParameterSet(array $paramArray, string $prefix = '') : void {
+    public function addParameterSet(array $paramArray, string $prefix = '') : int {
         foreach ($paramArray as $key => $value){
-            $paramArray[":".$prefix.$key] = $value;
+            if (!is_array($value)){
+                $paramArray[":".$prefix.$key] = $value;
+            }
             unset($paramArray[$key]);
         }
         $this->_paramArray[] = $paramArray;
+        //return the index of the inserted parameter set
+        return count($this->_paramArray) - 1;
     }
     public function getNamedParams() : array {
         return $this->_namedParams;
