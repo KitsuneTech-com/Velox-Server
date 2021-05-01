@@ -9,6 +9,7 @@ class PreparedStatement extends Query {
     private array $_namedParams = [];
     private int $_paramCount = 0;
     private array $_paramArray = [];
+    private int $_setCount = 0;
     
     public function __construct(Connection &$conn, string $sql, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_UNION, private ?string $setId = null) {
         parent::__construct($conn,$sql,$queryType,$resultType);
@@ -29,8 +30,9 @@ class PreparedStatement extends Query {
             unset($paramArray[$key]);
         }
         $this->_paramArray[] = $paramArray;
+        $this->_setCount++;
         //return the index of the inserted parameter set
-        return count($this->_paramArray) - 1;
+        return $this->_setCount - 1;
     }
     public function getNamedParams() : array {
         return $this->_namedParams;
@@ -43,6 +45,7 @@ class PreparedStatement extends Query {
     }
     public function clear() : void {
         $this->_paramArray = [];
+        $this->_setCount = 0;
     }
     public function dumpQuery(): array {
         $dump = parent::dumpQuery();
