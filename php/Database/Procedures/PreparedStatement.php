@@ -9,9 +9,8 @@ class PreparedStatement extends Query {
     private array $_namedParams = [];
     private int $_paramCount = 0;
     private array $_paramArray = [];
-    private ?string $setId = null;
     
-    public function __construct(Connection &$conn, string $sql, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_UNION, ?string $setId = null) {
+    public function __construct(Connection &$conn, string $sql, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_UNION, private ?string $setId = null) {
         parent::__construct($conn,$sql,$queryType,$resultType);
         $paramMatch = [];
         if (preg_match_all("/:[A-Za-z0-9_]+/",$sql,$paramMatch) > 0){
@@ -21,7 +20,6 @@ class PreparedStatement extends Query {
         else {
             $this->_paramCount = preg_match_all("/\?/",$sql);
         }
-        $this->setId = $setId;
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         foreach ($paramArray as $key => $value){
