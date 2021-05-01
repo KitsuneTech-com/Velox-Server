@@ -199,10 +199,11 @@ class Model {
     }
     
     public function insert(array $rows, bool $diff = false) : bool {
+        $hasSubmodels = !!$this->submodels;
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
         }
-        elseif (!!$this->_submodels){
+        elseif ($hasSubmodels){
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
@@ -220,7 +221,10 @@ class Model {
                         if (!isset($row[$param])){
                             $row[$param] = null;
                         }
-                        $this->_insert->addParameterSet($row);
+                        $idx = $this->_insert->addParameterSet($row);
+                        if ($hasSubmodels && is_array($row[$param])){
+                            $row[$param]['_idx'] = $idx;
+                        }
                     }
                 }
                 break;
