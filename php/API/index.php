@@ -80,7 +80,7 @@ require_once $queryFileName;
 
 //Allow pre-processing of data prior to query call (such as password hashing, etc.)
 if (function_exists("preProcessing")){
-    preProcessing($DIFF);
+    preProcessing($DIFF->select,$DIFF->update,$DIFF->insert,$DIFF->delete);
 }
 
 if ($QUERIES['SELECT'] ?? false){
