@@ -224,7 +224,7 @@ class Connection {
                                         //but are not strictly necessary)
                                     }
                                     else {
-                                        throw new VeloxException('Placeholder '.$key.' does not exist in prepared statement SQL',
+                                        throw new VeloxException('Placeholder '.$key.' does not exist in prepared statement SQL',46);
                                     }
                                 }
                             }
