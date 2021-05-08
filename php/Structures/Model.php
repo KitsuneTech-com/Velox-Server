@@ -102,6 +102,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
+        if ($this->_select->queryType == QUERY_PROC){
+            //add criteria to query first   
+        }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
             if (is_array($this->_select->results)){
