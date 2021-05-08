@@ -249,6 +249,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 throw new VeloxException($data[0].' operator used without second operand',24);
                             }
                         }
+                        elseif ($this->queryType == QUERY_PROC){
+                            $parameterSet['op_'.$column] = $data[0];
+                        }
                     }
                 }
                 foreach ($row['values'] as $column => $value){
