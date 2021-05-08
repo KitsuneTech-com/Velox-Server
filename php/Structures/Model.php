@@ -28,17 +28,25 @@ class Model {
     public string|null $instanceName = null;
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
-        $this->_select = $select;
+        if ($select && $select->queryType != QUERY_PROC){
+            $select->queryType = QUERY_SELECT;
+        }
         if ($update && !($update instanceof Transaction)) {
-            $update->queryType = QUERY_UPDATE;
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_UPDATE;
+            }
             $update->resultType = VELOX_RESULT_NONE;
         }
         if ($insert && !($insert instanceof Transaction)) {
-            $insert->queryType = QUERY_INSERT;
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_INSERT;
+            }
             $insert->resultType = VELOX_RESULT_NONE;
         }
         if ($delete && !($delete instanceof Transaction)) {
-            $delete->queryType = QUERY_DELETE;
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_DELETE;
+            }
             $delete->resultType = VELOX_RESULT_NONE;
         }
         $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
@@ -54,6 +62,9 @@ class Model {
     public function select(bool $diff = false) : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
+        }
+        if ($this->_select->queryType == QUERY_PROC){
+            //add criteria to query first   
         }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
