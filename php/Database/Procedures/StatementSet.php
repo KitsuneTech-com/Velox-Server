@@ -304,6 +304,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 }
                                 break;
                         }
+                        elseif ($this->queryType == QUERY_PROC){
+                            $parameterSet['op_'.$column] = $data[0];
+                        }
                     }
                 }
                 foreach ($row['values'] as $column => $value){
