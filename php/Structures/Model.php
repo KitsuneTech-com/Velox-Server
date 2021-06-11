@@ -363,10 +363,10 @@ class Model {
         if ($foreignKey == ""){
             throw new VeloxException('Foreign key cannot be empty',42);   
         }
-        if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update']){
+        if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update'])){
             throw new VeloxException('Submodel updates are not allowed when the parent Model update is a PreparedStatement',45);
         }
-        if ($this->_delete instanceof PreparedStatement && isset($submodel->getDefinedQueries()['delete']){
+        if ($this->_delete instanceof PreparedStatement && isset($submodel->getDefinedQueries()['delete'])){
             throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
         }
         $submodel->instanceName = $name;
