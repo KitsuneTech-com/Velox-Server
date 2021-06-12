@@ -30,10 +30,10 @@ class Model {
     public ?string $primaryKey = null;
     
     public function __construct(
-            private PreparedStatement|StatementSet $_select = null,
-            private PreparedStatement|StatementSet|Transaction $_update = null,
-            private PreparedStatement|StatementSet|Transaction $_insert = null,
-            private PreparedStatement|StatementSet|Transaction $_delete = null,
+            private PreparedStatement|StatementSet|null $_select = null,
+            private PreparedStatement|StatementSet|Transaction|null $_update = null,
+            private PreparedStatement|StatementSet|Transaction|null $_insert = null,
+            private PreparedStatement|StatementSet|Transaction|null $_delete = null,
             public ?string $instanceName = null
         ){
         if ($this->_update && !($this->_update instanceof Transaction)) {
