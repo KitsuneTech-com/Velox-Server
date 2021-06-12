@@ -394,7 +394,7 @@ class Model {
                             }
                             break;
                         case "IN":
-                            if (!in_array($row[$column],$criteria[2]){
+                            if (!in_array($row[$column],$criteria[2])){
                                 continue 3;
                             }
                             break;
