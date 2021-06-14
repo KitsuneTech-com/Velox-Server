@@ -141,7 +141,7 @@ row.where.push(criteria);
 request.push(row);
 ```
 
-Similarly, if we wanted an UPDATE query to set any null address2 values to "---", using this in the query definition file:
+Similarly, if you wanted an UPDATE query to set any null address2 values to "---", using this in the query definition file:
   
 ```
 $QUERIES['UPDATE'] = new StatementSet($conn,"UPDATE addresses SET <<values>> WHERE <<condition>>");
