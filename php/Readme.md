@@ -109,6 +109,7 @@ id | address1       | address2 | city              | state | zip   |
  4 | 1011 Cedar Dr. | Box 789  | Winters           | TX    | 79567 |
 
 If you wanted to get any rows from Falls City, TX, using SQL, you might write the query as so:
+  
 ``` SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX'; ```
   
 With the Velox API, if the query definition file includes:
