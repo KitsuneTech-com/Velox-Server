@@ -309,6 +309,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         return $affected;
     }
+    public function getResults() : ResultSet|array|null {
+        return $this->results;
+    }
     public function dumpQueries() : array {
         $queries = [];
         foreach ($this->_statements as $stmt){
