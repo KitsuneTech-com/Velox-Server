@@ -112,11 +112,15 @@ If you wanted to get any rows from Falls City, TX, using SQL, you might write th
 ``` SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX'; ```
   
 With the Velox API, if the query definition file includes:
+  
 ``` $QUERIES['SELECT'] = new StatementSet($conn,"SELECT * FROM addresses WHERE <<criteria>>"); ```
+  
 then the JSON used to perform the same query would be:
+  
 ```{"select": [{"where": [{"city": ["=","Falls City"], "state": ["=","TX"]}]}]}```
   
 Alternatively, if this were to be built programmatically:
+  
 ```
 //Define the request body
 let request = {};
@@ -137,12 +141,17 @@ request.push(row);
 ```
 
 Similarly, if we wanted an UPDATE query to set any null address2 values to "---", using this in the query definition file:
+  
 ```
 $QUERIES['UPDATE'] = new StatementSet($conn,"UPDATE addresses SET <<values>> WHERE <<condition>>");
 ```
+  
 The JSON in the request would look like:
+  
 ``` {"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]} ```
+  
 Or programmatically:
+  
 ```
 //Define the request body
 let request = {};
@@ -164,6 +173,7 @@ row.where.push(criteria);
 //Add the row object to the request
 request.push(row);
 ```
+  
 Being able to build API requests programmatically through JavaScript objects allows filters and updates of high complexity to be constructed client-side
 with minimal code on the back-end. StatementSet is optimized for specifically these kinds of queries; it only builds as many PreparedStatements as necessary
 to run the request; where possible, similar criteria are grouped together and run as criteria on one PreparedStatement.
