@@ -42,7 +42,7 @@ constructor. Once defined, it is run using its execute() method, and the results
 
 #### PreparedStatement
 
-PreparedStatement is a subclass of Query, which extends it with methods that allow named and positional placeholders to be defined and used
+PreparedStatement is a subclass of Query that extends it with methods that allow named and positional placeholders to be defined and used
 following the syntax appropriate for the database engine. A single PreparedStatement object can be used to batch queries by iterative calls
 to its addParameterSet() method, each call supplied with an associative array having the placeholders and values to be substituted. The batch
 of queries can then be run with a single execute() method call, and the combined results are available with a single call to the getResults()
@@ -50,7 +50,7 @@ method.
 
 #### StatementSet
 
-StatementSet is the most versatile of these classes. It addresses several shortcomings of the SQL standard prepared statement by creating its own set
+StatementSet is the most versatile of these classes. It addresses several shortcomings of the SQL-standard prepared statement by creating its own set
 of PreparedStatements depending on the values and criteria given to it. Among other things, this behavior allows for operators to be assigned dynamically
 and for column names and values to only be specified as needed.
 Because of this unique, non-standard behavior, SQL used to define a StatementSet follows an augmented syntax, with placeholders similar to those used
