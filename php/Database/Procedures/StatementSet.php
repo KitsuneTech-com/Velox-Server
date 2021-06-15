@@ -16,9 +16,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public bool $optimize = true;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, private array|Diff $_criteria = []){
+        $lc_query = strtolower($this->_baseSql);
+        if (str_starts_with($lc_query,"call")){
+            throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
+        }
         if (!$this->queryType){
             //Attempt to determine type by first keyword if query type isn't specified
-            $lc_query = strtolower($this->_baseSql);
+            
             if (str_starts_with($lc_query,"select")){
                 $this->queryType = QUERY_SELECT;
             }
@@ -30,9 +34,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             }
             elseif (str_starts_with($lc_query,"delete")){
                 $this->queryType = QUERY_DELETE;
-            }
-            elseif (str_starts_with($lc_query,"call")){
-                $this->queryType = QUERY_PROC;
             }
             else {
                 $this->queryType = QUERY_SELECT;
@@ -170,7 +171,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 case QUERY_SELECT:
                 case QUERY_DELETE:
                 case QUERY_UPDATE:
-                case QUERY_PROC:
                     //format where clause
                     $orArray = [];
                     foreach ($variation['where'] as $andSet){
@@ -233,11 +233,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                             $whereStr = "(".implode(" OR ",$orArray).")";
                             break;
                     }
-                    if ($this->queryType != QUERY_UPDATE && $this->queryType != QUERY_PROC){
+                    if ($this->queryType != QUERY_UPDATE){
+                        //Only QUERY_UPDATE falls through
                         break;
                     }
 
-                case QUERY_INSERT:  //and fall-through for QUERY_UPDATE and QUERY_PROC
+                case QUERY_INSERT:  //and fall-through for QUERY_UPDATE
                     //format values
                     $valuesArray = $variation['values'];
                     $valuesStrArray = [];
