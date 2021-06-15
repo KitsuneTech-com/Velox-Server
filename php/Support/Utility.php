@@ -4,7 +4,7 @@ use KitsuneTech\Velox\VeloxException as VeloxException;
 
 function deleteArrayColumn(array &$array, string $key) : void {
     foreach ($array as $row){
-        unset $row[$key];
+        unset ($row[$key]);
     }
 }
 function isAscii($str) {
