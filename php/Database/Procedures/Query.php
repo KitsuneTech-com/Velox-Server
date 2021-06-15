@@ -13,7 +13,7 @@ class Query {
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
         if (!$this->queryType){
             //Attempt to determine type by first keyword if query type isn't specified
-            $lc_query = strtolower($sql);
+            $lc_query = strtolower($this->sql);
             if (str_starts_with($lc_query,"select")){
                 $this->queryType = QUERY_SELECT;
             }
