@@ -8,7 +8,6 @@ use KitsuneTech\Velox\VeloxException;
 
 class Query {
     public array|ResultSet|bool $results;
-    public array $tables = [];
     private array $_lastAffected = [];
     
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
