@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database\Procedures;
 use KitsuneTech\Velox\Database\Connection as Connection;
+use KitsuneTech\Velox\Database\Procedures\Query as Query;
 use KitsuneTech\Velox\VeloxException;
 
 class PreparedStatement extends Query {
