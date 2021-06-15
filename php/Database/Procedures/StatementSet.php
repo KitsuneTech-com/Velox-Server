@@ -15,7 +15,29 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public ResultSet|array|bool|null $results;
     public bool $optimize = true;
     
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, private array|Diff $_criteria = []){
+        if (!$this->queryType){
+            //Attempt to determine type by first keyword if query type isn't specified
+            $lc_query = strtolower($this->_baseSql);
+            if (str_starts_with($lc_query,"select")){
+                $this->queryType = QUERY_SELECT;
+            }
+            elseif (str_starts_with($lc_query,"insert")){
+                $this->queryType = QUERY_INSERT;
+            }
+            elseif (str_starts_with($lc_query,"update")){
+                $this->queryType = QUERY_UPDATE;
+            }
+            elseif (str_starts_with($lc_query,"delete")){
+                $this->queryType = QUERY_DELETE;
+            }
+            elseif (str_starts_with($lc_query,"call")){
+                $this->queryType = QUERY_PROC;
+            }
+            else {
+                $this->queryType = QUERY_SELECT;
+            }
+        }
         if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
             $this->addCriteria($this->_criteria);
         }
