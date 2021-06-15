@@ -11,7 +11,30 @@ class Query {
     public array $tables = [];
     private array $_lastAffected = [];
     
-    public function __construct(public Connection &$conn, public string $sql, public int $queryType = QUERY_SELECT, public int $resultType = VELOX_RESULT_ARRAY) {}
+    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
+    	if (!$this->queryType){
+	        //Attempt to determine type by first keyword if query type isn't specified
+            $lc_query = strtolower($sql);
+	        if (str_starts_with($lc_query,"select")){
+                $this->queryType = QUERY_SELECT;
+            }
+            elseif (str_starts_with($lc_query,"insert")){
+                $this->queryType = QUERY_INSERT;
+            }
+            elseif (str_starts_with($lc_query,"update")){
+                $this->queryType = QUERY_UPDATE;
+            }
+            elseif (str_starts_with($lc_query,"delete")){
+                $this->queryType = QUERY_DELETE;
+            }
+            elseif (str_starts_with($lc_query,"call")){
+                $this->queryType = QUERY_PROC;
+            }
+            else {
+                $this->queryType = QUERY_SELECT;
+            }
+	    }
+    }
     
     public function execute() : bool {
         $this->results = $this->conn->execute($this);
