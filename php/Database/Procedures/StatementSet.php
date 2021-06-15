@@ -13,6 +13,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
     public ResultSet|array|bool|null $results;
+    public bool $optimize = true;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
         if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
