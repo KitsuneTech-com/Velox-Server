@@ -12,10 +12,10 @@ class Query {
     private array $_lastAffected = [];
     
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
-    	if (!$this->queryType){
-	        //Attempt to determine type by first keyword if query type isn't specified
+        if (!$this->queryType){
+            //Attempt to determine type by first keyword if query type isn't specified
             $lc_query = strtolower($sql);
-	        if (str_starts_with($lc_query,"select")){
+            if (str_starts_with($lc_query,"select")){
                 $this->queryType = QUERY_SELECT;
             }
             elseif (str_starts_with($lc_query,"insert")){
@@ -33,7 +33,7 @@ class Query {
             else {
                 $this->queryType = QUERY_SELECT;
             }
-	    }
+        }
     }
     
     public function execute() : bool {
@@ -58,10 +58,10 @@ class Query {
         }
     }
     public function getLastAffected() : array {
-	    return $this->_lastAffected;
+        return $this->_lastAffected;
     }
     
     public function dumpQuery() : array {
-	    return ["type"=>"Query","connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],"query"=>$this->sql];
+        return ["type"=>"Query","connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],"query"=>$this->sql];
     }
 }
