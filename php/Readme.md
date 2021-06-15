@@ -54,7 +54,7 @@ StatementSet is the most versatile of these classes. It addresses several shortc
 of PreparedStatements depending on the values and criteria given to it. Among other things, this behavior allows for operators to be assigned dynamically
 and for column names and values to only be specified as needed.
 Because of this unique, non-standard behavior, SQL used to define a StatementSet follows an augmented syntax, with placeholders similar to those used
-by Angular. Three basic placeholders are allowed (\<<values>>, \<<columns>>, and \<<condition>>), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
+by Angular. Three basic placeholders are allowed (\<\<values\>\>, \<\<columns\>\>, and \<\<condition\>\>), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
   ```
   SELECT <<columns>> FROM myTable WHERE <<condition>>
   INSERT INTO myTable (<<columns>>) VALUES (<<values>>)
