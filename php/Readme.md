@@ -15,7 +15,6 @@ dependency by including the following in the composer.json file in your project 
     "kitsunetech/velox": "dev-main"
   }
 }
-
 ```
 Note: Since Velox is currently in active development, no version number is yet assigned. If you fork this repository, you will need to change
 the url to reflect your fork.
