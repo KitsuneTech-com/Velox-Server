@@ -29,8 +29,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
         if (!($model instanceof Model)){
             throw new VeloxException("Array contains elements other than instances of Model",33);
         }
-        $returnData = $model->returnDiff ? $model->diff() : $model->data();
-        $details = ['lastQuery'=>$model->lastQuery(), 'columns'=>$model->columns(), 'data'=>$returnData];
+        $details = ['lastQuery'=>$model->lastQuery(), 'columns'=>$model->columns(), 'data'=>$model->data()];
         if ($ignoreRows > 0){
             for ($i=0; $i<$ignoreRows; $i++){
                 array_shift($details['data']);

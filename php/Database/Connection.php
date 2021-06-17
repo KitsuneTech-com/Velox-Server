@@ -209,7 +209,7 @@ class Connection {
         $results = [];
     
         try {
-            if (!!$placeholders){    //placeholders signify that this is intended to be run more than once
+            if (count($placeholders) > 0){    //placeholders signify that this is intended to be run more than once
                 $firstExecution = true;
                 switch ($this->_serverType){
                     case DB_MYSQL:

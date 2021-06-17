@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Structures;
 
 class Diff {
-    public array $select = [];
-    public array $update = [];
-    public array $insert = [];
-    public array $delete = [];
+    public array $select;
+    public array $update;
+    public array $insert;
+    public array $delete;
     public function __construct(string $json = ""){
         //Expected JSON format (where col1 is an autoincrement field not set by this library):
         //(each row is an object with properties representing each field name)
@@ -22,8 +22,9 @@ class Diff {
         //    [{values: {col2: 'changeThis'}, where: {col2: 'fromThis'}},{values: {col2: 'thisToo'}, where: {col1: 2}}]
         // }
         $diffObj = $json != "" ? json_decode($json) : (object)[];
-        foreach ($diffObj as $prop => $value){
-            $this->$prop = $value;
-        }
+        $this->select = $diffObj->select ?? [];
+        $this->update = $diffObj->update ?? [];
+        $this->insert = $diffObj->insert ?? [];
+        $this->delete = $diffObj->delete ?? [];
     }
 }

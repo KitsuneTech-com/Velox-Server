@@ -31,7 +31,6 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 25   | Criteria must be set before StatementSet can be executed.     | StatementSet cannot be executed without specifying at least one set of conditions.  |
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 | 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
-| 46   | Stored procedure calls are not supported by StatementSet.     | StatementSet placeholders are incompatible with stored procedure calls. A PreparedStatement must be used. |
 
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |

@@ -13,32 +13,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
     public ResultSet|array|bool|null $results;
-    public bool $optimize = true;
     
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, private array|Diff $_criteria = []){
-        $lc_query = strtolower($this->_baseSql);
-        if (str_starts_with($lc_query,"call")){
-            throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
-        }
-        if (!$this->queryType){
-            //Attempt to determine type by first keyword if query type isn't specified
-            
-            if (str_starts_with($lc_query,"select")){
-                $this->queryType = QUERY_SELECT;
-            }
-            elseif (str_starts_with($lc_query,"insert")){
-                $this->queryType = QUERY_INSERT;
-            }
-            elseif (str_starts_with($lc_query,"update")){
-                $this->queryType = QUERY_UPDATE;
-            }
-            elseif (str_starts_with($lc_query,"delete")){
-                $this->queryType = QUERY_DELETE;
-            }
-            else {
-                $this->queryType = QUERY_SELECT;
-            }
-        }
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
         if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
             $this->addCriteria($this->_criteria);
         }
@@ -98,10 +74,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         if (isset($criterion['where'])){
             foreach ($criterion['where'] as $or){
                 foreach ($or as $column => $condition){
-                    if ($condition[0] == "IN" || $condition[0] == "NOT IN"){
-                        //IN / NOT IN conditions also need to take into account unique number of elements
-                        $condition[0] .= count($condition[1]);
-                    }
                     $criterion['where'][$column] = $condition[0];
                 }
             }
@@ -171,6 +143,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 case QUERY_SELECT:
                 case QUERY_DELETE:
                 case QUERY_UPDATE:
+                case QUERY_PROC:
                     //format where clause
                     $orArray = [];
                     foreach ($variation['where'] as $andSet){
@@ -196,15 +169,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 case "BETWEEN":
                                 case "NOT BETWEEN":
                                     $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
-                                    break;
-                                case "IN":
-                                case "NOT IN":
-                                    $inList = [];
-                                    $inCount = count($variation['data']['where'][0][$column][1]);
-                                    for ($i=0; $i<$inCount; $i++){
-                                        $inList[] = ":w".$i."_".$column;
-                                    }
-                                    $andArray[] = $column." ".$details[0]." (".implode(",",$inList).")";
                                     break;
                                 default:
                                     throw new VeloxException("Unsupported operator",36);
@@ -233,12 +197,11 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                             $whereStr = "(".implode(" OR ",$orArray).")";
                             break;
                     }
-                    if ($this->queryType != QUERY_UPDATE){
-                        //Only QUERY_UPDATE falls through
+                    if ($this->queryType != QUERY_UPDATE && $this->queryType != QUERY_PROC){
                         break;
                     }
 
-                case QUERY_INSERT:  //and fall-through for QUERY_UPDATE
+                case QUERY_INSERT:  //and fall-through for QUERY_UPDATE and QUERY_PROC
                     //format values
                     $valuesArray = $variation['values'];
                     $valuesStrArray = [];
@@ -272,36 +235,19 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 $parameterSet = [];
                 foreach ($row['where'] as $or){
                     foreach ($or as $column => $data){
-                        switch ($data[0]){
-                            case "BETWEEN":
-                            case "NOT BETWEEN":
-                                try {
-                                    $parameterSet['wb_'.$column] = $data[2];
-                                }
-                                catch (Exception $ex){
-                                    throw new VeloxException($data[0].' operator used without second operand',24);
-                                }
-                                break;
-                            case "IN":
-                            case "NOT IN":
-                                try {
-                                    $valueCount = count($data[1]);
-                                    for ($i=0; $i<$valueCount; $i++){
-                                        $parameterSet['w'.$i."_".$column] = $data[1][$i];
-                                    }
-                                }
-                                catch (Exception $ex){
-                                    throw new VeloxException("IN operand must be in the form of an array",44);
-                                }
-                                break;
-                            default:
-                                try {
-                                    $parameterSet['w_'.$column] = $data[1];
-                                }
-                                catch (Exception $ex){
-                                    throw new VeloxException("Operand missing in 'where' array",23);
-                                }
-                                break;
+                        try {
+                            $parameterSet['w_'.$column] = $data[1];
+                        }
+                        catch (Exception $ex){
+                            throw new VeloxException("Operand missing in 'where' array",23);
+                        }
+                        if ($data[0] == "BETWEEN" || $data[0] == "NOT BETWEEN") {
+                            try {
+                                $parameterSet['wb_'.$column] = $data[2];
+                            }
+                            catch (Exception $ex){
+                                throw new VeloxException($data[0].' operator used without second operand',24);
+                            }
                         }
                     }
                 }

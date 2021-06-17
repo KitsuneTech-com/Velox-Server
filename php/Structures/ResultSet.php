@@ -8,7 +8,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private int $_position = 0;
     
     public function __construct(private array $_resultArray = []) {
-        if (!!$this->_resultArray){
+        if (count($this->_resultArray) > 0){
             $this->_columns = array_keys($this->_resultArray[0]);
         }
         $this->_keys = array_keys($this->_resultArray);
