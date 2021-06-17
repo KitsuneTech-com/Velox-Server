@@ -186,12 +186,15 @@ class Model {
                 break;
         }
         
-        $this->_update->execute();
+        $transaction = new Transaction;
+        $transaction->addQuery($this->_update);
         if ($hasSubmodels){
             foreach ($cachedSubmodels as $name){
-                $this->submodels[$name]->object->update();
+                $transaction->addQuery($this->submodels[$name]->object->_update);
             }
         }
+        $transaction->executeAll();
+        
         if (!$this->_delaySelect){
             $this->select();
         }
