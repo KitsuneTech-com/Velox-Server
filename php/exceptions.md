@@ -56,7 +56,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 42   | Name and foreign key arguments cannot be empty strings        | The names and foreign keys of submodels must be specified.                          |
 | 43   | Foreign key column 'xxxx' does not exist in submodel.         | The specified foreign key isn't a column in the submodel it was defined for. Make sure the key matches a column in the underlying query. |
 | 45   | Submodel updates are not allowed when the parent Model update is a PreparedStatement | PreparedStatement placeholders don't supply the necessary column names. Only a StatementSet can do this. |
-
+| 47   | Invalid value passed for PreparedStatement parameter.         | An iterable (array or object) was passed in as a value to a PreparedStatement named parameter. If this was intended to be a submodel query, make sure the submodel doesn't have the same name as a named parameter. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
