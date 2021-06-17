@@ -52,11 +52,11 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 37   | The associated procedure for xxxx has not been defined.       | In order to call the given Model method, the corresponding procedure must have been defined in the constructor call. |
 | 38   | Column 'xxxx' does not exist in result set.                   | Attempted to filter on a column that doesn't exist in the result set.               |
 | 40   | Select query required for DML queries on nested Models        | A nested Model was defined without a select query set on the parent Model. Submodels need this in order to match the parent's primary key. |
-| 41   | primaryKey missing on parent of nested Model                  | A query was attempted on a nested Model without a primaryKey property set. This needs to be set in order to join the submodel(s). |
+| 41   | Primary key column name must be specified for parent Model    | Without a primary key, submodel rows can't be linked to parent Model rows.          |
 | 42   | Name and foreign key arguments cannot be empty strings        | The names and foreign keys of submodels must be specified.                          |
 | 43   | Foreign key column 'xxxx' does not exist in submodel.         | The specified foreign key isn't a column in the submodel it was defined for. Make sure the key matches a column in the underlying query. |
 | 45   | Submodel updates are not allowed when the parent Model update is a PreparedStatement | PreparedStatement placeholders don't supply the necessary column names. Only a StatementSet can do this. |
-| 47   | Primary key column name must be specified for parent Model    | Without a primary key, submodel rows can't be linked to parent Model rows.          |
+
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
