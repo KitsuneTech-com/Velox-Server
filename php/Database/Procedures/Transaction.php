@@ -44,7 +44,7 @@ class Transaction {
             }
             
             //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (!$this->executionOrder && !!$this->_paramArray){
+            if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
                 //Get class name for following switch
                 $refl = new \ReflectionObject($query);
                 $className = $refl->getShortName();
@@ -91,8 +91,13 @@ class Transaction {
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
+<<<<<<< HEAD
         if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
             $this->executionOrder[0]->addParameterSet($paramArray,$prefix);
+=======
+        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
+            $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
+>>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
         }
     }
     public function getParams() : array {
