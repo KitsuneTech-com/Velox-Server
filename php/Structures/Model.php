@@ -216,6 +216,9 @@ class Model {
             $this->_insert->clear();
         }
         $reflection = new \ReflectionClass($this->_insert);
+        $transaction = new Transaction;
+        //Add parent query to 
+        $transaction->addQuery($this->_insert);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 $namedParams = $this->_insert->getNamedParams();
@@ -235,7 +238,7 @@ class Model {
                 $this->_insert->addCriteria($rows);
                 break;
         }
-        $this->_insert->execute();
+        $transaction->executeAll();
         
         if (!$this->_delaySelect){
             $this->select();
@@ -363,6 +366,9 @@ class Model {
         //$name is the desired column name for export
         //$submodel is the Model object to be used as the submodel
         //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
+        if (!$this->primaryKey){
+            throw new VeloxException('Primary key column name must be specified for parent Model',47);
+        }
         if ($foreignKey == ""){
             throw new VeloxException('Foreign key cannot be empty',42);   
         }
