@@ -7,7 +7,7 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 class Query {
-    public array|ResultSet|bool $results;
+    public array|ResultSet|bool $results = [];
     private array $_lastAffected = [];
     
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
@@ -34,7 +34,11 @@ class Query {
             }
         }
     }
-    
+    public function __clone() : void {
+        //A cloned Query doesn't retain the original's results.
+        $this->results = [];
+        $this->_lastAffected = [];
+    }
     public function execute() : bool {
         $this->results = $this->conn->execute($this);
         $this->_lastAffected = $this->conn->getLastAffected();
