@@ -8,50 +8,54 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 class Model {
     
-    // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
-    // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
-    // in the model. In Model::insert(), any columns not specified are set as NULL.   
-    private PreparedStatement|StatementSet|null $_select;
-    private PreparedStatement|StatementSet|Transaction|null $_update;
-    private PreparedStatement|StatementSet|Transaction|null $_insert;
-    private PreparedStatement|StatementSet|Transaction|null $_delete;
+    // Note: in Model->update() and Model->delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
+    // In Model->update() and Model->insert(), $values is an array of associative arrays, the keys of which are the column names represented
+    // in the model. In Model->insert(), any columns not specified are set as NULL.   
     private array $_columns = [];
     private array $_data = [];
-    private object $_diff;
+    private Diff $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     
-    //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
-    //(such as when several Models are stored in an array)
-    public string|null $instanceName = null;
+    //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
+    // (false by default: returns full resultset)
+    public bool $returnDiff = false;
     
-    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
-        $this->_select = $select;
-        if ($update && !($update instanceof Transaction)) {
-            $update->queryType = QUERY_UPDATE;
-            $update->resultType = VELOX_RESULT_NONE;
+    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly by user-defined code.
+    public array $submodels = [];
+    
+    //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
+    public ?string $primaryKey = null;
+    
+    public function __construct(
+            public PreparedStatement|StatementSet|null $_select = null,
+            public PreparedStatement|StatementSet|Transaction|null $_update = null,
+            public PreparedStatement|StatementSet|Transaction|null $_insert = null,
+            public PreparedStatement|StatementSet|Transaction|null $_delete = null,
+            public ?string $instanceName = null
+        ){
+        if ($this->_update && !($this->_update instanceof Transaction)) {
+            $this->_update->queryType = QUERY_UPDATE;
+            $this->_update->resultType = VELOX_RESULT_NONE;
         }
-        if ($insert && !($insert instanceof Transaction)) {
-            $insert->queryType = QUERY_INSERT;
-            $insert->resultType = VELOX_RESULT_NONE;
+        if ($this->_insert && !($this->_insert instanceof Transaction)) {
+            $this->_insert->queryType = QUERY_INSERT;
+            $this->_insert->resultType = VELOX_RESULT_NONE;
         }
-        if ($delete && !($delete instanceof Transaction)) {
-            $delete->queryType = QUERY_DELETE;
-            $delete->resultType = VELOX_RESULT_NONE;
+        if ($this->_delete && !($this->_delete instanceof Transaction)) {
+            $this->_delete->queryType = QUERY_DELETE;
+            $this->_delete->resultType = VELOX_RESULT_NONE;
         }
-        $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
-        $this->_select = $select ?? null;
-        $this->_update = $update ?? new Transaction($conn);
-        $this->_insert = $insert ?? new Transaction($conn);
-        $this->_delete = $delete ?? new Transaction($conn);
+        $conn = $this->_select->conn ?? $this->_update->conn ?? $this->_insert->conn ?? $this->_delete->conn ?? null;
+        $this->_update = $this->_update ?? new Transaction($conn);
+        $this->_insert = $this->_insert ?? new Transaction($conn);
+        $this->_delete = $this->_delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
-        $this->instanceName = null;
-        $this->select();
     }
     
-    public function select(bool $diff = false) : Diff|bool {
+    public function select() : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -70,21 +74,39 @@ class Model {
                         throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
                 }
             }
-            elseif ($this->_select->results instanceof ResultSet){
+            if ($this->_select->results instanceof ResultSet){
                 $results = $this->_select->results->getRawData();
+                $this->_columns = $this->_select->results->columns();
             }
             else {
                 $results = [];
             }
-            $this->_data = $results;
-            if ($this->_select->results instanceof ResultSet){
-                $this->_columns = $this->_select->results->columns();
-            }
-            if ($this->_filter){
-                $this->setFilter($this->_filter);
+            
+            foreach ($this->submodels as $name => $submodel){
+                if (!$this->primaryKey){
+                    throw new VeloxException('primaryKey missing on parent of nested Model',41);
+                }
+                $submodel->select();
+                $pk = $this->primaryKey;
+                $fk = $submodel->foreignKey;
+                $submodel->object->sort($fk,SORT_ASC);
+                $fk_column = array_column($submodel->object->data(),$fk);
+                if (!$fk_column){
+                    throw new VeloxException("Foreign key column '".$fk."' does not exist in submodel.",43);
+                }
+                $this->sort($pk,SORT_ASC);
+                foreach ($this->_data as $index => $row){
+                    $fk_value = $this->_data[$pk];
+                    $fk_indices = array_keys($fk_column,$fk_value);
+                    $subdata = [];
+                    foreach ($fk_indices as $idx){
+                        $subdata[] = $submodel->object->data()[$idx];
+                    }
+                    $this->_data[$name] = $subdata;
+                }
             }
             
-            if ($diff) {
+            if ($this->returnDiff) {
                 $this->_diff = new Diff();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
@@ -100,11 +122,14 @@ class Model {
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_diff;
             }
             else {
-                return true;
+                $this->_data = $results;
             }
+            if ($this->_filter){
+                $this->setFilter($this->_filter);
+            }
+            return true;
         }
     }
     
@@ -112,34 +137,80 @@ class Model {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
+        $hasSubmodels = !!$this->submodels;
+        
         if (!$this->_update){
             throw new VeloxException('The associated procedure for update has not been defined.',37);
+        }
+        elseif ($hasSubmodels){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
+            //Hold on to the current filter to reapply later
+            $currentFilter = $this->_filter;
+            //Cache updated submodel names so we only query the ones needed
+            $updatedSubmodels = [];
         }
         elseif ($this->_update instanceof PreparedStatement){
             $this->_update->clear();
         }
         $reflection = new \ReflectionClass($this->_update);
-        switch ($reflection->getShortName()){
+        $statementType = $reflection->getShortName();
+        
+        switch ($statementType){
             case "PreparedStatement":
                 foreach($rows as $row){
+                    //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
+                    //PreparedStatement placeholders do not supply the necessary criteria for filtering.
                     $this->_update->addParameterSet($row);
                 }
                 break;
             case "StatementSet":
+                if ($hasSubmodels){
+                    foreach ($rows as &$row){
+                        foreach ($row as $column => $subcriteria){
+                            if (is_object($subcriteria)){
+                                $this->setFilter($subcriteria);
+                                $filteredResults = $this->data();
+                                $filteredKeys = array_column($filteredResults,$this->primaryKey);
+                                $fk = $this->submodels[$name]->foreignKey;
+                                $subcriteria->where = [(object)[$fk => ["IN",$filteredKeys]]];
+                                $this->submodels[$column]->addCriteria($subcriteria);
+                                unset ($row[$column]);
+                            }
+                        }
+                    }
+                }
                 $this->_update->addCriteria($rows);
                 break;
         }
         
-        $this->_update->execute();
+        $transaction = new Transaction;
+        $transaction->addQuery($this->_update);
+        if ($hasSubmodels){
+            foreach ($cachedSubmodels as $name){
+                $transaction->addQuery($this->submodels[$name]->object->_update);
+            }
+        }
+        $transaction->executeAll();
+        
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
     
-    public function insert(array $rows) : bool {
+    public function insert(array $rows, bool $diff = false) : bool {
+        $hasSubmodels = !!$this->submodels;
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
+        }
+        elseif ($hasSubmodels){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
         }
         elseif ($this->_insert instanceof PreparedStatement){
             $this->_insert->clear();
@@ -153,7 +224,10 @@ class Model {
                         if (!isset($row[$param])){
                             $row[$param] = null;
                         }
-                        $this->_insert->addParameterSet($row);
+                        $idx = $this->_insert->addParameterSet($row);
+                        if ($hasSubmodels && is_array($row[$param])){
+                            $row[$param]['_idx'] = $idx;
+                        }
                     }
                 }
                 break;
@@ -164,7 +238,7 @@ class Model {
         $this->_insert->execute();
         
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -172,6 +246,12 @@ class Model {
     public function delete(array $rows) : bool {
         if (!$this->_delete){
             throw new VeloxException('The associated procedure for delete has not been defined.',37);
+        }
+        elseif (!!$this->_submodels){
+            if (!$this->_select){
+                throw new VeloxException('Select query required for DML queries on nested Models',40);
+            }
+            $this->_select();
         }
         elseif ($this->_delete instanceof PreparedStatement){
             $this->_delete->clear();
@@ -190,7 +270,7 @@ class Model {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -262,7 +342,7 @@ class Model {
         if ($diff->select) {
             $this->setFilter($diff);
         }
-        $this->select(true);
+        $this->select();
         $this->_delaySelect = false;
     }
     public function columns() : array {
@@ -275,6 +355,25 @@ class Model {
         else {
             return $this->_data;
         }
+    }
+    public function diff() : Diff {
+        return $this->_diff;
+    }
+    public function addSubmodel(string $name, Model $submodel, string $foreignKey) : void {
+        //$name is the desired column name for export
+        //$submodel is the Model object to be used as the submodel
+        //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
+        if ($foreignKey == ""){
+            throw new VeloxException('Foreign key cannot be empty',42);   
+        }
+        if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update'])){
+            throw new VeloxException('Submodel updates are not allowed when the parent Model update is a PreparedStatement',45);
+        }
+        if ($this->_delete instanceof PreparedStatement && isset($submodel->getDefinedQueries()['delete'])){
+            throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
+        }
+        $submodel->instanceName = $name;
+        $this->_submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
     }
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
@@ -297,6 +396,16 @@ class Model {
                                 continue 3;
                             }
                             break;
+                        case "IN":
+                            if (!in_array($row[$column],$criteria[2])){
+                                continue 3;
+                            }
+                            break;
+                        case "NOT IN":
+                            if (in_array($row[$column],$criteria[2])){
+                                continue 3;
+                            }
+                            break;   
                         case "IS NULL":
                             if (!is_null($row[$column])){
                                 continue 3;
@@ -320,6 +429,9 @@ class Model {
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
+    }
+    public function getDefinedQueries() : array {
+        return ['select'=>&$this->_select, 'update'=>&$this->_update, 'insert'=>&$this->_insert, 'delete'=>&$this->_delete];
     }
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
