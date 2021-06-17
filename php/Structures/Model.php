@@ -175,7 +175,7 @@ class Model {
                                 $filteredResults = $this->data();
                                 $filteredKeys = array_column($filteredResults,$this->primaryKey);
                                 $fk = $this->submodels[$name]->foreignKey;
-                                $subcriteria->where[] = (object)[$fk => ["IN",$filteredKeys]];
+                                $subcriteria->where = [(object)[$fk => ["IN",$filteredKeys]]];
                                 $this->submodels[$column]->addCriteria($subcriteria);
                                 unset ($row[$column]);
                             }
