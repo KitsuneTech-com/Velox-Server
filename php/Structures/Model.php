@@ -84,7 +84,7 @@ class Model {
             
             foreach ($this->submodels as $name => $submodel){
                 if (!$this->primaryKey){
-                    throw new VeloxException('primaryKey missing on parent of nested Model',41);
+                    throw new VeloxException('Primary key column name must be specified for parent Model',41);
                 }
                 $submodel->select();
                 $pk = $this->primaryKey;
@@ -217,21 +217,34 @@ class Model {
         }
         $reflection = new \ReflectionClass($this->_insert);
         $transaction = new Transaction;
-        //Add parent query to 
-        $transaction->addQuery($this->_insert);
+        $baseQuery = clone $this->_insert;
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 $namedParams = $this->_insert->getNamedParams();
-                foreach($rows as $row){
+                if ($hasSubmodels){
+                    $submodelDataCache = [];
+                }
+                foreach($rows as $idx => $row){
                     foreach($namedParams as $param){
+                        //set nulls for missing parameters of prepared statement
                         if (!isset($row[$param])){
                             $row[$param] = null;
                         }
-                        $idx = $this->_insert->addParameterSet($row);
-                        if ($hasSubmodels && is_array($row[$param])){
-                            $row[$param]['_idx'] = $idx;
+                        //make sure the data passed into named parameters is valid
+                        elseif (is_iterable($row[$param])){
+                            throw new VeloxException("Invalid value passed for PreparedStatement parameter.",47);
                         }
                     }
+                    if ($hasSubmodels){
+                        $submodelDataCache[$idx] = [];
+                        foreach ($row as $column => $value){
+                            if (is_array($value)){
+                                $submodelDataCache[$idx][$column] = $value;
+                                unset($row[$column]);
+                            }
+                        }
+                    }
+                    $this->_insert->addParameterSet($row);
                 }
                 break;
             case "StatementSet":
@@ -367,10 +380,10 @@ class Model {
         //$submodel is the Model object to be used as the submodel
         //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
         if (!$this->primaryKey){
-            throw new VeloxException('Primary key column name must be specified for parent Model',47);
+            throw new VeloxException('Primary key column name must be specified for parent Model',41);
         }
-        if ($foreignKey == ""){
-            throw new VeloxException('Foreign key cannot be empty',42);   
+        if ($name == "" || $foreignKey == ""){
+            throw new VeloxException('Name and foreign key arguments cannot be empty strings',42);   
         }
         if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update'])){
             throw new VeloxException('Submodel updates are not allowed when the parent Model update is a PreparedStatement',45);
