@@ -2,6 +2,14 @@
 namespace KitsuneTech\Velox\Utility;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 
+function deleteArrayColumn(array &$array, string $key) : void {
+    foreach ($array as $row){
+        unset ($row[$key]);
+    }
+}
+function isAscii($str) {
+    return preg_match('/[^\x00-\x7F]/', $str) == 0;
+}
 function recur_ksort(&$array) {
     foreach ($array as &$value) {
         if (is_array($value)) {
@@ -10,11 +18,6 @@ function recur_ksort(&$array) {
     }
     return ksort($array);
 }
-
-function isAscii($str) {
-    return preg_match('/[^\x00-\x7F]/', $str) == 0;
-}
-
 function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
     //This is based on and functionally equivalent to MySQL comparison operations.
     $v1_type = gettype($value1);
@@ -58,3 +61,4 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
             throw new VeloxException("Unsupported operator",36);
     }
 }
+
