@@ -23,6 +23,12 @@ class PreparedStatement extends Query {
             $this->_paramCount = preg_match_all("/\?/",$sql);
         }
     }
+    public function __clone() : void {
+        parent::__clone();
+        //Named parameters are retained, but values assigned to the parameters are not.
+        $this->_paramArray = [];
+        $this->_setCount = 0;
+    }
     public function addParameterSet(array $paramArray, string $prefix = '') : int {
         foreach ($paramArray as $key => $value){
             if (!is_array($value)){
