@@ -48,6 +48,9 @@ class PreparedStatement extends Query {
     public function getParamCount() : int {
         return $this->_paramCount;
     }
+    public function getSetCount() : int {
+        return $this->_setCount;
+    }
     public function clear() : void {
         $this->_paramArray = [];
         $this->_setCount = 0;
