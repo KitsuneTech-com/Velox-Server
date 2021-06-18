@@ -25,9 +25,7 @@ class PreparedStatement extends Query {
     }
     public function __clone() : void {
         parent::__clone();
-        //Named parameters are retained, but values assigned to the parameters are not.
-        $this->_paramArray = [];
-        $this->_setCount = 0;
+        $this->clear();
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : int {
         foreach ($paramArray as $key => $value){
