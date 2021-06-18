@@ -152,10 +152,8 @@ class Model {
             //Cache updated submodel names so we only query the ones needed
             $updatedSubmodels = [];
         }
-        elseif ($this->_update instanceof PreparedStatement){
-            $this->_update->clear();
-        }
-        $reflection = new \ReflectionClass($this->_update);
+        $currentProcedure = clone $this->_update;
+        $reflection = new \ReflectionClass($currentProcedure);
         $statementType = $reflection->getShortName();
         
         switch ($statementType){
@@ -163,7 +161,7 @@ class Model {
                 foreach($rows as $row){
                     //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
                     //PreparedStatement placeholders do not supply the necessary criteria for filtering.
-                    $this->_update->addParameterSet($row);
+                    $currentProcedure->addParameterSet($row);
                 }
                 break;
             case "StatementSet":
@@ -175,19 +173,22 @@ class Model {
                                 $filteredResults = $this->data();
                                 $filteredKeys = array_column($filteredResults,$this->primaryKey);
                                 $fk = $this->submodels[$name]->foreignKey;
-                                $subcriteria->where = [(object)[$fk => ["IN",$filteredKeys]]];
-                                $this->submodels[$column]->addCriteria($subcriteria);
+                                $whereCount = count($subcriteria->where);
+                                for ($i=0; $i<$whereCount; $i++){
+                                    $subcriteria->where[$i]->$fk = ["IN",$filteredKeys]];
+                                }
+                                $this->submodels[$column]->object->_update->addCriteria($subcriteria);
                                 unset ($row[$column]);
                             }
                         }
                     }
                 }
-                $this->_update->addCriteria($rows);
+                $currentProcedure->addCriteria($rows);
                 break;
         }
         
         $transaction = new Transaction;
-        $transaction->addQuery($this->_update);
+        $transaction->addQuery($currentProcedure);
         if ($hasSubmodels){
             foreach ($cachedSubmodels as $name){
                 $transaction->addQuery($this->submodels[$name]->object->_update);
@@ -210,41 +211,46 @@ class Model {
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
-            $this->_select();
+            $this->select();
         }
-        elseif ($this->_insert instanceof PreparedStatement){
-            $this->_insert->clear();
-        }
-        $reflection = new \ReflectionClass($this->_insert);
         $transaction = new Transaction;
-        $baseQuery = clone $this->_insert;
+        $currentProcedure = clone $this->_insert;
+        $reflection = new \ReflectionClass($currentProcedure);
+        
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 $namedParams = $this->_insert->getNamedParams();
-                if ($hasSubmodels){
-                    $submodelDataCache = [];
-                }
                 foreach($rows as $idx => $row){
                     foreach($namedParams as $param){
                         //set nulls for missing parameters of prepared statement
-                        if (!isset($row[$param])){
-                            $row[$param] = null;
-                        }
+                        $row[$param] = $row[$param] ?? null;
+                        
                         //make sure the data passed into named parameters is valid
-                        elseif (is_iterable($row[$param])){
-                            throw new VeloxException("Invalid value passed for PreparedStatement parameter.",47);
+                        if (is_iterable($row[$param])){
+                            throw new VeloxException("Model->insert: Invalid value passed for PreparedStatement parameter.",47);
                         }
                     }
                     if ($hasSubmodels){
-                        $submodelDataCache[$idx] = [];
+                        $submodelDataCache = [];
                         foreach ($row as $column => $value){
                             if (is_array($value)){
-                                $submodelDataCache[$idx][$column] = $value;
+                                $submodelDataCache[$column] = $value;
                                 unset($row[$column]);
                             }
                         }
                     }
-                    $this->_insert->addParameterSet($row);
+                   
+                    if (isset($submodelDataCache)){
+                        //Attach the previous PreparedStatement to the Transaction (if parameter sets already exist)
+                        if ($currentProcedure->
+                        $currentProcedure = clone $this->_insert;
+                    }
+ 
+                    $baseQuery->addParameterSet($row);
+                    if (isset($submodelDataCache)){
+                        
+                        unset $submodelDataCache;
+                    }
                 }
                 break;
             case "StatementSet":
