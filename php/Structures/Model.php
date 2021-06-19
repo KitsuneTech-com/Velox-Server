@@ -231,6 +231,7 @@ class Model {
                         }
                     }
                     if ($hasSubmodels){
+                        //Check the row for any nested datasets; cache them in an array and remove them from the row 
                         $submodelDataCache = [];
                         foreach ($row as $column => $value){
                             if (is_array($value)){
@@ -239,16 +240,19 @@ class Model {
                             }
                         }
                     }
-                   
-                    if (isset($submodelDataCache)){
-                        //Attach the previous PreparedStatement to the Transaction (if parameter sets already exist)
-                        if ($currentProcedure->
+                    //If any nested datasets are found (and parameter sets already exist for the current procedure)...
+                    if (isset($submodelDataCache) && $currentProcedure->getSetCount() > 0){
+                        //Attach the previous PreparedStatement to the Transaction...
+                        $transaction->addQuery($currentProcedure);
+                        //...then make a fresh clone for this iteration
                         $currentProcedure = clone $this->_insert;
                     }
- 
-                    $baseQuery->addParameterSet($row);
+                    //Add the adjusted row to the current procedure
+                    $currentProcedure->addParameterSet($row);
                     if (isset($submodelDataCache)){
-                        
+                        foreach($submodelDataCache as $submodelName => $rows){
+                            //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction   
+                        }
                         unset $submodelDataCache;
                     }
                 }
