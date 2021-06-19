@@ -175,7 +175,7 @@ class Model {
                                 $fk = $this->submodels[$name]->foreignKey;
                                 $whereCount = count($subcriteria->where);
                                 for ($i=0; $i<$whereCount; $i++){
-                                    $subcriteria->where[$i]->$fk = ["IN",$filteredKeys]];
+                                    $subcriteria->where[$i]->$fk = ["IN",$filteredKeys];
                                 }
                                 $this->submodels[$column]->object->_update->addCriteria($subcriteria);
                                 unset ($row[$column]);
@@ -253,7 +253,7 @@ class Model {
                         foreach($submodelDataCache as $submodelName => $rows){
                             //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction   
                         }
-                        unset $submodelDataCache;
+                        unset ($submodelDataCache);
                     }
                 }
                 break;
