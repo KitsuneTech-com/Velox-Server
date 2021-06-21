@@ -17,7 +17,7 @@ class Transaction {
     private array $_paramArray = [];
     private array $_executionOrder = [];
     
-    public function __construct(?Connection &$conn = null) {
+    public function __construct(?Connection &$conn = null) : void {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
