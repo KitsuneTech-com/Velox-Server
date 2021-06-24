@@ -6,7 +6,7 @@ use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Tran
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
-class Model {
+class Model implements \ArrayAccess, \Iterator, \Countable {
     
     // Note: in Model->update() and Model->delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
     // In Model->update() and Model->insert(), $values is an array of associative arrays, the keys of which are the column names represented
@@ -18,6 +18,7 @@ class Model {
     private array $_filteredIndices = [];
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
+    private int $_currentIndex = 0;
     
     //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
     // (false by default: returns full resultset)
@@ -53,6 +54,47 @@ class Model {
         $this->_insert = $this->_insert ?? new Transaction($conn);
         $this->_delete = $this->_delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
+    }
+    
+    // Countable implementation
+    public function count() : int {
+        return count($this->_data);
+    }
+    
+    // Iterator implementation
+    public function current() : array {
+        return $this->_data[$this->_currentIndex];
+    }
+    public function key() : int {
+        return $this->_currentIndex;
+    }
+    public function next() : void {
+        $this->_currentIndex++;
+    }
+    public function rewind() : void {
+        $this->_currentIndex = 0;
+    }
+    public function valid() : bool {
+        return isset($this->_data[$this->_currentIndex]);
+    }
+    
+    // ArrayAccess implementation
+    public function offsetSet(mixed $offset, mixed $row){
+        throw new VeloxException('Model rows cannot be inserted by array access. Use Model->insert() instead.',48);
+    }
+    public function offsetGet(mixed $offset) : array {
+        if (!$this->offsetExists($offset)){
+            throw new VeloxException("Offset out of bounds",49);
+        }
+        return $this->_data[$offset];
+    }
+    public function offsetUnset(mixed $offset) : void {
+        $currentRow = $this->_data[$offset];
+        $this->delete($currentRow);
+        $this->select();
+    }
+    public function offsetExists(mixed $offset) : bool {
+        return isset($this->_data[$offset]);
     }
     
     public function select() : Diff|bool {
