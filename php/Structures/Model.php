@@ -97,6 +97,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return isset($this->_data[$offset]);
     }
     
+    // Class-specific methods
     public function select() : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
