@@ -300,7 +300,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 break;
             case "StatementSet":
-                $this->_insert->addCriteria($rows);
+                $currentProcedure->addCriteria($rows);
+                $transaction->addQuery($currentProcedure);
                 break;
         }
         $transaction->executeAll();
