@@ -304,6 +304,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 $transaction->addQuery($currentProcedure);
                 break;
         }
+        $transaction->begin();
         $transaction->executeAll();
         
         if (!$this->_delaySelect){
