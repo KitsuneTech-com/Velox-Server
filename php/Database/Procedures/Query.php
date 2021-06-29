@@ -65,6 +65,11 @@ class Query {
     }
     
     public function dumpQuery() : array {
-        return ["type"=>"Query","connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],"procedure"=>$this->sql];
+        return [
+            "type"=>"Query",
+            "connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],
+            "procedure"=>$this->sql,
+            "parameters"=>null
+        ];
     }
 }
