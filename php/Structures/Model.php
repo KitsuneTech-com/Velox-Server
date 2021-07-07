@@ -245,7 +245,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return true;
     }
     
-    public function insert(array $rows, bool $diff = false) : bool {
+    public function insert(array $rows, bool $diff = false, bool $defer = false) : bool {
         $hasSubmodels = !!$this->submodels;
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
@@ -292,11 +292,37 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                     //Add the adjusted row to the current procedure
                     $currentProcedure->addParameterSet($row);
+                    
                     if (isset($submodelDataCache)){
-                        foreach($submodelDataCache as $submodelName => $rows){
-                            //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction   
+                         $parentModel = $this;
+                         //Note: bridge function is called during Transaction execution, not as part of this method.
+                         $bridge = function(Query &$previous, PreparedStatement|StatementSet &$next) use (&$submodelDataCache, &$parentModel){
+                            foreach ($submodelDataCache as $submodelName => $rows){
+                                $rowCount = count($rows);
+                                $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
+                                
+                                for ($i=0; $i<$rowCount; $i++){
+                                    $fk_name = $submodelDataCache[$submodelName]->foreignKey;
+                                    //add primary key values to each foreign key of each submodel insert
+                                    if ($next instanceof PreparedStatement){
+                                        $paramArray = &$next->getParams();
+                                        array_walk($paramArray,function(&$paramSet) use ($fk_name, $pk_value){
+                                            $paramSet[$fk_name] = $pk_value;
+                                        });
+                                    }
+                                    elseif ($next instanceof StatementSet){
+                                        
+                                    }
+                                }
+                            }
                         }
-                        unset ($submodelDataCache);
+                        
+                        foreach($submodelDataCache as $submodelName => $rows){
+                            //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
+                            $proc = $this->submodels[$submodelName]->insert($rows);
+                            $transaction->addQuery($proc);
+                        }
+                        unset($submodelDataCache);
                     }
                 }
                 break;
@@ -447,7 +473,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
         }
         $submodel->instanceName = $name;
-        $this->_submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
+        $this->submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
     }
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
