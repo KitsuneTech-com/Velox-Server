@@ -15,7 +15,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public ResultSet|array|bool|null $results;
     public bool $optimize = true;
     
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, private array|Diff $_criteria = []){
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = []){
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
             throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
@@ -39,8 +39,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 $this->queryType = QUERY_SELECT;
             }
         }
-        if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
-            $this->addCriteria($this->_criteria);
+        if ($this->criteria instanceof Diff || count($this->criteria) > 0){
+            $this->addCriteria($this->criteria);
         }
     }
     
@@ -136,6 +136,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     if ($this->queryType == QUERY_INSERT) break;
                 case QUERY_SELECT:
                 case QUERY_DELETE:
+                //case QUERY_UPDATE: (fall-through)
                     $requiredKeys[] = "where";
                     break;
             }
@@ -146,17 +147,17 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
                 }
                 $hashedKeys = $this->criterionHash($criterion);
-                if (!isset($this->_criteria[$hashedKeys])){
-                    $this->_criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
+                if (!isset($this->criteria[$hashedKeys])){
+                    $this->criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
                 }
-                $this->_criteria[$hashedKeys]['data'][] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? []];
+                $this->criteria[$hashedKeys]['data'][] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? []];
             }
         }
     }
     public function setStatements() : void {
         $setId = uniqid();
         $statements = [];
-        $criteria = $this->_criteria;
+        $criteria = $this->criteria;
 
         if (count($criteria) == 0){
             $criteria[0]['where'] = [];
