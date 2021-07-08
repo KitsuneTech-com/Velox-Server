@@ -15,10 +15,9 @@ dependency by including the following in the composer.json file in your project 
     "kitsunetech/velox": "dev-main"
   }
 }
-
 ```
 Note: Since Velox is currently in active development, no version number is yet assigned. If you fork this repository, you will need to change
-the url and require properties to reflect your fork.
+the url to reflect your fork.
 
 ## Classes
 
@@ -54,7 +53,7 @@ StatementSet is the most versatile of these classes. It addresses several shortc
 of PreparedStatements depending on the values and criteria given to it. Among other things, this behavior allows for operators to be assigned dynamically
 and for column names and values to only be specified as needed.
 Because of this unique, non-standard behavior, SQL used to define a StatementSet follows an augmented syntax, with placeholders similar to those used
-by Angular. Three basic placeholders are allowed (<<values>>, <<columns>>, and <<condition>>), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
+by Angular. Three basic placeholders are allowed (\<\<values\>\>, \<\<columns\>\>, and \<\<condition\>\>), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
   ```
   SELECT <<columns>> FROM myTable WHERE <<condition>>
   INSERT INTO myTable (<<columns>>) VALUES (<<values>>)
@@ -96,7 +95,7 @@ All requests to a Velox API endpoint are done using either form-encoded variable
 values to be used by the corresponding query. Each object in the array, depending on the type of query being used, will have either or both of the following properties: "where", which defines the filtering criteria (as in a SQL WHERE clause); and "values", which contains name-value pairs to be inserted or
 updated by the query. The "where" property is itself an array of objects, each representing a set of criteria to be ORed together; each element object
 represents specific column criteria, with the properties ANDed together. The values of these properties are arrays of one to three elements, the first of
-which is a string containing a standard SQL operator, and the following element(s) corresponding to the right side of the operation. The "values" property
+which is a string containing a standard SQL operator, and the followin g element(s) corresponding to the right side of the operation. The "values" property
 is simpler; the object represents a single row to be inserted or updated, with the keys and values being the column names and intended values, respectively.
   
 If all this seems complicated, an illustration may help to clear it up. Let's say you have a table called "addresses", structured as so:
