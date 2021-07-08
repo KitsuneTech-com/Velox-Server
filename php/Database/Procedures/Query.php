@@ -7,12 +7,38 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 class Query {
-    public array|ResultSet|bool $results;
-    public array $tables = [];
+    public array|ResultSet|bool $results = [];
     private array $_lastAffected = [];
     
-    public function __construct(public Connection &$conn, public string $sql, public int $queryType = QUERY_SELECT, public int $resultType = VELOX_RESULT_ARRAY) {}
-    
+    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
+        if (!$this->queryType){
+            //Attempt to determine type by first keyword if query type isn't specified
+            $lc_query = strtolower($this->sql);
+            if (str_starts_with($lc_query,"select")){
+                $this->queryType = QUERY_SELECT;
+            }
+            elseif (str_starts_with($lc_query,"insert")){
+                $this->queryType = QUERY_INSERT;
+            }
+            elseif (str_starts_with($lc_query,"update")){
+                $this->queryType = QUERY_UPDATE;
+            }
+            elseif (str_starts_with($lc_query,"delete")){
+                $this->queryType = QUERY_DELETE;
+            }
+            elseif (str_starts_with($lc_query,"call")){
+                $this->queryType = QUERY_PROC;
+            }
+            else {
+                $this->queryType = QUERY_SELECT;
+            }
+        }
+    }
+    public function __clone() : void {
+        //A cloned Query doesn't retain the original's results.
+        $this->results = [];
+        $this->_lastAffected = [];
+    }
     public function execute() : bool {
         $this->results = $this->conn->execute($this);
         $this->_lastAffected = $this->conn->getLastAffected();
@@ -39,6 +65,11 @@ class Query {
     }
     
     public function dumpQuery() : array {
-	    return ["type"=>"Query","connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],"query"=>$this->sql];
+        return [
+            "type"=>"Query",
+            "connection"=>["host"=>$this->conn->getHost(),"db"=>$this->conn->getDB(),"type"=>$this->conn->getServerType()],
+            "procedure"=>$this->sql,
+            "parameters"=>null
+        ];
     }
 }

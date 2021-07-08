@@ -52,11 +52,13 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 37   | The associated procedure for xxxx has not been defined.       | In order to call the given Model method, the corresponding procedure must have been defined in the constructor call. |
 | 38   | Column 'xxxx' does not exist in result set.                   | Attempted to filter on a column that doesn't exist in the result set.               |
 | 40   | Select query required for DML queries on nested Models        | A nested Model was defined without a select query set on the parent Model. Submodels need this in order to match the parent's primary key. |
-| 41   | primaryKey missing on parent of nested Model                  | A query was attempted on a nested Model without a primaryKey property set. This needs to be set in order to join the submodel(s). |
-| 42   | Foreign key cannot be empty                                   | The foreign key argument on addSubquery() cannot be an empty string.                |
+| 41   | Primary key column name must be specified for parent Model    | Without a primary key, submodel rows can't be linked to parent Model rows.          |
+| 42   | Name and foreign key arguments cannot be empty strings        | The names and foreign keys of submodels must be specified.                          |
 | 43   | Foreign key column 'xxxx' does not exist in submodel.         | The specified foreign key isn't a column in the submodel it was defined for. Make sure the key matches a column in the underlying query. |
 | 45   | Submodel updates are not allowed when the parent Model update is a PreparedStatement | PreparedStatement placeholders don't supply the necessary column names. Only a StatementSet can do this. |
-
+| 47   | Model->insert: Invalid value passed for PreparedStatement parameter. | An iterable (array or object) was passed in as a value to a PreparedStatement named parameter. If this was intended to be a submodel query, make sure the submodel doesn't have the same name as a named parameter. |
+| 48   | Model rows cannot be inserted by array access. Use Model->insert() instead. | Primary key values in the underlying database may differ from the Model array indices, so Model cannot automatically determine the appropriate value for a given position. |
+| 49   | Offset out of bounds                                          | Attempted to access an array offset that doesn't exist in the Model. (Note: Model array keys are *not* the same as primary key indices.) |
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
 | ---- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
