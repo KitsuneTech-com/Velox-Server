@@ -209,13 +209,24 @@ class Connection {
         $results = [];
     
         try {
-            if (!!$placeholders){    //placeholders signify that this is intended to be run more than once
+            if (count($placeholders) > 0){    //placeholders signify that this is intended to be run more than once
                 $firstExecution = true;
                 switch ($this->_serverType){
                     case DB_MYSQL:
                         foreach ($paramArray as $paramSet){
                             foreach (array_keys($paramSet) as $key){
-                                $stmt->bindParam($key,$paramSet[$key]);
+                                try {
+                                    $stmt->bindParam($key,$paramSet[$key]);
+                                }
+                                catch(Exception $ex){
+                                    if ($queryType == QUERY_PROC && str_starts_with($key,':op_')){
+                                        //Ignore missing :op_ placeholder for stored procedures (these will be passed by StatementSet
+                                        //but are not strictly necessary)
+                                    }
+                                    else {
+                                        throw new VeloxException('Placeholder '.$key.' does not exist in prepared statement SQL',46);
+                                    }
+                                }
                             }
                             if (!$stmt->execute($paramSet)){
                                 $err = $stmt->errorInfo();

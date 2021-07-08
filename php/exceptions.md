@@ -16,6 +16,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 19   | Query SQL is not set                                          | A Query object was passed to Connection::execute() without its sql property set.    |
 | 20   | SQL statement failed to prepare                               | The underlying prepare function/method failed. See chained exception for details.   |
 | 21   | Query failed to execute                                       | The database failed to execute the query. See chained exception for details.        |
+| 46   | Placeholder 'xxxx' does not exist in prepared statement SQL   | A parameter was passed to a prepared statement with an incorrect placeholder name.  |
 | ***  | PDO/MySQL error:                                              | PDO returned an error when connecting to MySQL (error code is for PDOException)     |
 
 ### Database\Procedures\Query
@@ -31,7 +32,6 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 25   | Criteria must be set before StatementSet can be executed.     | StatementSet cannot be executed without specifying at least one set of conditions.  |
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 | 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
-| 46   | Stored procedure calls are not supported by StatementSet.     | StatementSet placeholders are incompatible with stored procedure calls. A PreparedStatement must be used. |
 
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |

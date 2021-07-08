@@ -16,33 +16,6 @@ if ((@include_once $autoloaderPath) === false){
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\{Model, Diff};
 
-function createSubmodel(Model &$parentModel, array $queries, string $name) : void {
-    foreach ($queries as $key => &$procedure){
-        $nested = [];
-        switch ($key){
-            case 'SELECT':
-            case 'INSERT':
-            case 'UPDATE':
-            case 'DELETE':
-            case 'PK':
-            case 'FK':
-                $$key = &$procedure;
-                break;
-            default:
-                if (is_array($procedure)){
-                    $nested[$key] = $procedure;
-                }
-                break;
-        }
-        $submodel = new Model($SELECT,$UPDATE,$INSERT,$DELETE);
-        $submodel->primaryKey = $PK;
-        foreach ($nested as $name => $queries){
-            createSubmodel($submodel,$queries,$name);
-        }
-        $parentModel->addSubmodel($name,$submodel,$FK);
-    }
-}
-
 //The endpoint uses the 'q' GET parameter to find the appropriate query definition, so this parameter must be sent on the request.
 if (!isset($_GET['q'])){
     throw new VeloxException("No query name specified. Name must be specified as a '?q=' GET parameter on the request.",1);
@@ -60,16 +33,30 @@ if (!file_exists($queryFileName)){
 
 //Generate array (try decoding JSON request first; if it's not JSON, fallback to standard POST
 try {
-    $test = json_decode(file_get_contents("php://input"),true,512,JSON_THROW_ON_ERROR);
-    //If the test succeeds, then we got valid JSON, so use that string
-    $post = file_get_contents("php://input");
+    $post_array = json_decode(file_get_contents("php://input"),true,512,JSON_THROW_ON_ERROR);
 }
 catch(Exception $ex){
-    //If the test for valid JSON fails, then we expect standard form-encoded POST. JSON encode that.
-    $post = json_encode($_POST);
+    $post_array = $_POST;
 }
 
-$DIFF = new Diff($post);
+//Assign variables from array
+$SELECT = $post_array['select'] ?? [];
+$UPDATE = $post_array['update'] ?? [];
+$INSERT = $post_array['insert'] ?? [];
+$DELETE = $post_array['delete'] ?? [];
+$META = $post_array['meta'] ?? [];
+
+
+if ($SELECT || $UPDATE || $INSERT || $DELETE){
+    $DIFF = new Diff();
+    $DIFF->select = is_array($SELECT) ? $SELECT : json_decode($SELECT);
+    $DIFF->update = is_array($UPDATE) ? $UPDATE : json_decode($UPDATE);
+    $DIFF->insert = is_array($INSERT) ? $INSERT : json_decode($INSERT);
+    $DIFF->delete = is_array($DELETE) ? $DELETE : json_decode($DELETE);
+}
+else {
+    $DIFF = null;
+}
 
 $QUERIES = [];
 
@@ -80,16 +67,11 @@ require_once $queryFileName;
 
 //Allow pre-processing of data prior to query call (such as password hashing, etc.)
 if (function_exists("preProcessing")){
-    preProcessing($DIFF);
+    preProcessing($DIFF->select,$DIFF->update,$DIFF->insert,$DIFF->delete);
 }
 
 if ($QUERIES['SELECT'] ?? false){
     $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
-    foreach ($QUERIES as $key => $value){
-        if (is_array($value)){
-            createSubmodel($VELOX_MODEL,$value,$key);
-        }
-    }
     if ($DIFF){
         $VELOX_MODEL->synchronize($DIFF);
     }

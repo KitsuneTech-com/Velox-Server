@@ -61,7 +61,7 @@ class Query {
         }
     }
     public function getLastAffected() : array {
-        return $this->_lastAffected;
+	    return $this->_lastAffected;
     }
     
     public function dumpQuery() : array {

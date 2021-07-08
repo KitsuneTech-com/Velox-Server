@@ -8,52 +8,56 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 class Model implements \ArrayAccess, \Iterator, \Countable {
     
-    // Note: in Model->update() and Model->delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
-    // In Model->update() and Model->insert(), $values is an array of associative arrays, the keys of which are the column names represented
-    // in the model. In Model->insert(), any columns not specified are set as NULL.   
+    // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
+    // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
+    // in the model. In Model::insert(), any columns not specified are set as NULL.   
+    private PreparedStatement|StatementSet|null $_select;
+    private PreparedStatement|StatementSet|Transaction|null $_update;
+    private PreparedStatement|StatementSet|Transaction|null $_insert;
+    private PreparedStatement|StatementSet|Transaction|null $_delete;
     private array $_columns = [];
     private array $_data = [];
-    private Diff $_diff;
+    private object $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
     
-    //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
-    // (false by default: returns full resultset)
-    public bool $returnDiff = false;
+    //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
+    //(such as when several Models are stored in an array)
+    public string|null $instanceName = null;
     
-    //Model->submodels is public for the sake of reference by Export. This property should not be modified directly by user-defined code.
-    public array $submodels = [];
-    
-    //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
-    public ?string $primaryKey = null;
-    
-    public function __construct(
-            public PreparedStatement|StatementSet|null $_select = null,
-            public PreparedStatement|StatementSet|Transaction|null $_update = null,
-            public PreparedStatement|StatementSet|Transaction|null $_insert = null,
-            public PreparedStatement|StatementSet|Transaction|null $_delete = null,
-            public ?string $instanceName = null
-        ){
-        if ($this->_update && !($this->_update instanceof Transaction)) {
-            $this->_update->queryType = QUERY_UPDATE;
-            $this->_update->resultType = VELOX_RESULT_NONE;
+    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
+        if ($select && $select->queryType != QUERY_PROC){
+            $select->queryType = QUERY_SELECT;
         }
-        if ($this->_insert && !($this->_insert instanceof Transaction)) {
-            $this->_insert->queryType = QUERY_INSERT;
-            $this->_insert->resultType = VELOX_RESULT_NONE;
+        if ($update && !($update instanceof Transaction)) {
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_UPDATE;
+            }
+            $update->resultType = VELOX_RESULT_NONE;
         }
-        if ($this->_delete && !($this->_delete instanceof Transaction)) {
-            $this->_delete->queryType = QUERY_DELETE;
-            $this->_delete->resultType = VELOX_RESULT_NONE;
+        if ($insert && !($insert instanceof Transaction)) {
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_INSERT;
+            }
+            $insert->resultType = VELOX_RESULT_NONE;
         }
-        $conn = $this->_select->conn ?? $this->_update->conn ?? $this->_insert->conn ?? $this->_delete->conn ?? null;
-        $this->_update = $this->_update ?? new Transaction($conn);
-        $this->_insert = $this->_insert ?? new Transaction($conn);
-        $this->_delete = $this->_delete ?? new Transaction($conn);
+        if ($delete && !($delete instanceof Transaction)) {
+            if ($select->queryType != QUERY_PROC){
+                $update->queryType = QUERY_DELETE;
+            }
+            $delete->resultType = VELOX_RESULT_NONE;
+        }
+        $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
+        $this->_select = $select ?? null;
+        $this->_update = $update ?? new Transaction($conn);
+        $this->_insert = $insert ?? new Transaction($conn);
+        $this->_delete = $delete ?? new Transaction($conn);
         $this->_diff = new Diff('{}');
+        $this->instanceName = null;
+        $this->select();
     }
     
     // Countable implementation
@@ -102,6 +106,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
+        if ($this->_select->queryType == QUERY_PROC){
+            //add criteria to query first   
+        }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
             if (is_array($this->_select->results)){
@@ -117,14 +124,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
                 }
             }
-            if ($this->_select->results instanceof ResultSet){
+            elseif ($this->_select->results instanceof ResultSet){
                 $results = $this->_select->results->getRawData();
-                $this->_columns = $this->_select->results->columns();
             }
             else {
                 $results = [];
-            }
-            
+            }  
             foreach ($this->submodels as $name => $submodel){
                 if (!$this->primaryKey){
                     throw new VeloxException('Primary key column name must be specified for parent Model',41);
@@ -149,7 +154,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
             
-            if ($this->returnDiff) {
+            if ($diff) {
                 $this->_diff = new Diff();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
@@ -165,14 +170,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
+                return $this->_diff;
             }
             else {
-                $this->_data = $results;
+                return true;
             }
-            if ($this->_filter){
-                $this->setFilter($this->_filter);
-            }
-            return true;
         }
     }
     
@@ -180,8 +182,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
-        $hasSubmodels = !!$this->submodels;
-        
         if (!$this->_update){
             throw new VeloxException('The associated procedure for update has not been defined.',37);
         }
@@ -238,9 +238,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         $transaction->executeAll();
-        
+      
         if (!$this->_delaySelect){
-            $this->select();
+            $this->select(true);
         }
         return true;
     }
@@ -335,7 +335,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $transaction->executeAll();
         
         if (!$this->_delaySelect){
-            $this->select();
+            $this->select(true);
         }
         return true;
     }
@@ -343,12 +343,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function delete(array $rows) : bool {
         if (!$this->_delete){
             throw new VeloxException('The associated procedure for delete has not been defined.',37);
-        }
-        elseif (!!$this->_submodels){
-            if (!$this->_select){
-                throw new VeloxException('Select query required for DML queries on nested Models',40);
-            }
-            $this->_select();
         }
         elseif ($this->_delete instanceof PreparedStatement){
             $this->_delete->clear();
@@ -367,7 +361,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select();
+            $this->select(true);
         }
         return true;
     }
@@ -496,16 +490,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                                 continue 3;
                             }
                             break;
-                        case "IN":
-                            if (!in_array($row[$column],$criteria[2])){
-                                continue 3;
-                            }
-                            break;
-                        case "NOT IN":
-                            if (in_array($row[$column],$criteria[2])){
-                                continue 3;
-                            }
-                            break;   
                         case "IS NULL":
                             if (!is_null($row[$column])){
                                 continue 3;
@@ -529,9 +513,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
-    }
-    public function getDefinedQueries() : array {
-        return ['select'=>&$this->_select, 'update'=>&$this->_update, 'insert'=>&$this->_insert, 'delete'=>&$this->_delete];
     }
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
