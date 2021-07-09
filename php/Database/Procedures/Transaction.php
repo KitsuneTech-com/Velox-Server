@@ -24,6 +24,17 @@ class Transaction {
         }
     }
     
+    public function __clone() : void {
+        $this->_paramArray = [];
+        $this->_results = [];
+        $this->_currentIndex = 0;
+        $this->_lastAffected = [];
+        $this->_paramArray = [];
+        foreach ($this->executionOrder as $idx => $procedure){
+            $this->executionOrder[$idx] = clone $procedure;
+        }
+    }
+    
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
         $executionCount = count($this->executionOrder);
