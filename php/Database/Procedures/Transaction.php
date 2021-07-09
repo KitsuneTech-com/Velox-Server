@@ -86,17 +86,20 @@ class Transaction {
         // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
         // ------------------
         // $transactionInstance = new Transaction();
-        // $myFunction = function(Query|callable|null &$previous, Query|callable|null &$next) : void {
+        // $myFunction = function(mixed &$previous, Query|callable|null &$next) : void {
         //     //function code goes here
         // }
         // $transactionInstance.addFunction($myFunction);
         // -------------------
         // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
+        //
+        // If the function is the first element in the Transaction execution order and initial data is provided through Transaction->addInput(),
+        // this data is made available through the $previous argument.
         
         $executionCount = count($this->executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
-            $previous = &$this->executionOrder[$executionCount-1] ?? null;
+            $previous = &$this->executionOrder[$executionCount-1] ?? $this->_input;
             $next = &$this->executionOrder[$executionCount+1] ?? null;
             $boundFunction = $function->bindTo($this);
             $boundFunction($previous,$next);
