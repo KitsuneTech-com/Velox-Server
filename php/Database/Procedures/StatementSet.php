@@ -160,14 +160,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $criteria = $this->criteria;
 
         if (count($criteria) == 0){
-            $criteria[0]['where'] = [];
-            $criteria[0]['values'] = [];
-            $criteria[0]['data'] = [];
+            //If there are no criteria, create a dummy array
+            $criteria[0] = ['where'=>[], 'values'=>[], 'data'=>[]];
         }
         foreach($criteria as $variation){
-            $whereStr = "";
-            $valuesStr = "";
-            $columnsStr = "";
+            //Set each of these as an empty string
+            $whereStr = $valuesStr = $columnsStr = "";
             switch ($this->queryType){
                 case QUERY_SELECT:
                 case QUERY_DELETE:
@@ -242,8 +240,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 case QUERY_INSERT:  //and fall-through for QUERY_UPDATE
                     //format values
                     $valuesArray = $variation['values'];
-                    $valuesStrArray = [];
-                    $columnsStrArray = [];
+                    //Initialize empty arrays
+                    $valuesStrArray = $columnsStrArray = [];
                     foreach (array_keys($valuesArray) as $column){
                         switch ($this->queryType){
                             case QUERY_INSERT:
