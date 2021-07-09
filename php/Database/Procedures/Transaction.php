@@ -34,6 +34,10 @@ class Transaction {
         }
     }
     
+    public function __destruct() {
+        $this->rollBack();
+    }
+    
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
         $executionCount = count($this->executionOrder);
@@ -101,9 +105,6 @@ class Transaction {
     }
     public function addInput(array $input, string $prefix = '') : void {
         $this->_input[] = $input;
-        if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
-            $this->executionOrder[0]->addParameterSet($input,$prefix);
-        }
     }
     public function getParams() : array {
         return $this->_input;
@@ -115,13 +116,34 @@ class Transaction {
             $conn->beginTransaction();
         }
     }
-    public function executeNext() : bool {
+    public function executeNext(bool $autocommit = false) : bool {
         if (!(isset($this->executionOrder[$this->_currentIndex]))){
             return false;
         }
         
         $currentQuery = $this->executionOrder[$this->_currentIndex];
         $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
+        if ($this->_input && !$lastQuery){
+            if ($currentQuery instanceof PreparedStatement){
+                foreach ($this->_input as $paramSet){
+                    $currentQuery->addParameterSet($paramSet);
+                }
+            }
+            elseif ($currentQuery instanceof StatementSet){
+                $currentQuery->addCriteria($this->_input);
+            }
+            elseif ($currentQuery instanceof Query){
+                foreach ($this->_connections as $conn){
+                    try {
+                        $conn->rollBack();
+                    }
+                    catch(VeloxException $rollbackEx){
+                        continue;
+                    }
+                }
+                throw $ex;
+            }
+        }
         try {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
@@ -135,6 +157,9 @@ class Transaction {
             }
             
             $this->_currentIndex++;
+            if ($autocommit){
+                $this->commitLast();
+            }
             return true;
         }
         catch (Exception $ex){
@@ -159,25 +184,59 @@ class Transaction {
             return false;
         }
     }
+    
+    public function rollBack() : void {
+       $ex = null;
+       foreach ($this->_connections as $conn){
+            try {
+                $conn->rollBack();
+            }
+            catch(VeloxException $rollbackEx){
+                //Store any exception and continue
+                //Note: if more exceptions are thrown, only the most recent is stored
+                $ex = $rollbackEx;
+                continue;
+            }
+        }
+        if ($ex){
+            //Throw any stored exception
+            throw $ex;
+        }
+    }
+    public function commitLast() : void {
+        //Commit on the connection used by the most recent query
+        $position = $this->_currentIndex;
+        while ($previous = $this->executionOrder[$position--]){
+            if ($previous instanceof Query || $previous instanceof StatementSet){
+                $previous->conn->commit();
+                $previous->conn->beginTransaction();
+                return;
+            }
+            if ($position == 0){
+                return;
+            }
+        }
+    }
   
-    public function executeAll() : bool {
+    public function executeAll(bool $autocommit = false) : bool {
         try {
-            while ($next = $this->executeNext()){}
+            while ($next = $this->executeNext()){
+                if ($autocommit){
+                    $this->commitLast();
+                }
+            }
             foreach ($this->_connections as $conn){
                 $conn->commit();
             }
             return true;
         }
         catch (VeloxException $ex){
-            foreach ($this->_connections as $conn){
-                try {
-                    $conn->rollBack();
-                }
-                catch(VeloxException $rollbackEx){
-                    continue;
-                }
+            try {
+                $this->rollBack();
             }
-            throw $ex;
+            finally {
+                throw $ex;
+            }
         }
     }
     public function getLastAffected() : array {
