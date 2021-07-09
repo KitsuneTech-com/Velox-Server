@@ -14,7 +14,7 @@ class Transaction {
     private array $_results = [];
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
-    private array $_paramArray = [];
+    private array $_input = [];
     public array $executionOrder = [];
     
     public function __construct(?Connection &$conn = null) {
@@ -25,11 +25,10 @@ class Transaction {
     }
     
     public function __clone() : void {
-        $this->_paramArray = [];
+        $this->_input = [];
         $this->_results = [];
         $this->_currentIndex = 0;
         $this->_lastAffected = [];
-        $this->_paramArray = [];
         foreach ($this->executionOrder as $idx => $procedure){
             $this->executionOrder[$idx] = clone $procedure;
         }
@@ -55,19 +54,19 @@ class Transaction {
             }
             
             //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (!$this->executionOrder && !!$this->_paramArray){
+            if (!$this->executionOrder && !!$this->_input){
                 //Get class name for following switch
                 $refl = new \ReflectionObject($query);
                 $className = $refl->getShortName();
                 
                 switch ($className){
                     case "PreparedStatement":
-                        foreach ($this->_paramArray as $paramSet){
+                        foreach ($this->_input as $paramSet){
                             $query->addParameterSet($paramSet);
                         }
                         break;
                     case "StatementSet":
-                        foreach ($this->_paramArray as $criteria){
+                        foreach ($this->_input as $criteria){
                             $query->addCriteria($criteria);
                         }
                         break;
@@ -100,14 +99,14 @@ class Transaction {
         };
         $this->executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
-    public function addParameterSet(array $paramArray, string $prefix = '') : void {
-        $this->_paramArray[] = $paramArray;
+    public function addInput(array $input, string $prefix = '') : void {
+        $this->_input[] = $input;
         if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
-            $this->executionOrder[0]->addParameterSet($paramArray,$prefix);
+            $this->executionOrder[0]->addParameterSet($input,$prefix);
         }
     }
     public function getParams() : array {
-        return $this->_paramArray;
+        return $this->_input;
     }
     
     //Execution
