@@ -245,7 +245,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return true;
     }
     
-    public function insert(array $rows, bool $diff = false, bool $defer = false) : bool {
+    public function insert(array $rows) : bool {
         $hasSubmodels = !!$this->submodels;
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
@@ -256,80 +256,99 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             $this->select();
         }
+        //If $rows comes from a Diff, reassign it as an array_column from the "values" property ("where" doesn't apply here)
         $transaction = new Transaction;
         $currentProcedure = clone $this->_insert;
-        $reflection = new \ReflectionClass($currentProcedure);
-        
-        switch ($reflection->getShortName()){
-            case "PreparedStatement":
-                $namedParams = $this->_insert->getNamedParams();
-                foreach($rows as $idx => $row){
-                    foreach($namedParams as $param){
-                        //set nulls for missing parameters of prepared statement
-                        $row[$param] = $row[$param] ?? null;
-                        
-                        //make sure the data passed into named parameters is valid
-                        if (is_iterable($row[$param])){
-                            throw new VeloxException("Model->insert: Invalid value passed for PreparedStatement parameter.",47);
-                        }
-                    }
-                    if ($hasSubmodels){
-                        //Check the row for any nested datasets; cache them in an array and remove them from the row 
-                        $submodelDataCache = [];
-                        foreach ($row as $column => $value){
-                            if (is_array($value)){
-                                $submodelDataCache[$column] = $value;
-                                unset($row[$column]);
-                            }
-                        }
-                    }
-                    //If any nested datasets are found (and parameter sets already exist for the current procedure)...
-                    if (isset($submodelDataCache) && $currentProcedure->getSetCount() > 0){
-                        //Attach the previous PreparedStatement to the Transaction...
-                        $transaction->addQuery($currentProcedure);
-                        //...then make a fresh clone for this iteration
-                        $currentProcedure = clone $this->_insert;
-                    }
-                    //Add the adjusted row to the current procedure
-                    $currentProcedure->addParameterSet($row);
-                    
-                    if (isset($submodelDataCache)){
-                         $parentModel = $this;
-                         //Note: bridge function is called during Transaction execution, not as part of this method.
-                         $bridge = function(Query &$previous, PreparedStatement|StatementSet &$next) use (&$submodelDataCache, &$parentModel){
-                            foreach ($submodelDataCache as $submodelName => $rows){
-                                $rowCount = count($rows);
-                                $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
-                                
-                                for ($i=0; $i<$rowCount; $i++){
-                                    $fk_name = $submodelDataCache[$submodelName]->foreignKey;
-                                    //add primary key values to each foreign key of each submodel insert
-                                    if ($next instanceof PreparedStatement){
-                                        $paramArray = &$next->getParams();
-                                        array_walk($paramArray,function(&$paramSet) use ($fk_name, $pk_value){
-                                            $paramSet[$fk_name] = $pk_value;
-                                        });
-                                    }
-                                    elseif ($next instanceof StatementSet){
-                                        
-                                    }
-                                }
-                            }
-                        }
-                        
-                        foreach($submodelDataCache as $submodelName => $rows){
-                            //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
-                            $proc = $this->submodels[$submodelName]->insert($rows);
-                            $transaction->addQuery($proc);
-                        }
-                        unset($submodelDataCache);
+        if ($currentProcedure instanceof PreparedStatement){
+            //set nulls for missing parameters of PreparedStatement
+            $namedParams = $this->_insert->getNamedParams();
+            foreach ($rows as &$row){
+                foreach($namedParams as $param){
+                    $row[$param] = $row[$param] ?? null;
+                    //also make sure the data passed into named parameters is valid (so as to avoid any collision with submodels)
+                    if (is_iterable($row[$param])){
+                        throw new VeloxException("Model->insert: Invalid value passed for PreparedStatement parameter.",47);
                     }
                 }
-                break;
-            case "StatementSet":
-                $currentProcedure->addCriteria($rows);
-                $transaction->addQuery($currentProcedure);
-                break;
+            }
+        }
+        
+        //Check for submodel data; separate and cache it
+        $submodelDataCache = [];
+        if ($hasSubmodels){
+            foreach ($rows as $idx => $row){
+                //Check the row for any nested datasets; cache them in an array and remove them from the row 
+                $submodelDataCache[$idx] = [];
+                foreach ($row as $key => $value){
+                    if (is_array($value)){
+                        if (!array_key_exists($key,$this->submodels)){
+                            throw new VeloxException("Model->insert: Array passed as value without corresponding submodel.",50);
+                        }
+                        $submodelDataCache[$idx][$column] = $value;
+                        unset($row[$column]);
+                    }
+                }
+            }
+        }
+        
+        //If any nested datasets are found (and if rows have already been added to the current procedure)...
+        if ($submodelDataCache){
+            $rowsExist = $currentProcedure instanceof PreparedStatement ? $currentProcedure->getSetCount() : $currentProcedure->
+            //Attach the previous procedure to the Transaction...
+            $transaction->addQuery($currentProcedure);
+            //...then make a fresh clone for this iteration
+            $currentProcedure = clone $this->_insert;
+        }
+                    
+        //Add the adjusted row to the current procedure
+        if ($currentProcedure instanceof PreparedStatement){
+            $currentProcedure->addParameterSet($row);
+        }
+        elseif ($currentProcedure instanceof StatementSet){
+            $currentProcedure->addCriteria($row);
+        }
+        elseif ($currentProcedure instanceof Transaction){
+            $currentProcedure->addInput($row);
+        }
+        
+        //TODO: Need to account for Transactions. Since the parent method is already Transaction-driven, submodel Transactions need to
+        //be adopted somehow.
+        
+        //Add submodel handling, if any
+        if (isset($submodelDataCache)){
+             $parentModel = $this;
+             //Note: bridge function is called during Transaction execution, not as part of this method.
+             $bridge = function(Query &$previous, PreparedStatement|StatementSet &$next) use (&$submodelDataCache, &$parentModel){
+                foreach ($submodelDataCache as $submodelName => $rows){
+                    $rowCount = count($rows);
+                    $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
+
+                    for ($i=0; $i<$rowCount; $i++){
+                        $fk_name = $submodelDataCache[$submodelName]->foreignKey;
+                        //add primary key values to each foreign key of each submodel insert
+                        if ($next instanceof PreparedStatement){
+                            $paramArray = &$next->getParams();
+                            foreach ($paramArray as &$paramSet){
+                                $paramSet[$fk_name] = $pk_value;
+                            }
+                        }
+                        elseif ($next instanceof StatementSet){
+                            $criteriaArray = &$next->criteria;
+                            foreach ($criteriaArray as &$criteriaSet){
+                                $criteriaSet['values'][$fk_name] = $pk_value;
+                            }
+                            $next->setStatements();
+                        }
+                    }
+                }
+            }
+
+            foreach($submodelDataCache as $submodelName => $rows){
+                //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
+                $proc = $this->submodels[$submodelName]->insert($rows);
+                $transaction->addQuery($proc);
+            }
+            unset($submodelDataCache);
         }
         $transaction->begin();
         $transaction->executeAll();
