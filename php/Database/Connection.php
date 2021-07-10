@@ -86,6 +86,10 @@ class Connection {
         }
     }
     public function beginTransaction() : bool {
+        if ($this->_inTransaction){
+            //If a transaction already exists, don't need to start one
+            return true;
+        }
         $this->_inTransaction = true;
         switch ($this->_serverType){
             case DB_MYSQL:
