@@ -299,26 +299,27 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             //...then make a fresh clone for this iteration
             $currentProcedure = clone $this->_insert;
         }
-                    
+        
         //Add the adjusted row to the current procedure
-        if ($currentProcedure instanceof PreparedStatement){
-            $currentProcedure->addParameterSet($row);
+        $reflection = new \ReflectionClass($currentProcedure);
+        $statementType = $reflection->getShortName();
+        switch ($statementType){
+            case "PreparedStatement":
+                $currentProcedure->addParameterSet($row);
+                break;
+            case "StatementSet":
+                $currentProcedure->addCriteria($row);
+                break;
+            case "Transaction":
+                $currentProcedure->addInput($row);
+                break;
         }
-        elseif ($currentProcedure instanceof StatementSet){
-            $currentProcedure->addCriteria($row);
-        }
-        elseif ($currentProcedure instanceof Transaction){
-            $currentProcedure->addInput($row);
-        }
-        
-        //TODO: Need to account for Transactions. Since the parent method is already Transaction-driven, submodel Transactions need to
-        //be adopted somehow.
-        
+
         //Add submodel handling, if any
         if (isset($submodelDataCache)){
              $parentModel = $this;
              //Note: bridge function is called during Transaction execution, not as part of this method.
-             $bridge = function(Query &$previous, PreparedStatement|StatementSet &$next) use (&$submodelDataCache, &$parentModel){
+             $bridge = function(Query &$previous, PreparedStatement|StatementSet|Transaction &$next) use (&$submodelDataCache, &$parentModel){
                 foreach ($submodelDataCache as $submodelName => $rows){
                     $rowCount = count($rows);
                     $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
@@ -338,6 +339,19 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                                 $criteriaSet['values'][$fk_name] = $pk_value;
                             }
                             $next->setStatements();
+                        }
+                        elseif ($next instanceof Transaction){
+                            $inputArray = &$next->input;
+                            //Transaction input can be either in the form of PreparedStatement parameter sets
+                            //or StatementSet criteria. We don't know what's there, so we can't make assumptions.
+                            foreach ($inputArray as &$input){
+                                if (array_key_exists('values',$input) && is_array($input['values'])){
+                                    $input['values'][$fk_name] = $pk_value;
+                                }
+                                else {
+                                    $input[$fk_name] = $pk_value;
+                                }
+                            }
                         }
                     }
                 }
