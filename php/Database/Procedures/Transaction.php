@@ -14,7 +14,7 @@ class Transaction {
     private array $_results = [];
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
-    private array $_input = [];
+    public array $input = [];
     public array $executionOrder = [];
     
     public function __construct(?Connection &$conn = null) {
@@ -25,7 +25,7 @@ class Transaction {
     }
     
     public function __clone() : void {
-        $this->_input = [];
+        $this->input = [];
         $this->_results = [];
         $this->_currentIndex = 0;
         $this->_lastAffected = [];
@@ -63,24 +63,24 @@ class Transaction {
             }
             
             //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (!$this->executionOrder && !!$this->_input){
+            if (!$this->executionOrder && !!$this->input){
                 //Get class name for following switch
                 $refl = new \ReflectionObject($query);
                 $className = $refl->getShortName();
                 
                 switch ($className){
                     case "PreparedStatement":
-                        foreach ($this->_input as $paramSet){
+                        foreach ($this->input as $paramSet){
                             $query->addParameterSet($paramSet);
                         }
                         break;
                     case "StatementSet":
-                        foreach ($this->_input as $criteria){
+                        foreach ($this->input as $criteria){
                             $query->addCriteria($criteria);
                         }
                         break;
                     case "Transaction":
-                        foreach ($this->_input as $input){
+                        foreach ($this->input as $input){
                             $query->addInput($input);
                         }
                         break;
@@ -109,7 +109,7 @@ class Transaction {
         
         $executionCount = count($this->executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
-            $previous = &$this->executionOrder[$executionCount-1] ?? $this->_input;
+            $previous = &$this->executionOrder[$executionCount-1] ?? $this->input;
             $next = &$this->executionOrder[$executionCount+1] ?? null;
             $boundFunction = $function->bindTo($this);
             $boundFunction($previous,$next);
@@ -117,10 +117,10 @@ class Transaction {
         $this->executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
     public function addInput(array $input) : void {
-        $this->_input[] = $input;
+        $this->input[] = $input;
     }
     public function getParams() : array {
-        return $this->_input;
+        return $this->input;
     }
     
     //Execution
@@ -137,21 +137,21 @@ class Transaction {
         
         $currentQuery = $this->executionOrder[$this->_currentIndex];
         $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
-        if ($this->_input && !$lastQuery){
+        if ($this->input && !$lastQuery){
             //Get class name for following switch
             $refl = new \ReflectionObject($currentQuery);
             $className = $refl->getShortName();
             switch ($className){
                 case "PreparedStatement":
-                    foreach ($this->_input as $paramSet){
+                    foreach ($this->input as $paramSet){
                         $currentQuery->addParameterSet($paramSet);
                     }
                     break;
                 case "StatementSet":
-                    $currentQuery->addCriteria($this->_input);
+                    $currentQuery->addCriteria($this->input);
                     break;
                 case "Transaction":
-                    $currentQuery->addInput($this->_input);
+                    $currentQuery->addInput($this->input);
                     break;
             }
         }
