@@ -38,8 +38,13 @@ class Transaction {
         $this->rollBack();
     }
     
+    public function __invoke() {
+        //Execute the entire execution order (but don't commit)
+        while ($next = $this->executeNext()){}
+    }
+    
     //Assembly
-    public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
+    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
         $executionCount = count($this->executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
@@ -74,6 +79,11 @@ class Transaction {
                             $query->addCriteria($criteria);
                         }
                         break;
+                    case "Transaction":
+                        foreach ($this->_input as $input){
+                            $query->addInput($input);
+                        }
+                        break;
                 }
             }
             $this->executionOrder[] = &$query;
@@ -86,7 +96,7 @@ class Transaction {
         // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
         // ------------------
         // $transactionInstance = new Transaction();
-        // $myFunction = function(mixed &$previous, Query|callable|null &$next) : void {
+        // $myFunction = function(mixed &$previous, mixed &$next) : void {
         //     //function code goes here
         // }
         // $transactionInstance.addFunction($myFunction);
@@ -106,7 +116,7 @@ class Transaction {
         };
         $this->executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
-    public function addInput(array $input, string $prefix = '') : void {
+    public function addInput(array $input) : void {
         $this->_input[] = $input;
     }
     public function getParams() : array {
@@ -117,6 +127,7 @@ class Transaction {
     public function begin() : void {
         foreach ($this->_connections as $conn){
             $conn->beginTransaction();
+            $conn->setSavepoint();
         }
     }
     public function executeNext(bool $autocommit = false) : bool {
@@ -127,24 +138,21 @@ class Transaction {
         $currentQuery = $this->executionOrder[$this->_currentIndex];
         $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
         if ($this->_input && !$lastQuery){
-            if ($currentQuery instanceof PreparedStatement){
-                foreach ($this->_input as $paramSet){
-                    $currentQuery->addParameterSet($paramSet);
-                }
-            }
-            elseif ($currentQuery instanceof StatementSet){
-                $currentQuery->addCriteria($this->_input);
-            }
-            elseif ($currentQuery instanceof Query){
-                foreach ($this->_connections as $conn){
-                    try {
-                        $conn->rollBack();
+            //Get class name for following switch
+            $refl = new \ReflectionObject($currentQuery);
+            $className = $refl->getShortName();
+            switch ($className){
+                case "PreparedStatement":
+                    foreach ($this->_input as $paramSet){
+                        $currentQuery->addParameterSet($paramSet);
                     }
-                    catch(VeloxException $rollbackEx){
-                        continue;
-                    }
-                }
-                throw $ex;
+                    break;
+                case "StatementSet":
+                    $currentQuery->addCriteria($this->_input);
+                    break;
+                case "Transaction":
+                    $currentQuery->addInput($this->_input);
+                    break;
             }
         }
         try {
@@ -192,7 +200,7 @@ class Transaction {
        $ex = null;
        foreach ($this->_connections as $conn){
             try {
-                $conn->rollBack();
+                $conn->rollBack(true);
             }
             catch(VeloxException $rollbackEx){
                 //Store any exception and continue
@@ -213,6 +221,11 @@ class Transaction {
             if ($previous instanceof Query || $previous instanceof StatementSet){
                 $previous->conn->commit();
                 $previous->conn->beginTransaction();
+                return;
+            }
+            elseif ($previous instanceof Transaction){
+                $previous->commitLast();
+                $previous->begin();
                 return;
             }
             if ($position == 0){
