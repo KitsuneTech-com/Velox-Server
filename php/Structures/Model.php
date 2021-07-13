@@ -469,7 +469,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if ($diff->select) {
             $this->setFilter($diff);
         }
-        $this->select(true);
+        $this->select();
         $this->_delaySelect = false;
     }
     public function columns() : array {
