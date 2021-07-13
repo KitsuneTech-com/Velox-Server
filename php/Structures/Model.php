@@ -39,13 +39,13 @@ class Model {
         }
         if ($insert && !($insert instanceof Transaction)) {
             if ($select->queryType != QUERY_PROC){
-                $update->queryType = QUERY_INSERT;
+                $insert->queryType = QUERY_INSERT;
             }
             $insert->resultType = VELOX_RESULT_NONE;
         }
         if ($delete && !($delete instanceof Transaction)) {
             if ($select->queryType != QUERY_PROC){
-                $update->queryType = QUERY_DELETE;
+                $delete->queryType = QUERY_DELETE;
             }
             $delete->resultType = VELOX_RESULT_NONE;
         }
