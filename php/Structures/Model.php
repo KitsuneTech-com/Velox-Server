@@ -176,7 +176,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     
-    public function update(array $rows) : bool {
+    public function update(array $rows, bool $isDiff = false) : bool {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
@@ -195,6 +195,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             //Cache updated submodel names so we only query the ones needed
             $updatedSubmodels = [];
         }
+        
         $currentProcedure = clone $this->_update;
         $reflection = new \ReflectionClass($currentProcedure);
         $statementType = $reflection->getShortName();
@@ -204,6 +205,27 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 foreach($rows as $row){
                     //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
                     //PreparedStatement placeholders do not supply the necessary criteria for filtering.
+                    if ($isDiff){
+                        //Set properly prefixed placeholders
+                        //(UPDATE table SET column = :v_column WHERE column2 = :w_column2)
+                        //(CALL updateTable(:v_column, :op_column2, :w_column2)
+                        // ** Note: operators can't be dynamically added to SQL statements through prepared statements,
+                        // so something like "UPDATE table SET column = :v_column WHERE column2 :op_column2 :w_column"
+                        // won't work. This will attempt to pass 
+                        $newRow = [];
+                        $namedParams = $currentProcedure->getNamedParams();
+                        foreach ($row['values'] as $column => $value){
+                            $newRow['v_'.$column] = $value;
+                        }
+                        foreach ($row['where'] as $column => $condition){
+                            $newRow['op_'.$column] = $condition[0];
+                            $newRow['w_'.$column] = $condition[1];
+                        }
+                        foreach (array_keys($newRow) as $placeholder){
+                            if (!isset($namedParams[$placeholder]) || !str_starts_with($placeholder,'op_')){
+                                
+                        $row = $newRow;
+                    }
                     $currentProcedure->addParameterSet($row);
                 }
                 break;
@@ -256,6 +278,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             $this->select();
         }
+        if (isset($rows[0]['values']){
+            
         //If $rows comes from a Diff, reassign it as an array_column from the "values" property ("where" doesn't apply here)
         $transaction = new Transaction;
         $currentProcedure = clone $this->_insert;
@@ -272,7 +296,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
         }
-        
+        else
         //Check for submodel data; separate and cache it
         $submodelDataCache = [];
         if ($hasSubmodels){
@@ -461,13 +485,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function synchronize(Diff $diff) : void {
         $this->_delaySelect = true;
         if ($diff->update) {
-            $this->update($diff->update);
+            $this->update($diff->update,true);
         }
         if ($diff->delete) {
-            $this->delete($diff->delete);
+            $this->delete($diff->delete,true);
         }
         if ($diff->insert) {
-            $this->insert($diff->insert);
+            $this->insert($diff->insert,true);
         }
         if ($diff->select) {
             $this->setFilter($diff);
