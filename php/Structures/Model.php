@@ -261,7 +261,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $this->_update->execute();
 >>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -371,7 +371,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $transaction->executeAll();
         
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -397,7 +397,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
