@@ -278,12 +278,17 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             $this->select();
         }
-        if (isset($rows[0]['values']){
-            
-        //If $rows comes from a Diff, reassign it as an array_column from the "values" property ("where" doesn't apply here)
+        //Get the current statement type
+        $reflection = new \ReflectionClass($currentProcedure);
+        $statementType = $reflection->getShortName();
+        
+        if (isset($rows[0]['values']) && is_object($rows[0]['values'])){
+            //If $rows is in the form of a Diff-like array, extract only the 'values' properties
+            $rows = array_column($rows,'values');
+        }
         $transaction = new Transaction;
         $currentProcedure = clone $this->_insert;
-        if ($currentProcedure instanceof PreparedStatement){
+        if ($statementType == "PreparedStatement"){
             //set nulls for missing parameters of PreparedStatement
             $namedParams = $this->_insert->getNamedParams();
             foreach ($rows as &$row){
@@ -296,7 +301,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
         }
-        else
         //Check for submodel data; separate and cache it
         $submodelDataCache = [];
         if ($hasSubmodels){
@@ -317,28 +321,39 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         
         //If any nested datasets are found (and if rows have already been added to the current procedure)...
         if ($submodelDataCache){
-            $rowsExist = $currentProcedure instanceof PreparedStatement ? $currentProcedure->getSetCount() : $currentProcedure->
-            //Attach the previous procedure to the Transaction...
-            $transaction->addQuery($currentProcedure);
-            //...then make a fresh clone for this iteration
-            $currentProcedure = clone $this->_insert;
+            switch ($statementType){
+                case "PreparedStatement":
+                    $rowsExist = !!$currentProcedure->getSetCount();
+                    break;
+                case "StatementSet":
+                    $rowsExist = !!$currentProcedure->criteria;
+                    break;
+                case "Transaction":
+                    $rowsExist = !!$currentProcedure->input;
+                    break;
+            }
+            if ($rowsExist){
+                //Attach the previous procedure to the Transaction...
+                $transaction->addQuery($currentProcedure);
+                //...then make a fresh clone for this iteration
+                $currentProcedure = clone $this->_insert;
+            }
         }
         
         //Add the adjusted row to the current procedure
-        $reflection = new \ReflectionClass($currentProcedure);
-        $statementType = $reflection->getShortName();
-        switch ($statementType){
-            case "PreparedStatement":
-                $currentProcedure->addParameterSet($row);
-                break;
-            case "StatementSet":
-                $currentProcedure->addCriteria($row);
-                break;
-            case "Transaction":
-                $currentProcedure->addInput($row);
-                break;
+        foreach ($rows as $row){
+            switch ($statementType){
+                case "PreparedStatement":
+                    $currentProcedure->addParameterSet($row);
+                    break;
+                case "StatementSet":
+                    $currentProcedure->addCriteria($row);
+                    break;
+                case "Transaction":
+                    $currentProcedure->addInput($row);
+                    break;
+            }
         }
-
         //Add submodel handling, if any
         if (isset($submodelDataCache)){
              $parentModel = $this;
