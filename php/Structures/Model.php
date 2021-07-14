@@ -143,7 +143,7 @@ class Model {
         
         $this->_update->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -175,7 +175,7 @@ class Model {
         $this->_insert->execute();
         
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -201,7 +201,7 @@ class Model {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
