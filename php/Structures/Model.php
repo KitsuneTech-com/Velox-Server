@@ -290,7 +290,10 @@ class Model {
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
-        $whereArray = $this->_filter[0]['where'] ?? [];
+        if (!$this->_filter){
+            return;
+        }
+        $whereArray = $this->_filter[0]['where'];
         foreach ($whereArray as $orArray){
             foreach ($this->_data as $idx => $row){
                 foreach ($orArray as $column => $criteria){
