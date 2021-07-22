@@ -29,7 +29,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     
     //Used to join nested Models by a specific column. These will automatically be utilized if submodels are present.
     public ?string $primaryKey = null;
-    
+        
     public function __construct(
             public PreparedStatement|StatementSet|null $_select = null,
             public PreparedStatement|StatementSet|Transaction|null $_update = null,
@@ -431,6 +431,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         elseif ($this->_delete instanceof PreparedStatement){
             $this->_delete->clear();
         }
+        
+        
         $reflection = new \ReflectionClass($this->_delete);
         switch ($reflection->getShortName()){
             case "PreparedStatement":
@@ -440,6 +442,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 break;
             case "StatementSet":
                 $this->_delete->addCriteria($rows);
+                break;
+            case "Transaction":
+                $this->_delete->addInput($rows);
                 break;
         }
         
@@ -534,10 +539,21 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function diff() : Diff {
         return $this->_diff;
     }
-    public function addSubmodel(string $name, Model $submodel, string $foreignKey) : void {
+    public function addSubmodel(string $name, Model $submodel, string $foreignKey, ?bool $deleteProtected = null) : void {
         //$name is the desired column name for export
         //$submodel is the Model object to be used as the submodel
         //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
+        //$deleteProtected is a nullable boolean that determines whether DELETEs on the parent Model should be:
+        //    true: restricted (any attempt to delete parent Model rows whose primary key matches a defined foreign key in the submodel will be disallowed)
+        //    false: cascaded (all rows in the submodel with foreign keys that match the primary key of a deleted parent Model row will
+        //        also be deleted
+        //    null: the Model will not make any foreign key checks prior to parent Model row deletion. Any such checks are deferred to the database.
+        //    *** Note: this should NOT be allowed to be null if no foreign key constraints exist on the database (such as if the submodel is derived from
+        //    a different database). Either true or false should be selected as appropriate, in order to preserve integrity. ***
+        //    If $deleteProtected is set to true, the parent Model row can still be deleted *if*, after any submodel deletions, no foreign key matches remain.
+        //    If the parent Model has multiple submodels, if any one of them has $deleteProtected set to true, deletion cannot proceed unless no foreign key
+        //    matches exist for that submodel, regardless of the value of $deleteProtected on the others.
+        
         if (!$this->primaryKey){
             throw new VeloxException('Primary key column name must be specified for parent Model',41);
         }
@@ -551,7 +567,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
         }
         $submodel->instanceName = $name;
-        $this->submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
+        $this->submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey,'deleteProtected'=>$deleteProtected];
     }
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
