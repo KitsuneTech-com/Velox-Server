@@ -356,12 +356,16 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         //Add submodel handling, if any
         if (isset($submodelDataCache)){
-             $parentModel = $this;
+             $parentModel = &$this;
+             $parentProcedure = &$currentProcedure;
              //Note: bridge function is called during Transaction execution, not as part of this method.
-             $bridge = function(Query &$previous, PreparedStatement|StatementSet|Transaction &$next) use (&$submodelDataCache, &$parentModel){
+             // ---------------------------------------------------------------------------------------- //
+             $bridge = function(Query &$previous, PreparedStatement|StatementSet|Transaction &$next) use ($submodelDataCache, &$parentModel, &$parentProcedure){
                 foreach ($submodelDataCache as $submodelName => $rows){
                     $rowCount = count($rows);
-                    $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
+                    //Using the imported $parentProcedure rather than $previous because $previous may be a sibling procedure rather than the parent
+                    //(if multiple submodels are being inserted into, and this isn't the first of them)
+                    $pk_value = $parentProcedure->getResults()[0][$parentModel->primaryKey];
 
                     for ($i=0; $i<$rowCount; $i++){
                         $fk_name = $submodelDataCache[$submodelName]->foreignKey;
@@ -395,9 +399,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-
+            // ---------------------------------------------------------------------------------------- //
+            
             foreach($submodelDataCache as $submodelName => $rows){
                 //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
+                $transaction->addFunction($bridge);
                 $proc = $this->submodels[$submodelName]->insert($rows);
                 $transaction->addQuery($proc);
             }
