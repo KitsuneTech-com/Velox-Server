@@ -37,8 +37,8 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | Code | Text                                                          | Explanation                                                                                     |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | 26   | Transaction has no active connection                          | A query string was passed to Transaction::addQuery() without first setting a connection to use. |
-| 27   | Query in transaction failed at position ###                   | The transaction was rolled back after a failed query. See the chained exception and/or Transaction->getTransactionPlan() for details. |
-| 39   | User-defined function failed                                  | A custom function added to the Transaction failed. See the chained exception and/or Transaction->getTransactionPlan() for details. |
+| 27   | Query in transaction failed at position xxxx                  | The transaction was rolled back after a failed query. See the chained exception and/or Transaction->getTransactionPlan() for details. |
+| 39   | User-defined function failed at position xxxx                 | A custom function added to the Transaction failed. See the chained exception and/or Transaction->getTransactionPlan() for details. |
 
 ### Database\Structures\ResultSet
 | Code | Text                                                          | Explanation                                                                         |
