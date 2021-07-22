@@ -58,7 +58,7 @@ class Transaction {
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
             if (!in_array($query->conn,$this->_connections,true)){
-                $this->_connections[] = $query->conn;
+                $this->_connections[] = &$query->conn;
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
             }
             
@@ -131,12 +131,13 @@ class Transaction {
         }
     }
     public function executeNext(bool $autocommit = false) : bool {
-        if (!(isset($this->executionOrder[$this->_currentIndex]))){
+        $currentIndex = $this->_currentIndex;
+        if (!(isset($this->executionOrder[$currentIndex]))){
             return false;
         }
         
-        $currentQuery = $this->executionOrder[$this->_currentIndex];
-        $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
+        $currentQuery = $this->executionOrder[$currentIndex];
+        $lastQuery = $this->executionOrder[$currentIndex-1] ?? null;
         if ($this->input && !$lastQuery){
             //Get class name for following switch
             $refl = new \ReflectionObject($currentQuery);
@@ -167,7 +168,7 @@ class Transaction {
                 $this->_lastAffected = $currentQuery->getLastAffected();
             }
             
-            $this->_currentIndex++;
+            $this->_currentIndex = $currentIndex + 1;
             if ($autocommit){
                 $this->commitLast();
             }
@@ -176,10 +177,14 @@ class Transaction {
         catch (Exception $ex){
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
                 $currentQuery->conn->rollBack(true);
-                throw new VeloxException("Query in transaction failed",27,$ex);
+                throw new VeloxException("Query in transaction failed at position ".$currentIndex,27,$ex);
+            }
+            elseif ($currentQuery instanceof Transaction){
+                $currentQuery->rollBack();
+                throw new VeloxException("Query in transaction failed at position ".$currentIndex,27,$ex);
             }
             else {
-                throw new VeloxException("User-defined function failed",39,$ex);
+                throw new VeloxException("User-defined function failed at position ".$currentIndex,39,$ex);
             }
         }
     }
@@ -214,18 +219,20 @@ class Transaction {
             throw $ex;
         }
     }
-    public function commitLast() : void {
+    public function commitLast(bool $reopen = false) : void {
         //Commit on the connection used by the most recent query
         $position = $this->_currentIndex;
         while ($previous = $this->executionOrder[$position--]){
             if ($previous instanceof Query || $previous instanceof StatementSet){
                 $previous->conn->commit();
-                $previous->conn->beginTransaction();
+                if ($reopen){
+                    $previous->conn->beginTransaction();
+                }
                 return;
             }
             elseif ($previous instanceof Transaction){
-                $previous->commitLast();
-                $previous->begin();
+                //If last procedure was a nested Transaction, call the method recursively
+                $previous->commitLast($reopen);
                 return;
             }
             if ($position == 0){
@@ -233,17 +240,26 @@ class Transaction {
             }
         }
     }
-  
+    public function commitAll(bool $reopen = false) : void {
+        //Commit on every connection used by this Transaction
+        foreach ($this->_connections as $conn){
+            //Suppress error for 
+            @$conn->commit();
+            if ($reopen){
+                //If desired, reopen transactions after committing
+                $conn->beginTransaction();
+            }
+        }
+        foreach ($this->
+    }
     public function executeAll(bool $autocommit = false) : bool {
         try {
             while ($next = $this->executeNext()){
                 if ($autocommit){
-                    $this->commitLast();
+                    $this->commitLast(true);
                 }
             }
-            foreach ($this->_connections as $conn){
-                $conn->commit();
-            }
+            $this->commitAll();
             return true;
         }
         catch (VeloxException $ex){
