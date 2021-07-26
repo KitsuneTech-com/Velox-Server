@@ -46,7 +46,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
     $mostRecent = 0;
     switch ($format){
         case AS_JSON:
-            $output = json_encode($data);
+            $output = json_encode($data, JSON_UNESCAPED_UNICODE);
             break;
         case AS_XML:
             if (!extension_loaded('xmlwriter')){
