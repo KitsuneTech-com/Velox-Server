@@ -179,7 +179,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
             else {
                 header('Content-Disposition: inline');
             }
-            header('Content-Length: '.mb_strlen($output,'UTF-8'));
+            //header('Content-Length: '.mb_strlen($output,'UTF-8'));
             header('Last-Modified: '.gmdate('D, d M Y H:i:s ', $mostRecent) . 'GMT');
             echo $output;
             return true;
