@@ -36,3 +36,4 @@ $errorLevel = VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE;
 function veloxErrorReporting(int $errorLevel) : void {
     $GLOBALS['Velox']['ErrorReportingMode'] = $errorLevel;
 }
+
