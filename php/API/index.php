@@ -1,6 +1,6 @@
 <?php
 // Note to developers: Do not remove the placeholder comments below unless you don't want these features installed on
-// your endpoints. These comments will be replaced by the postinstall script.
+// your endpoints. These comments will be replaced by the post-install script.
 
 //*CORS placeholder*//
 
