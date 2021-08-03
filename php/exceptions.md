@@ -60,7 +60,8 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 48   | Model rows cannot be inserted by array access. Use Model->insert() instead. | Primary key values in the underlying database may differ from the Model array indices, so Model cannot automatically determine the appropriate value for a given position. |
 | 49   | Offset out of bounds                                          | Attempted to access an array offset that doesn't exist in the Model. (Note: Model array keys are *not* the same as primary key indices.) |
 | 50   | Model->insert: Array passed as value without corresponding submodel. | An array was given as a column value for a column name that doesn't match a submodel assigned to this Model. |
-| 51   | Attempted to delete parent row of protected submodel          | A submodel was set as delete-protected, and a delete() call was made on the parent Model that would have deleted a row having a primary key referenced by at least one foreign key. The deletion was aborted. | 
+| 51   | Attempted to delete parent row of protected submodel          | A submodel was set as delete-protected, and a delete() call was made on the parent Model that would have deleted a row having a primary key referenced by at least one foreign key. The deletion was aborted. |
+| 52   | Object expected for submodel column, xxxx found.              | Criteria for submodel columns must be in the form of objects. Double-check to make sure you are passing the correct criteria. |
 
 ### Transport\Export
 | Code | Text                                                          | Explanation                                                                              |
