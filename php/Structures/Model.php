@@ -19,6 +19,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private int|null $_lastQuery;
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
+    private bool $_invertFilter = false;
     
     //Model->returnDiff controls whether a Model->export returns a full resultset or just the rows that have been changed with the previous DML call
     // (false by default: returns full resultset)
@@ -439,7 +440,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                             if (!isset($submodelDeletions[$column])){
                                 $submodelDeletions[$column] = [];
                             }
-                            $submodelDeletions[$column][] = [$this->_submodels[$column]->foreignKey => $data[
+                            //$submodelDeletions[$column][] = [$this->_submodels[$column]->foreignKey => $data[
                         }
                     }
                 }
@@ -546,7 +547,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     public function data() : array {
         if ($this->_filter){
-            return array_values(array_intersect_key($this->_data,array_flip($this->_filteredIndices)));
+            $args = [$this->_data, array_flip($this->_filteredIndices)];
+            $filteredElements = $this->_invertFilter ? array_diff_key(...$args) : array_intersect_key(...$args);
+            return array_values($filteredElements);
         }
         else {
             return $this->_data;
@@ -651,6 +654,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 if (!in_array($idx,$this->_filteredIndices)) $this->_filteredIndices[] = $idx;
             }
         }
+    }
+    public function invertFilter() : void {
+        $this->_invertFilter = !$this->_invertFilter;
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
