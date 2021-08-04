@@ -426,12 +426,28 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
             }
-            $this->_select();
+            $this->_filter = $rows;
+            $this->select();
+            $submodelDeletions = [];
+            foreach($rows as $row){
+                foreach ($row as $column => $data){
+                    if (isset($this->_submodels[$column])){
+                        if ($this->_submodels[$column]->deleteProtected && $data){
+                            throw new VeloxException('Attempted to delete parent row of protected submodel',51);
+                        }
+                        elseif ($this->_submodels[$column]->deleteProtected === false){
+                            if (!isset($submodelDeletions[$column])){
+                                $submodelDeletions[$column] = [];
+                            }
+                            $submodelDeletions[$column][] = [$this->_submodels[$column]->foreignKey => $data[
+                        }
+                    }
+                }
+            }
         }
         elseif ($this->_delete instanceof PreparedStatement){
             $this->_delete->clear();
         }
-        
         
         $reflection = new \ReflectionClass($this->_delete);
         switch ($reflection->getShortName()){
@@ -578,6 +594,21 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 foreach ($orArray as $column => $criteria){
                     if (!in_array($column,$this->_columns)){
                         throw new VeloxException("Column '".$column."' does not exist in result set.",38);
+                    }
+                    if (!!$this->_submodels){
+                        if (isset($this->_submodels[$column])){
+                            if (!is_object($criteria)){
+                                $reflection = new \ReflectionClass($criteria);
+                                $variableType = $reflection->getShortName();
+                                throw new VeloxException("Object expected for submodel column, ".$variableType." found.",52);
+                            }
+                            else {
+                                $this->_submodels[$column]->object->setFilter([["where"=>[$criteria]]]);
+                                if (!$this->_submodels[$column]->object->data()){
+                                    continue 2;
+                                }
+                            }
+                        }
                     }
                     switch ($criteria[0]){
                         case "BETWEEN":
