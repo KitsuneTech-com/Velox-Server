@@ -440,7 +440,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                             if (!isset($submodelDeletions[$column])){
                                 $submodelDeletions[$column] = [];
                             }
-                            //$submodelDeletions[$column][] = [$this->_submodels[$column]->foreignKey => $data[
+                            
                         }
                     }
                 }
