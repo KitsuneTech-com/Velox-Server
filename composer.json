@@ -20,6 +20,7 @@
             "KitsuneTech\\Velox\\": "php/"
         },
         "files": [
+            "php/Database/oneShot.php",
             "php/Support/Constants.php",
             "php/Support/ErrorHandling.php",
             "php/Support/Utility.php",
