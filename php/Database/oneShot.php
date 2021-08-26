@@ -5,7 +5,7 @@ use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Transaction};
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 
-function oneShot(PreparedStatement|StatementSet|Transaction $query, array $input = null) : array|ResultSet|bool|null {
+function oneShot(PreparedStatement|StatementSet|Transaction $query, array|object $input = null) : array|ResultSet|bool|null {
     if ($query instanceof PreparedStatement){
         if ($input){
             $query->addParameterSet($input);
