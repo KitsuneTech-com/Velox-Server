@@ -9,7 +9,8 @@
 // Note: these classes are defined by way of the autoloader include in the API endpoint script. As such, this template is only
 // intended to be used in the context of the Velox API.
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\StatementSet as StatementSet;
+use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet};
+use function KitsuneTech\Velox\Database\oneShot as oneShot;
 
 /*
 $QUERY_VERSION should be incremented any time the result set schema changes. This will be sent as a header with the response
@@ -49,8 +50,15 @@ $QUERIES = [
     'DELETE' => new StatementSet($conn, "DELETE FROM myTable WHERE <<condition>>")
 ];
 
-function postProcessing($model){
-    //If any post-processing needs to be done after the model is generated but before the results are output,
+function preProcessing(&$diffSelect, &$diffUpdate, &$diffInsert, &$diffDelete){
+    //If any pre-processing needs to be done before the Model is generated, do it here. The data for each query type is passed by
+    //reference here, allowing it to be altered before it's used. This function can also be used to skip Model generation (as might
+    //be preferred if a DML query is to be used standalone) by including an exit() or die() call. (Note that if this is to be done,
+    //the relevant Velox procedure must be executed here; use the global keyword to bring it into the function scope.)
+}
+
+function postProcessing(&$model){
+    //If any post-processing needs to be done after the Model is generated but before the results are output,
     //do it here. The Model instance for this query will be assigned to the $model argument, and this function
     //will be run after the instance is generated and synchronized. This function can be omitted if no post-processing
     //is needed.
