@@ -38,7 +38,7 @@ class Connection {
         $this->_serverType = $serverType;
         $this->_inTransaction = false;
     
-        $this->_timestampFileLoc = preg_replace('/ [^a-zA-Z0-9\-\._]/','', sys_get_temp_dir()."/".$host.$db_name);
+        $this->_timestampFileLoc = preg_replace('/ [^a-zA-Z0-9\-\._]/','', sys_get_temp_dir()."/".$host."_".$db_name);
         touch($this->_timestampFileLoc);
     
         switch ($this->_serverType){
