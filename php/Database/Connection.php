@@ -37,9 +37,9 @@ class Connection {
         $this->_db = $db_name;
         $this->_serverType = $serverType;
         $this->_inTransaction = false;
-    
-        $this->_timestampFileLoc = preg_replace('/ [^a-zA-Z0-9\-\._]/','', sys_get_temp_dir()."/".$host."_".$db_name);
-        touch($this->_timestampFileLoc);
+      
+        $this->_timestampFileName = preg_replace('/ [^a-zA-Z0-9\-\._]/','',$host."_".$db_name);
+        touch(sys_get_temp_dir()."/".$this->_timestampFileName);
     
         switch ($this->_serverType){
             case DB_MYSQL:
@@ -399,7 +399,7 @@ class Connection {
         //Note: this information is not stored in the database, so this function cannot be relied
         //on to provide accurate information for table updates outside of Velox.
         $mode = $update ? "c+" : "r";
-        $fp = fopen($this->_timestampFileLoc,$mode);
+        $fp = fopen(sys_get_temp_dir()."/".$this->_timestampFileName,$mode);
         $info = json_decode(fread($fp),filesize($this->_timestampFileLoc));
         if (!$info){
             $info = [];
