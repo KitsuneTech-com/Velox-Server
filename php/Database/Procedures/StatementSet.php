@@ -115,7 +115,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             for ($i=0; $i<$criteriaCount; $i++){
                 $criterion = (array)$criteria[$i];
                 if (array_diff_key(array_flip($requiredKeys),$criterion) || array_diff_key($criterion,array_flip($requiredKeys))){
-                    throw new VeloxException("Element at index ".$i." does not contain the correct keys.",37);
+                    throw new VeloxException("Element at index ".$i." does not contain the correct keys.",47);
                 }
                 $hashedKeys = $this->criterionHash($criterion);
                 if (!isset($this->_criteria[$hashedKeys])){
