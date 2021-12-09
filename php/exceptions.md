@@ -32,6 +32,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 25   | Criteria must be set before StatementSet can be executed.     | StatementSet cannot be executed without specifying at least one set of conditions.  |
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 | 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
+| 47   | Element at index xxxx does not contain the correct keys.      | The given element in the array passed to addCriteria() does not contain the appropriate properties for this type of query. |  
 
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |
