@@ -46,6 +46,13 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
     $mostRecent = 0;
     switch ($format){
         case AS_JSON:
+            array_walk_recursive($data,
+                function(&$v) {
+                    if (is_numeric($v)) {
+                        $v = strval($v);
+                    }
+                }
+            );
             $output = json_encode($data, JSON_INVALID_UTF8_IGNORE);
             break;
         case AS_XML:
