@@ -71,6 +71,13 @@ if (function_exists("preProcessing")){
 }
 
 if ($QUERIES['SELECT'] ?? false){
+    if ($DIFF->select->passthru){
+        if (!$QUERIES['SELECT'] instanceof StatementSet){
+            throw new VeloxException('Passthru is only available for StatementSet query definitions.',5);   
+        }
+        $DIFF->select->addCriteria($DIFF->select);
+        unset($DIFF->select);
+    }
     $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
     if ($DIFF){
         $VELOX_MODEL->synchronize($DIFF);
