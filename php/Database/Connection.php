@@ -38,9 +38,6 @@ class Connection {
         $this->_serverType = $serverType;
         $this->_inTransaction = false;
     
-        $this->_timestampFileLoc = preg_replace('/ [^a-zA-Z0-9\-\._]/','', sys_get_temp_dir()."/".$host.$db_name);
-        touch($this->_timestampFileLoc);
-    
         switch ($this->_serverType){
             case DB_MYSQL:
             case null:
@@ -394,30 +391,5 @@ class Connection {
             default:
                 return "Unidentified";
         }
-    }
-    public function tableTimestamp(string $table, bool $update = false) : int {
-        //Note: this information is not stored in the database, so this function cannot be relied
-        //on to provide accurate information for table updates outside of Velox.
-        $mode = $update ? "c+" : "r";
-        $fp = fopen($this->_timestampFileLoc,$mode);
-        $info = json_decode(fread($fp),filesize($this->_timestampFileLoc));
-        if (!$info){
-            $info = [];
-        }
-        if ($update){
-            $ts = time();
-            $info[$table] = $ts;
-            ftruncate($fp,0);
-            fwrite($fp,$info);
-            fclose($fp);
-        }
-        else {
-            foreach ($info as $ts_table => $timestamp){
-                if ($ts_table == $table){
-                    $ts = $timestamp;
-                }
-            }
-        }
-        return $ts;
     }
 }

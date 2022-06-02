@@ -46,7 +46,14 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
     $mostRecent = 0;
     switch ($format){
         case AS_JSON:
-            $output = json_encode($data);
+            array_walk_recursive($data,
+                function(&$v) {
+                    if (is_numeric($v)) {
+                        $v = strval($v);
+                    }
+                }
+            );
+            $output = json_encode($data, JSON_INVALID_UTF8_IGNORE);
             break;
         case AS_XML:
             if (!extension_loaded('xmlwriter')){
@@ -179,7 +186,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
             else {
                 header('Content-Disposition: inline');
             }
-            header('Content-Length: '.mb_strlen($output,'UTF-8'));
+            //header('Content-Length: '.mb_strlen($output,'UTF-8'));
             header('Last-Modified: '.gmdate('D, d M Y H:i:s ', $mostRecent) . 'GMT');
             echo $output;
             return true;

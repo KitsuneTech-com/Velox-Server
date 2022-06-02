@@ -40,13 +40,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         if ($insert && !($insert instanceof Transaction)) {
             if ($select->queryType != QUERY_PROC){
-                $update->queryType = QUERY_INSERT;
+                $insert->queryType = QUERY_INSERT;
             }
             $insert->resultType = VELOX_RESULT_NONE;
         }
         if ($delete && !($delete instanceof Transaction)) {
             if ($select->queryType != QUERY_PROC){
-                $update->queryType = QUERY_DELETE;
+                $delete->queryType = QUERY_DELETE;
             }
             $delete->resultType = VELOX_RESULT_NONE;
         }
@@ -240,7 +240,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $transaction->executeAll();
       
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -335,7 +335,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $transaction->executeAll();
         
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -361,7 +361,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         
         $this->_delete->execute();
         if (!$this->_delaySelect){
-            $this->select(true);
+            $this->select();
         }
         return true;
     }
@@ -472,6 +472,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
+        if (!$this->_filter){
+            return;
+        }
         $whereArray = $this->_filter[0]['where'];
         foreach ($whereArray as $orArray){
             foreach ($this->_data as $idx => $row){
