@@ -9,7 +9,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 12   | Database name not provided                                    | Connection information must be passed to the constructor.                           |
 | 13   | Database user not provided                                    | Connection information must be passed to the constructor.                           |
 | 14   | Database password not provided                                | Connection information must be passed to the constructor.                           |
-| 15   | sqlsrv extension must be installed for SQL Server connections | Velox uses the sqlsrv extension for Microsoft SQL Server connections.               |
+| 15   | SQL Server connections require either the sqlsrv or pdo_sqlsrv extensions to be loaded. | Velox uses the sqlsrv extension for Microsoft SQL Server connections.               |
 | 16   | Unidentified database engine or incorrect parameters          | Velox was unable to connect to the database using the supplied information.         |
 | 17   | SQL Server error(s):                                          | The Microsoft SQL Server instance returned the given error(s).                      |
 | 18   | Transactional method called without active transaction        | The called method can't be invoked before Connection::beginTransaction().           |
