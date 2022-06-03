@@ -40,7 +40,6 @@ class Connection {
     
         switch ($this->_serverType){
             case DB_MYSQL:
-            case null:
                 try {
                     $connStr = http_build_query(['host' => $host, 'dbname' => $db_name],'',";");
                     $this->_conn = new \PDO("mysql:$connStr",$uid,$pwd);
@@ -54,7 +53,6 @@ class Connection {
                     }
                 }
             case DB_MSSQL:
-            case null:
                 if (!function_exists("sqlsrv_connect")){
                     if ($this->_serverType == DB_MSSQL){
                         throw new VeloxException("sqlsrv extension must be installed for SQL Server connections",15);
