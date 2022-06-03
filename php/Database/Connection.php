@@ -270,8 +270,12 @@ class Connection {
                                 $placeholders[$i] = $paramSet[$keys[$i]];
                             }
                             if (!sqlsrv_execute($stmt)){
-                                $err = sqlsrv_errors();
-                                throw new VeloxException($err['message'],$err['code']);
+                                $errors = sqlsrv_errors();
+                                $errorStr = "";
+                                foreach($errors as $error){
+                                    $errorStr .= "(code ".$error['code']."): ".$error['message']."\n";
+                                }
+                                throw new VeloxException($errorStr,17);
                             }
                             switch ($queryType){
                                 case QUERY_INSERT:
