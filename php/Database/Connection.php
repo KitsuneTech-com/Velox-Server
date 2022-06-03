@@ -7,7 +7,7 @@ use KitsuneTech\Velox\Database\Procedures\{Query,PreparedStatement};
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
                        
 class Connection {
-    private object $_conn;
+    private $_conn;
     private string $_host;
     private string $_db;
     private int $_serverType;
