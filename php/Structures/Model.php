@@ -118,13 +118,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
             elseif ($this->_select->results instanceof ResultSet){
-                $results = $this->_select->results->getRawData();
+                $this->_data = $this->_select->results->getRawData();
             }
             else {
-                $results = [];
-            }
-<<<<<<< HEAD
-            
+                $this->_data = [];
+            }  
+
             foreach ($this->submodels as $name => $submodel){
                 if (!$this->primaryKey){
                     throw new VeloxException('Primary key column name must be specified for parent Model',41);
