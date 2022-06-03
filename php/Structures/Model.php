@@ -27,6 +27,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
     //(such as when several Models are stored in an array)
     public string|null $instanceName = null;
+    public array $submodels = [];
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
