@@ -101,7 +101,7 @@ class Connection {
             case DB_MYSQL:
                 return $this->_conn->exec("SAVEPOINT currentQuery") !== false;
             case DB_MSSQL:
-                return (bool)sqlsrv_query($this->conn,"SAVE TRANSACTION currentQuery");
+                return (bool)sqlsrv_query($this->_conn,"SAVE TRANSACTION currentQuery");
         }
     }
     public function rollBack(bool $toSavepoint = false) : bool {
