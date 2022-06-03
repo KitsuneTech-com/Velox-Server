@@ -328,7 +328,7 @@ class Connection {
                                             $currentResult[] = $metadata;
                                         }
                                         $results[] = $currentResult;
-                                        break 4;    //Break out of all iteration, since the remaining results would be redundant
+                                        break 3;    //Break out of all iteration, since the remaining results would be redundant
                                 }
                                 break;
                         }
