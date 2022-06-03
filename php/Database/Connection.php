@@ -7,13 +7,14 @@ use KitsuneTech\Velox\Database\Procedures\{Query,PreparedStatement};
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
                        
 class Connection {
-    private object $_conn;
+    private $_conn;
     private string $_host;
     private string $_db;
     private int $_serverType;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
     private string $_timestampFileLoc;
+    private bool $_usePDO = false;
     public function __construct (
         string $host,
         string $db_name,
@@ -44,33 +45,50 @@ class Connection {
                     $connStr = http_build_query(['host' => $host, 'dbname' => $db_name],'',";");
                     $this->_conn = new \PDO("mysql:$connStr",$uid,$pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                    break;
+                    $this->_usePDO = true;
                 }
                 catch (\PDOException $ex) {
                     if ($this->_serverType === DB_MYSQL) {
-                        throw new VeloxException("PDO/MySQL error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
+                        throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
                     }
                 }
+                break;
             case DB_MSSQL:
-                if (!function_exists("sqlsrv_connect")){
-                    if ($this->_serverType == DB_MSSQL){
-                        throw new VeloxException("sqlsrv extension must be installed for SQL Server connections",15);
+                if (extension_loaded("pdo_sqlsrv")){
+                    try {
+                        $connStr = http_build_query(['Server' => $host, 'Database' => $db_name], '', ";");
+                        $this->_conn = new \PDO("sqlsrv:$connStr", $uid, $pwd);
+                        $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                        $this->_usePDO = true;
                     }
-                    else {
-                        throw new VeloxException("Unidentified database engine or incorrect parameters",16);
+                    catch (\PDOException $ex) {
+                        if ($this->_serverType === DB_MYSQL) {
+                            throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
+                        }
                     }
                 }
-                $this->_conn = sqlsrv_connect($host,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd]);
-                if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
-                    if (!$this->_serverType){
-                        throw new VeloxException("Unidentified database engine or incorrect parameters",16);
+                elseif (extension_loaded("sqlsrv")){
+                    if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
+                        if (!$this->_serverType){
+                            throw new VeloxException("Unidentified database engine or incorrect parameters",16);
+                        }
+                        $errorStrings = [];
+                        foreach ($errors as $error){
+                            if ($error['code'] != "5701" && $error['code'] != "5703") {
+                                //5701 and 5703 are informational and don't actually indicate an error.
+                                $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
+                            }
+                        }
+                        if (count($errorStrings) > 0) {
+                            throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
+                        }
                     }
-                    $errorStrings = [];
-                    foreach ($errors as $error){
-                        $errorStrings[] = "SQLSTATE ".$error['SQLSTATE']." (".$error['code']."): ".$error['message'];
-                    }
-                    throw new VeloxException("SQL Server error(s): ".implode(', ',$errorStrings),17);
+                    $this->_conn = sqlsrv_connect($host,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd]);
                 }
+                else {
+                    throw new VeloxException("SQL Server connections require either the sqlsrv or pdo_sqlsrv extensions to be loaded.",15);
+                }
+
                 break;
             default:
                 throw new VeloxException("Invalid database type constant",10);
@@ -78,11 +96,11 @@ class Connection {
     }
     public function beginTransaction() : bool {
         $this->_inTransaction = true;
-        switch ($this->_serverType){
-            case DB_MYSQL:
-                return $this->_conn->beginTransaction();
-            case DB_MSSQL:
-                return sqlsrv_begin_transaction($this->_conn);
+        if ($this->_usePDO){
+            return $this->_conn->beginTransaction();
+        }
+        elseif ($this->_serverType == DB_MSSQL){
+            return sqlsrv_begin_transaction($this->_conn);
         }
     }
     public function inTransaction() : bool {
@@ -96,7 +114,12 @@ class Connection {
             case DB_MYSQL:
                 return $this->_conn->exec("SAVEPOINT currentQuery") !== false;
             case DB_MSSQL:
-                return (bool)sqlsrv_query($this->conn,"SAVE TRANSACTION currentQuery");
+                if ($this->_usePDO){
+                    return $this->_conn->exec("SAVE TRANSACTION currentQuery") !== false;
+                }
+                else {
+                    return (bool)sqlsrv_query($this->_conn,"SAVE TRANSACTION currentQuery");
+                }
         }
     }
     public function rollBack(bool $toSavepoint = false) : bool {
@@ -112,11 +135,19 @@ class Connection {
                     return $this->_conn->rollBack();
                 }
             case DB_MSSQL:
-                if ($toSavepoint){
-                    return (bool)sqlsrv_query($this->conn,"ROLLBACK TRANSACTION currentQuery");
+                if ($this->_usePDO){
+                    if ($toSavepoint) {
+                        return $this->_conn->exec("ROLLBACK TRANSACTION currentQuery") !== false;
+                    } else {
+                        return $this->_conn->rollBack();
+                    }
                 }
                 else {
-                    return sqlsrv_rollback($this->_conn);
+                    if ($toSavepoint) {
+                        return (bool)sqlsrv_query($this->conn, "ROLLBACK TRANSACTION currentQuery");
+                    } else {
+                        return sqlsrv_rollback($this->_conn);
+                    }
                 }
         }
     }
@@ -125,13 +156,11 @@ class Connection {
             throw new VeloxException("Transactional method called without active transaction",18);
         }
         $success = false;
-        switch ($this->_serverType){
-            case DB_MYSQL:
-                $success = $this->_conn->commit();
-                break;
-            case DB_MSSQL:
-                $success = sqlsrv_commit($this->_conn);
-                break;
+        if ($this->_usePDO){
+            $success = $this->_conn->commit();
+        }
+        elseif ($this->_serverType == DB_MSSQL){
+            $success = sqlsrv_commit($this->_conn);
         }
         $this->_inTransaction = !$success;
         return (bool)$success;
@@ -147,12 +176,11 @@ class Connection {
     }
     
     public function close() : bool {
-        switch ($this->_serverType){
-            case DB_MYSQL:
-                $this->_conn = null;
-                return true;
-            case DB_MSSQL:
-                return sqlsrv_close($this->_conn);
+        if ($this->_usePDO){
+            $this->_conn = null;
+        }
+        elseif ($this->_serverType == DB_MSSQL){
+            return sqlsrv_close($this->_conn);
         }
     }
     
@@ -186,9 +214,18 @@ class Connection {
                         //add SCOPE_IDENTITY() to the query to retrieve the last updated id
                         $sql = preg_replace("[\s;]+$", "; SCOPE_IDENTITY();", $sql);
                     }
-                    if (!($stmt = sqlsrv_prepare($this->_conn,$sql,$placeholders))){
-                        $err = sqlsrv_errors();
-                        throw new Exception($err['message'], $err['code']);
+                    if ($this->_usePDO){
+                        $stmt = $this->_conn->prepare($query->sql);
+                    }
+                    elseif (!($stmt = sqlsrv_prepare($this->_conn,$sql,$placeholders))){
+                        $errors = sqlsrv_errors();
+                        $errorStrings = [];
+                        foreach ($errors as $error){
+                            $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
+                        }
+                        if (count($errorStrings) > 0) {
+                            throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
+                        }
                     }
                     break;
             }
@@ -196,145 +233,79 @@ class Connection {
         catch (Exception $ex){
             throw new VeloxException("SQL statement failed to prepare",20,$ex);
         }
-    
         $results = [];
     
         try {
             if (count($placeholders) > 0){    //placeholders signify that this is intended to be run more than once
                 $firstExecution = true;
-                switch ($this->_serverType){
-                    case DB_MYSQL:
-                        foreach ($paramArray as $paramSet){
-                            foreach (array_keys($paramSet) as $key){
-                                try {
-                                    $stmt->bindParam($key,$paramSet[$key]);
+                if ($this->_usePDO){
+                    foreach ($paramArray as $paramSet){
+                        foreach (array_keys($paramSet) as $key){
+                            try {
+                                $stmt->bindParam($key,$paramSet[$key]);
+                            }
+                            catch(\PDOException $ex){
+                                if ($queryType == QUERY_PROC && str_starts_with($key,':op_')){
+                                    //Ignore missing :op_ placeholder for stored procedures (these will be passed by StatementSet
+                                    //but are not strictly necessary)
                                 }
-                                catch(Exception $ex){
-                                    if ($queryType == QUERY_PROC && str_starts_with($key,':op_')){
-                                        //Ignore missing :op_ placeholder for stored procedures (these will be passed by StatementSet
-                                        //but are not strictly necessary)
-                                    }
-                                    else {
-                                        throw new VeloxException('Placeholder '.$key.' does not exist in prepared statement SQL',46);
-                                    }
+                                else {
+                                    throw new VeloxException('Placeholder '.$key.' does not exist in prepared statement SQL',46);
                                 }
                             }
-                            if (!$stmt->execute($paramSet)){
-                                $err = $stmt->errorInfo();
-                                throw new Exception($err[2],$err[1]);
-                            }
-                            switch ($queryType){
-                                case QUERY_INSERT:
-                                case QUERY_UPDATE:
-                                    $this->_lastAffected[] = $this->_conn->lastInsertId();
-                                    break;
-                                case QUERY_SELECT:
-                                    switch ($resultType){
-                                        case VELOX_RESULT_ARRAY:
-                                        case VELOX_RESULT_UNION:
-                                        case VELOX_RESULT_UNION_ALL:
-                                            $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                            $currentResult = new ResultSet($resultArray);
-                                            if ($firstExecution || $resultType == VELOX_RESULT_ARRAY){
-                                                $results[] = $currentResult;
-                                            }
-                                            else {
-                                                $results[0]->merge($currentResult,($resultType == VELOX_RESULT_UNION_ALL));
-                                            }
-                                            break;
-                                        case VELOX_RESULT_FIELDS:
-                                            $currentResult = [];
-                                            $columnCount = $stmt->columnCount;
-                                            for ($i=0; $i<$columnCount-1; $i++){
-                                                $currentResult[] = $stmt->getColumnMeta($i); 
-                                            }
-                                            $results[] = $currentResult;
-                                            break 4;    //Break out of all iteration, since the remaining results would be redundant
-                                    }
-                                    break;
-                            }
-                            $stmt->closeCursor();
-                            $firstExecution = false;
                         }
-                        break;
-                    case DB_MSSQL:
-                        foreach ($paramArray as $paramSet){
-                            $keys = array_keys($paramSet);
-                            $placeholderCount = count($placeholders);
-                            for ($i=0; $i<$placeholderCount; $i++){
-                                $placeholders[$i] = $paramSet[$keys[$i]];
-                            }
-                            if (!sqlsrv_execute($stmt)){
-                                $err = sqlsrv_errors();
-                                throw new Exception($err['message'],$err['code']);
-                            }
-                            switch ($queryType){
-                                case QUERY_INSERT:
-                                case QUERY_UPDATE:
-                                    sqlsrv_fetch($stmt);
-                                    $this->_lastAffected[] = sqlsrv_get_field($stmt,0);
-                                    break;
-                                case QUERY_SELECT:
-                                    switch ($resultType){
-                                        case VELOX_RESULT_ARRAY:
-                                        case VELOX_RESULT_UNION:
-                                        case VELOX_RESULT_UNION_ALL:
-                                            $currentResult = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
-                                            while ($nextRow = sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC)){
-                                                $currentResult[] = $nextRow;
-                                            }
-                                            if ($firstExecution || $resultType == VELOX_RESULT_ARRAY){
-                                                $results[] = $currentResult;
-                                            }
-                                            else {
-                                                $results[0]->merge($currentResult,($resultType == VELOX_RESULT_UNION_ALL));
-                                            }
-                                            break;
-                                        case VELOX_RESULT_FIELDS:
-                                            foreach (sqlsrv_field_metadata($stmt) as $metadata){
-                                                $currentResult[] = $metadata;
-                                            }
-                                            $results[] = $currentResult;
-                                            break 4;    //Break out of all iteration, since the remaining results would be redundant
-                                    }
-                                    break;
-                            } 
-                            $firstExecution = false;
-                        }
-                        break;
-                }
-                if (count($results)==1){
-                    $results = $results[0];
-                }
-            }
-            else {
-                switch ($this->_serverType){
-                    case DB_MYSQL:
-                        if (!$stmt->execute()){
+                        if (!$stmt->execute($paramSet)){
                             $err = $stmt->errorInfo();
                             throw new Exception($err[2],$err[1]);
                         }
-                        $this->_lastAffected[] = $this->_conn->lastInsertId();
-                        switch ($resultType){
-                            case VELOX_RESULT_ARRAY:
-                            case VELOX_RESULT_UNION:
-                            case VELOX_RESULT_UNION_ALL:
-                                $results = new ResultSet($stmt->fetchAll(\PDO::FETCH_ASSOC));
+                        switch ($queryType){
+                            case QUERY_INSERT:
+                            case QUERY_UPDATE:
+                                $this->_lastAffected[] = $this->_conn->lastInsertId();
                                 break;
-                            case VELOX_RESULT_FIELDS:
-                                $currentResult = [];
-                                $columnCount = $stmt->columnCount;
-                                for ($i=0; $i<$columnCount-1; $i++){
-                                    $currentResult[] = $stmt->getColumnMeta($i); 
+                            case QUERY_SELECT:
+                                switch ($resultType){
+                                    case VELOX_RESULT_ARRAY:
+                                    case VELOX_RESULT_UNION:
+                                    case VELOX_RESULT_UNION_ALL:
+                                        $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                                        $currentResult = new ResultSet($resultArray);
+                                        if ($firstExecution || $resultType == VELOX_RESULT_ARRAY){
+                                            $results[] = $currentResult;
+                                        }
+                                        else {
+                                            $results[0]->merge($currentResult,($resultType == VELOX_RESULT_UNION_ALL));
+                                        }
+                                        break;
+                                    case VELOX_RESULT_FIELDS:
+                                        $currentResult = [];
+                                        $columnCount = $stmt->columnCount;
+                                        for ($i=0; $i<$columnCount-1; $i++){
+                                            $currentResult[] = $stmt->getColumnMeta($i);
+                                        }
+                                        $results[] = $currentResult;
+                                        break 3;    //Break out of all iteration, since the remaining results would be redundant
                                 }
-                                $results[] = $currentResult;
                                 break;
                         }
-                        break;
-                    case DB_MSSQL:
+                        $stmt->closeCursor();
+                        $firstExecution = false;
+                    }
+                }
+                elseif ($this->_serverType == DB_MSSQL){
+                    foreach ($paramArray as $paramSet){
+                        $keys = array_keys($paramSet);
+                        $placeholderCount = count($placeholders);
+                        for ($i=0; $i<$placeholderCount; $i++){
+                            $placeholders[$i] = $paramSet[$keys[$i]];
+                        }
                         if (!sqlsrv_execute($stmt)){
-                            $err = sqlsrv_errors();
-                            throw new Exception($err['message'],$err['code']);
+                            $errors = sqlsrv_errors();
+                            $errorStr = "";
+                            foreach($errors as $error){
+                                $errorStr .= "(code ".$error['code']."): ".$error['message']."\n";
+                            }
+                            throw new VeloxException($errorStr,17);
                         }
                         switch ($queryType){
                             case QUERY_INSERT:
@@ -347,9 +318,15 @@ class Connection {
                                     case VELOX_RESULT_ARRAY:
                                     case VELOX_RESULT_UNION:
                                     case VELOX_RESULT_UNION_ALL:
-                                        $results = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
+                                        $currentResult = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
                                         while ($nextRow = sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC)){
-                                            $results[] = $nextRow;
+                                            $currentResult[] = $nextRow;
+                                        }
+                                        if ($firstExecution || $resultType == VELOX_RESULT_ARRAY){
+                                            $results[] = $currentResult;
+                                        }
+                                        else {
+                                            $results[0]->merge($currentResult,($resultType == VELOX_RESULT_UNION_ALL));
                                         }
                                         break;
                                     case VELOX_RESULT_FIELDS:
@@ -357,11 +334,70 @@ class Connection {
                                             $currentResult[] = $metadata;
                                         }
                                         $results[] = $currentResult;
-                                        break;
+                                        break 3;    //Break out of all iteration, since the remaining results would be redundant
                                 }
                                 break;
                         }
-                        break;
+                        $firstExecution = false;
+                    }
+                }
+                if (count($results)==1){
+                    $results = $results[0];
+                }
+            }
+            else {
+                if ($this->_usePDO){
+                    if (!$stmt->execute()){
+                        $err = $stmt->errorInfo();
+                        throw new Exception($err[2],$err[1]);
+                    }
+                    $this->_lastAffected[] = $this->_conn->lastInsertId();
+                    switch ($resultType){
+                        case VELOX_RESULT_ARRAY:
+                        case VELOX_RESULT_UNION:
+                        case VELOX_RESULT_UNION_ALL:
+                            $results = new ResultSet($stmt->fetchAll(\PDO::FETCH_ASSOC));
+                            break;
+                        case VELOX_RESULT_FIELDS:
+                            $currentResult = [];
+                            $columnCount = $stmt->columnCount;
+                            for ($i=0; $i<$columnCount-1; $i++){
+                                $currentResult[] = $stmt->getColumnMeta($i);
+                            }
+                            $results[] = $currentResult;
+                            break;
+                    }
+                }
+                elseif ($this->_serverType == DB_MSSQL){
+                    if (!sqlsrv_execute($stmt)){
+                        $err = sqlsrv_errors();
+                        throw new Exception($err['message'],$err['code']);
+                    }
+                    switch ($queryType){
+                        case QUERY_INSERT:
+                        case QUERY_UPDATE:
+                            sqlsrv_fetch($stmt);
+                            $this->_lastAffected[] = sqlsrv_get_field($stmt,0);
+                            break;
+                        case QUERY_SELECT:
+                            switch ($resultType){
+                                case VELOX_RESULT_ARRAY:
+                                case VELOX_RESULT_UNION:
+                                case VELOX_RESULT_UNION_ALL:
+                                    $results = new ResultSet(sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC));
+                                    while ($nextRow = sqlsrv_fetch_array($stmt,SQLSRV_FETCH_ASSOC)){
+                                        $results[] = $nextRow;
+                                    }
+                                    break;
+                                case VELOX_RESULT_FIELDS:
+                                    foreach (sqlsrv_field_metadata($stmt) as $metadata){
+                                        $currentResult[] = $metadata;
+                                    }
+                                    $results[] = $currentResult;
+                                    break;
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -381,7 +417,12 @@ class Connection {
             case DB_MYSQL:
                 return "MySQL (PDO)";
             case DB_MSSQL:
-                return "MSSQL (sqlsrv)";
+                if ($this->_usePDO){
+                    return "MSSQL (PDO)";
+                }
+                else {
+                    return "MSSQL (sqlsrv)";
+                }
             default:
                 return "Unidentified";
         }
