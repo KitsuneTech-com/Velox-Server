@@ -315,7 +315,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                                     }
                                 }
                             }
-                        }
+                        };
                         
                         foreach($submodelDataCache as $submodelName => $rows){
                             //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
