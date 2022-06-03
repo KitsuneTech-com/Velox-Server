@@ -67,9 +67,14 @@ class Connection {
                     }
                     $errorStrings = [];
                     foreach ($errors as $error){
-                        $errorStrings[] = "SQLSTATE ".$error['SQLSTATE']." (".$error['code']."): ".$error['message'];
+                        if ($error['code'] != "5701" && $error['code'] != "5703") {
+                            //5701 and 5703 are informational and don't actually indicate an error.
+                            $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
+                        }
                     }
-                    throw new VeloxException("SQL Server error(s): ".implode(', ',$errorStrings),17);
+                    if (count($errorStrings) > 0) {
+                        throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
+                    }
                 }
                 break;
             default:
