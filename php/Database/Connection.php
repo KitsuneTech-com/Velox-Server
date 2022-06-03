@@ -271,7 +271,7 @@ class Connection {
                             }
                             if (!sqlsrv_execute($stmt)){
                                 $err = sqlsrv_errors();
-                                throw new Exception($err['message'],$err['code']);
+                                throw new VeloxException($err['message'],$err['code']);
                             }
                             switch ($queryType){
                                 case QUERY_INSERT:
