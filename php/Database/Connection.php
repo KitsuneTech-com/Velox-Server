@@ -40,12 +40,10 @@ class Connection {
     
         switch ($this->_serverType){
             case DB_MYSQL:
-            case null:
                 try {
                     $connStr = http_build_query(['host' => $host, 'dbname' => $db_name],'',";");
                     $this->_conn = new \PDO("mysql:$connStr",$uid,$pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                    $this->_serverType = DB_MYSQL;
                     break;
                 }
                 catch (\PDOException $ex) {
@@ -54,7 +52,6 @@ class Connection {
                     }
                 }
             case DB_MSSQL:
-            case null:
                 if (!function_exists("sqlsrv_connect")){
                     if ($this->_serverType == DB_MSSQL){
                         throw new VeloxException("sqlsrv extension must be installed for SQL Server connections",15);
@@ -73,9 +70,6 @@ class Connection {
                         $errorStrings[] = "SQLSTATE ".$error['SQLSTATE']." (".$error['code']."): ".$error['message'];
                     }
                     throw new VeloxException("SQL Server error(s): ".implode(', ',$errorStrings),17);
-                }
-                else {
-                    $this->_serverType = DB_MSSQL;
                 }
                 break;
             default:

@@ -14,9 +14,32 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private int $_position = 0;
     public ResultSet|array|bool|null $results;
     
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public int $queryType = QUERY_SELECT, private array|Diff $_criteria = []){
-        if ($this->_criteria instanceof Diff || count($this->_criteria) > 0){
-            $this->addCriteria($this->_criteria);
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = []){
+        $lc_query = strtolower($this->_baseSql);
+        if (str_starts_with($lc_query,"call")){
+            throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
+        }
+        if (!$this->queryType){
+            //Attempt to determine type by first keyword if query type isn't specified
+            
+            if (str_starts_with($lc_query,"select")){
+                $this->queryType = QUERY_SELECT;
+            }
+            elseif (str_starts_with($lc_query,"insert")){
+                $this->queryType = QUERY_INSERT;
+            }
+            elseif (str_starts_with($lc_query,"update")){
+                $this->queryType = QUERY_UPDATE;
+            }
+            elseif (str_starts_with($lc_query,"delete")){
+                $this->queryType = QUERY_DELETE;
+            }
+            else {
+                $this->queryType = QUERY_SELECT;
+            }
+        }
+        if ($this->criteria instanceof Diff || count($this->criteria) > 0){
+            $this->addCriteria($this->criteria);
         }
     }
     
@@ -108,6 +131,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     if ($this->queryType == QUERY_INSERT) break;
                 case QUERY_SELECT:
                 case QUERY_DELETE:
+                //case QUERY_UPDATE: (fall-through)
                     $requiredKeys[] = "where";
                     break;
             }
@@ -118,17 +142,17 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     throw new VeloxException("Element at index ".$i." does not contain the correct keys.",47);
                 }
                 $hashedKeys = $this->criterionHash($criterion);
-                if (!isset($this->_criteria[$hashedKeys])){
-                    $this->_criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
+                if (!isset($this->criteria[$hashedKeys])){
+                    $this->criteria[$hashedKeys] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? [],"data"=>[]];
                 }
-                $this->_criteria[$hashedKeys]['data'][] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? []];
+                $this->criteria[$hashedKeys]['data'][] = ["where"=>$criterion['where'] ?? [],"values"=>$criterion['values'] ?? []];
             }
         }
     }
     public function setStatements() : void {
         $setId = uniqid();
         $statements = [];
-        $criteria = $this->_criteria;
+        $criteria = $this->criteria;
 
         if (count($criteria) == 0){
             $criteria[0]['where'] = [];

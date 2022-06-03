@@ -15,9 +15,9 @@ class Transaction {
     private int $_currentIndex = 0;
     private array $_lastAffected = [];
     private array $_paramArray = [];
-    private array $_executionOrder = [];
+    public array $executionOrder = [];
     
-    public function __construct(?Connection &$conn) {
+    public function __construct(?Connection &$conn = null) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
@@ -26,7 +26,7 @@ class Transaction {
     
     //Assembly
     public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
-        $executionCount = count($this->_executionOrder);
+        $executionCount = count($this->executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -34,7 +34,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->_executionOrder[] = new Query($this->_baseConn,$query,$resultType);
+            $this->executionOrder[] = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -44,7 +44,7 @@ class Transaction {
             }
             
             //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (count($this->_executionOrder) == 0 && count($this->_paramArray) > 0){
+            if (!$this->executionOrder && !!$this->_paramArray){
                 //Get class name for following switch
                 $refl = new \ReflectionObject($query);
                 $className = $refl->getShortName();
@@ -62,7 +62,7 @@ class Transaction {
                         break;
                 }
             }
-            $this->_executionOrder[] = &$query;
+            $this->executionOrder[] = &$query;
         }   
     }
     public function addFunction(callable $function) : void {
@@ -80,19 +80,19 @@ class Transaction {
         // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
         
-        $executionCount = count($this->_executionOrder);
+        $executionCount = count($this->executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
-            $previous = &$this->_executionOrder[$executionCount-1] ?? null;
-            $next = &$this->_executionOrder[$executionCount+1] ?? null;
+            $previous = &$this->executionOrder[$executionCount-1] ?? null;
+            $next = &$this->executionOrder[$executionCount+1] ?? null;
             $boundFunction = $function->bindTo($this);
             $boundFunction($previous,$next);
         };
-        $this->_executionOrder[] = $scopedFunction->bindTo($this,$this);
+        $this->executionOrder[] = $scopedFunction->bindTo($this,$this);
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
-        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
-            $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
+        if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
+            $this->executionOrder[0]->addParameterSet($paramArray,$prefix);
         }
     }
     public function getParams() : array {
@@ -106,12 +106,12 @@ class Transaction {
         }
     }
     public function executeNext() : bool {
-        if (!(isset($this->_executionOrder[$this->_currentIndex]))){
+        if (!(isset($this->executionOrder[$this->_currentIndex]))){
             return false;
         }
         
-        $currentQuery = $this->_executionOrder[$this->_currentIndex];
-        $lastQuery = $this->_executionOrder[$this->_currentIndex-1] ?? null;
+        $currentQuery = $this->executionOrder[$this->_currentIndex];
+        $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
         try {
             if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
                 $currentQuery->conn->setSavepoint();
@@ -140,7 +140,7 @@ class Transaction {
   
     public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
         if (is_null($queryIndex)){
-            $queryIndex = count($this->_executionOrder)-1;
+            $queryIndex = count($this->executionOrder)-1;
         }
         if (isset($this->_results[$queryIndex])){
             return $this->_results[$queryIndex];
@@ -175,7 +175,7 @@ class Transaction {
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
-        foreach ($this->_executionOrder as $query){
+        foreach ($this->executionOrder as $query){
             $queryDumpArray[] = $query->dumpQuery();
         }
         return $queryDumpArray;

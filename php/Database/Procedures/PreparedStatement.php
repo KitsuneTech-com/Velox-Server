@@ -23,6 +23,10 @@ class PreparedStatement extends Query {
         }
         $this->setId = $setId;
     }
+    public function __clone() : void {
+        parent::__clone();
+        $this->clear();
+    }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         foreach ($paramArray as $key => $value){
             $paramArray[":".$prefix.$key] = $value;
@@ -38,6 +42,9 @@ class PreparedStatement extends Query {
     }
     public function getParamCount() : int {
         return $this->_paramCount;
+    }
+    public function getSetCount() : int {
+        return $this->_setCount;
     }
     public function clear() : void {
         $this->_paramArray = [];
