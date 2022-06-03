@@ -49,16 +49,23 @@ class Connection {
                 }
                 catch (\PDOException $ex) {
                     if ($this->_serverType === DB_MYSQL) {
-                        throw new VeloxException("PDO/MySQL error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
+                        throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
                     }
                 }
                 break;
             case DB_MSSQL:
                 if (extension_loaded("pdo_sqlsrv")){
-                    $connStr = http_build_query(['Server' => $host, 'Database' => $db_name],'',";");
-                    $this->_conn = new \PDO("sqlsrv:$connStr",$uid,$pwd);
-                    $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                    $this->_usePDO = true;
+                    try {
+                        $connStr = http_build_query(['Server' => $host, 'Database' => $db_name], '', ";");
+                        $this->_conn = new \PDO("sqlsrv:$connStr", $uid, $pwd);
+                        $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+                        $this->_usePDO = true;
+                    }
+                    catch (\PDOException $ex) {
+                        if ($this->_serverType === DB_MYSQL) {
+                            throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
+                        }
+                    }
                 }
                 elseif (extension_loaded("sqlsrv")){
                     if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
@@ -226,7 +233,6 @@ class Connection {
         catch (Exception $ex){
             throw new VeloxException("SQL statement failed to prepare",20,$ex);
         }
-    
         $results = [];
     
         try {
