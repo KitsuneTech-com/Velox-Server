@@ -83,7 +83,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     
     // ArrayAccess implementation
-    public function offsetSet(mixed $offset, mixed $row){
+    public function offsetSet(mixed $offset, mixed $row) : void {
         throw new VeloxException('Model rows cannot be inserted by array access. Use Model->insert() instead.',48);
     }
     public function offsetGet(mixed $offset) : array {
