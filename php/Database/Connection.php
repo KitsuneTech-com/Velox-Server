@@ -278,7 +278,7 @@ class Connection {
                                             $currentResult[] = $stmt->getColumnMeta($i);
                                         }
                                         $results[] = $currentResult;
-                                        break 4;    //Break out of all iteration, since the remaining results would be redundant
+                                        break 3;    //Break out of all iteration, since the remaining results would be redundant
                                 }
                                 break;
                         }
