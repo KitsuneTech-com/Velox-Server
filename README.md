@@ -6,7 +6,8 @@ Velox is intended as a streamlined client/server data retrieval and communicatio
 The eventual goal is to make this framework as portable and platform-agnostic as possible. At this early stage in development, however, the focus is currently on a LAMP server architecture. The particular requirements for the server-side component are as follows:
 
 * PHP 8.0.2+, with Composer 2.0+
-  * Either the PDO or sqlsrv extension (or both), depending on the database engine to be used
+  * Either PDO (with appropriate extensions) or the sqlsrv extension, depending on the database engine to be used
+   * Either the sqlsrv or pdo_sqlsrv extension can be used to connect to Microsoft SQL Server. If both are found, pdo_sqlsrv is preferred.
   * The xmlwriter extension, if the server-side component is to be used without the client-side component and XML output is needed
 * A web server that supports PHP server-side scripting (Apache 2.4+ is specifically supported, but NGINX, IIS, and others may work as well)
 
