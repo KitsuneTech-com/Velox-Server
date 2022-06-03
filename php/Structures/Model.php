@@ -103,7 +103,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     
     // Class-specific methods
-    public function select() : Diff|bool {
+    public function select(bool $diff = false) : Diff|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
