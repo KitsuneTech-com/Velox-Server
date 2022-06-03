@@ -244,7 +244,7 @@ class Connection {
                             try {
                                 $stmt->bindParam($key,$paramSet[$key]);
                             }
-                            catch(Exception $ex){
+                            catch(\PDOException $ex){
                                 if ($queryType == QUERY_PROC && str_starts_with($key,':op_')){
                                     //Ignore missing :op_ placeholder for stored procedures (these will be passed by StatementSet
                                     //but are not strictly necessary)
