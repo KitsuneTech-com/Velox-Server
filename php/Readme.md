@@ -28,9 +28,8 @@ Each of these sub-namespaces handles a different facet of the server-side compon
 ### Database
 
 The Database sub-namespace controls database communication. The Connection object serves as the interface for this communication, using
-whichever PHP library is needed to connect to the given database. (At present, PDO is used for MySQL and sqlsrv
-[https://docs.microsoft.com/en-us/sql/connect/php/download-drivers-php-sql-server?view=sql-server-ver15] is used for Microsoft SQL Server.
-Support for other database engines may be included in the future.) All queries and procedures are handled through one or more Connection
+whichever PHP library is needed to connect to the given database. (At present, PDO is used for MySQL and either PDO or sqlsrv
+[https://docs.microsoft.com/en-us/sql/connect/php/download-drivers-php-sql-server?view=sql-server-ver15] is used for Microsoft SQL Server. PDO is preferred.) Support for other database engines may be included in the future.) All queries and procedures are handled through one or more Connection
 instances, and the specific functions and methods necessary for this are abstracted away, using the following classes contained in the
 Database\Procedures sub-namespace:
 
