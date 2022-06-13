@@ -71,7 +71,7 @@ if (function_exists("preProcessing")){
 }
 
 if ($QUERIES['SELECT'] ?? false){
-    if ($DIFF->select->passthru){
+    if (isset($DIFF->select->passthru)){
         if (!$QUERIES['SELECT'] instanceof StatementSet){
             throw new VeloxException('Passthru is only available for StatementSet query definitions.',5);   
         }
