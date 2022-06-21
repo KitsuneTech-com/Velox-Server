@@ -24,6 +24,11 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 22   | Query results not yet available                               | Query::getResults() was called before query execution finished.                     |
 
+### Database\Procedures\PreparedStatement
+| Code | Text                                                          | Explanation                                                                                                                                                         |
+| ---- |---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 50   | Value for :parameter is not a scalar or null.                 | The value assigned to this parameter was array, object, or some other non-primitive. Only strings, numbers, booleans, or nulls can be assigned as parameter values. |
+
 ### Database\Procedures\StatementSet
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |

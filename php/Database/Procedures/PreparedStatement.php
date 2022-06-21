@@ -29,6 +29,9 @@ class PreparedStatement extends Query {
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         foreach ($paramArray as $key => $value){
+            if (!is_scalar($value) && !is_null($value)){
+                throw new VeloxException("Value for :".$key." is not a scalar or null.",50);
+            }
             $paramArray[":".$prefix.$key] = $value;
             unset($paramArray[$key]);
         }
