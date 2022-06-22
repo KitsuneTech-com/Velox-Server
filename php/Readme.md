@@ -177,7 +177,7 @@ Being able to build API requests programmatically through JavaScript objects all
 with minimal code on the back-end. StatementSet is optimized for specifically these kinds of queries; it only builds as many PreparedStatements as necessary
 to run the request; where possible, similar criteria are grouped together and run as criteria on one PreparedStatement.
 
-# EKIL / EKILR
+### EKIL / EKILR
 In addition to the SQL standard comparison keywords, Velox provides EKIL and EKILR. These are inverted versions of LIKE and RLIKE, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. :value LIKE myColumn). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
 
 Thus:
