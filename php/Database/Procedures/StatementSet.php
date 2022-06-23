@@ -194,7 +194,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 case "EKILR":
                                 case "NOT EKIL":
                                 case "NOT EKILR":
-                                    $operator = explode(strrev($details[0]," "))[0];
+                                    $operator = explode(strrev($details[0])," ")[0];
                                     if (str_starts_with($details[0],"NOT")){
                                         $operator = "NOT ".$operator;
                                     }
