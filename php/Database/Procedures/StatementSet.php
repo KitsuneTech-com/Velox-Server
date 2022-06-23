@@ -198,7 +198,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                     if (str_starts_with($details[0],"NOT")){
                                         $operator = "NOT ".$operator;
                                     }
-                                    $andArray = ":w_".$column." ".$operator." ".$column;
+                                    $andArray[] = ":w_".$column." ".$operator." ".$column;
                                     break;
                                 case "BETWEEN":
                                 case "NOT BETWEEN":
