@@ -157,7 +157,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
                 }
                 $rowData = [];
                 foreach ($details['columns'] as $column){
-                    $rowData[] = '"'.$row[$column].'"';
+                    $rowData[] = '"'.$row[$column] ?? ''.'"';
                 }
                 $output .= implode(",",$rowData);
             }
