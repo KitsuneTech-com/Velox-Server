@@ -15,7 +15,7 @@ const VELOX_RESULT_FIELDS = 4;
 
 const TO_BROWSER = 1;
 const TO_FILE = 2;
-const TO_OBJECT = 4;
+const TO_STRING = 4;
 const TO_STDOUT = 8;
 
 const AS_JSON = 16;

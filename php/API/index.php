@@ -69,19 +69,23 @@ require_once $queryFileName;
 if (function_exists("preProcessing")){
     preProcessing($DIFF->select,$DIFF->update,$DIFF->insert,$DIFF->delete);
 }
-
-if ($QUERIES['SELECT'] ?? false){
-    if ($DIFF->select->passthru){
-        if (!$QUERIES['SELECT'] instanceof StatementSet){
-            throw new VeloxException('Passthru is only available for StatementSet query definitions.',5);   
+if (isset($QUERIES['SELECT'])){
+    if ($DIFF && isset($DIFF->select[0]['passthru'])){
+        if (!($QUERIES['SELECT'] instanceof KitsuneTech\Velox\Database\Procedures\StatementSet)){
+            throw new VeloxException('Passthru is only available for StatementSet query definitions.',5);
         }
-        $DIFF->select->addCriteria($DIFF->select);
-        unset($DIFF->select);
+        unset($DIFF->select[0]['passthru']);
+        $QUERIES['SELECT']->addCriteria($DIFF->select);
+        $passthru = true;
     }
-    $VELOX_MODEL = new Model($QUERIES['SELECT'], $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
-    if ($DIFF){
-        $VELOX_MODEL->synchronize($DIFF);
+    else {
+        $passthru = false;
     }
+    $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
+    if ($DIFF && !$passthru){
+            $VELOX_MODEL->synchronize($DIFF);
+    }
+
     //Set the query version header (if it's set as a positive integer)
     if ($QUERY_VERSION ?? false){
         if (!is_int($QUERY_VERSION)){

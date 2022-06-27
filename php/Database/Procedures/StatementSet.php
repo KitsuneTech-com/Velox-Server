@@ -190,6 +190,16 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 case "NOT RLIKE":
                                     $andArray[] = $column." ".$details[0]." :w_".$column;
                                     break;
+                                case "EKIL":
+                                case "EKILR":
+                                case "NOT EKIL":
+                                case "NOT EKILR":
+                                    $operator = explode(" ", strrev($details[0]))[0];
+                                    if (str_starts_with($details[0],"NOT")){
+                                        $operator = "NOT ".$operator;
+                                    }
+                                    $andArray[] = ":w_".$column." ".$operator." ".$column;
+                                    break;
                                 case "BETWEEN":
                                 case "NOT BETWEEN":
                                     $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
