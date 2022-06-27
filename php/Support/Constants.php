@@ -15,14 +15,13 @@ const VELOX_RESULT_FIELDS = 4;
 
 const TO_BROWSER = 1;
 const TO_FILE = 2;
-const TO_OBJECT = 4;
+const TO_STRING = 4;
 const TO_STDOUT = 8;
-const TO_STRING = 16;
 
-const AS_JSON = 32;
-const AS_XML = 64;
-const AS_HTML = 128;
-const AS_CSV = 256;
+const AS_JSON = 16;
+const AS_XML = 32;
+const AS_HTML = 64;
+const AS_CSV = 128;
 
 const QUERY_SELECT = 1;
 const QUERY_UPDATE = 2;
