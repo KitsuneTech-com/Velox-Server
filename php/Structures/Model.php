@@ -127,7 +127,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             elseif ($this->_select->results instanceof ResultSet){
                 $this->_data = $this->_select->results->getRawData();
-                $this->_columns = array_keys($this->_data[0]);
+                $this->_columns = $this->_select->results->columns();
             }
             else {
                 $this->_data = [];
