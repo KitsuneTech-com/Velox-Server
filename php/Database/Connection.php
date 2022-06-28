@@ -100,7 +100,7 @@ class Connection {
             return $this->_conn->beginTransaction();
         }
         elseif ($this->_serverType == DB_MSSQL){
-            return sqlsrv_begin_transaction($this->_conn);
+            return \sqlsrv_begin_transaction($this->_conn);
         }
     }
     public function inTransaction() : bool {
