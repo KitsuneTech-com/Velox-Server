@@ -62,7 +62,7 @@ class Connection {
                         $this->_usePDO = true;
                     }
                     catch (\PDOException $ex) {
-                        if ($this->_serverType === DB_MYSQL) {
+                        if ($this->_serverType === DB_MSSQL) {
                             throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
                         }
                     }
