@@ -20,8 +20,10 @@ class Connection {
         string $db_name,
         string $uid,
         string $pwd,
-        int $serverType = DB_MYSQL) {
-    
+        int $serverType = DB_MYSQL,
+        array $options = []
+    ) {
+   
         if (!$host) {
             throw new VeloxException("Database host not provided",11);
         }
@@ -42,7 +44,7 @@ class Connection {
         switch ($this->_serverType){
             case DB_MYSQL:
                 try {
-                    $connStr = http_build_query(['host' => $host, 'dbname' => $db_name],'',";");
+                    $connStr = http_build_query(['host' => $host, 'dbname' => $db_name] + $options,'',";");
                     $this->_conn = new \PDO("mysql:$connStr",$uid,$pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                     $this->_usePDO = true;
@@ -56,7 +58,7 @@ class Connection {
             case DB_MSSQL:
                 if (extension_loaded("pdo_sqlsrv")){
                     try {
-                        $connStr = http_build_query(['Server' => $host, 'Database' => $db_name], '', ";");
+                        $connStr = http_build_query(['Server' => $host, 'Database' => $db_name] + $options, '', ";");
                         $this->_conn = new \PDO("sqlsrv:$connStr", $uid, $pwd);
                         $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                         $this->_usePDO = true;
@@ -68,7 +70,7 @@ class Connection {
                     }
                 }
                 elseif (extension_loaded("sqlsrv")){
-                    $this->_conn = sqlsrv_connect($host,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd]);
+                    $this->_conn = sqlsrv_connect($host,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd] + $options);
                     if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
                         if (!$this->_serverType){
                             throw new VeloxException("Unidentified database engine or incorrect parameters",16);
