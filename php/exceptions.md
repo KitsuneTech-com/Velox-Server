@@ -2,22 +2,32 @@
 Note: exceptions are not necessarily sequential per class. Numbers are added as needed during development.
 
 ### Database\Connection
-| Code | Text                                                                                    | Explanation                                                                        |
-| ---- |-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| 10   | Invalid database type constant                                                          | An unsupported database type constant was passed. See constants.php.               |
-| 11   | Database host not provided                                                              | Connection information must be passed to the constructor.                          |
-| 12   | Database name not provided                                                              | Connection information must be passed to the constructor.                          |
-| 13   | Database user not provided                                                              | Connection information must be passed to the constructor.                          |
-| 14   | Database password not provided                                                          | Connection information must be passed to the constructor.                          |
-| 15   | SQL Server connections require either the sqlsrv or pdo_sqlsrv extensions to be loaded. | Velox uses the sqlsrv extension for Microsoft SQL Server connections.              |
-| 16   | Unidentified database engine or incorrect parameters                                    | Velox was unable to connect to the database using the supplied information.        |
-| 17   | SQL Server error(s):                                                                    | The Microsoft SQL Server instance returned the given error(s).                     |
-| 18   | Transactional method called without active transaction                                  | The called method can't be invoked before Connection::beginTransaction().          |
-| 19   | Query SQL is not set                                                                    | A Query object was passed to Connection::execute() without its sql property set.   |
-| 20   | SQL statement failed to prepare                                                         | The underlying prepare function/method failed. See chained exception for details.  |
-| 21   | Query failed to execute                                                                 | The database failed to execute the query. See chained exception for details.       |
-| 46   | Placeholder 'xxxx' does not exist in prepared statement SQL                             | A parameter was passed to a prepared statement with an incorrect placeholder name. |
-| ***  | PDO error:                                                                              | PDO returned an error when connecting to database (error code is for PDOException) |
+| Code  | Text                                                                                   | Explanation                                                                                                                                                |
+|-------|----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 10    | Invalid database type constant                                                         | An unsupported database type constant was passed. See constants.php.                                                                                       |
+| 11    | Database host not provided                                                             | Connection information must be passed to the constructor.                                                                                                  |
+| 12    | Database name not provided                                                             | Connection information must be passed to the constructor.                                                                                                  |
+| 13    | Database user not provided                                                             | Connection information must be passed to the constructor.                                                                                                  |
+| 14    | Database password not provided                                                         | Connection information must be passed to the constructor.                                                                                                  |
+| 15    | SQL Server connections require either the sqlsrv or pdo_sqlsrv extensions to be loaded. | Velox uses the sqlsrv extension for Microsoft SQL Server connections.                                                                                      |
+| 16    | Unidentified database engine or incorrect parameters                                   | Velox was unable to connect to the database using the supplied information.                                                                                |
+| 17    | SQL Server error(s):                                                                   | The Microsoft SQL Server instance returned the given error(s).                                                                                             |
+| 18    | Transactional method called without active transaction                                 | The called method can't be invoked before Connection::beginTransaction().                                                                                  |
+| 19    | Query SQL is not set                                                                   | A Query object was passed to Connection::execute() without its sql property set.                                                                           |
+| 20    | SQL statement failed to prepare                                                        | The underlying prepare function/method failed. See chained exception for details.                                                                          |
+| 21    | Query failed to execute                                                                | The database failed to execute the query. See chained exception for details.                                                                               |
+| 46    | Placeholder 'xxxx' does not exist in prepared statement SQL                            | A parameter was passed to a prepared statement with an incorrect placeholder name.                                                                         |
+| 51    | This PHP installation has not been built with ODBC support.                            | PHP must be built with ODBC support in order to use Velox with ODBC connections.                                                                           |
+| 52    | Savepoint not supported on this database engine                                        | Velox doesn't support current transaction savepoints for this database engine.                                                                             |
+| 53    | pdo_sqlsrv required to connect to SQL Server using PDO.                                | PDO connections to SQL Server require the pdo_sqlsrv extension.                                                                                            |
+| 54    | SQL Server native connections require the sqlsrv extension to be loaded.               | Any SQL Server connections not using either PDO or ODBC require the sqlsrv extension.                                                                      |
+| 55    | Unknown connection type                                                                | Specified connection type must be CONN_PDO, CONN_ODBC, or CONN_NATIVE. If none was specified, Velox was unable to determine the correct connection method. |
+| 56    | Invalid result type constant                                                           | An invalid result type constant was passed. See constants.php.                                                                                             |
+| 57    | Invalid query type constant                                                            | An invalid query type constant was passed. See constants.php.                                                                                              |
+| 58    | PDO connection cannot be closed with the close() method                                | Connection::close() has no effect on a PDO connection. To close the connection, unset the Connection instance. |
+| ***   | PDO error:                                                                             | PDO returned an error when connecting to database (error code is for PDOException)                                                                         |
+| ***   | ODBC error:                                                                            | odbc_connect returned an error when connecting to database (error code is ODBC state)                                                                      |
+| ***   | MySQLi error:                                                                          | MySQLi returned an error when connecting to database (error code is SQLSTATE)                                                                              |
 
 ### Database\Procedures\Query
 | Code | Text                                                          | Explanation                                                                         |
@@ -73,4 +83,4 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 32   | Only one to-browser Export can be called per request.         | A TO_BROWSER Export() call cannot send more than one response at a time.                 |
 | 33   | Array contains elements other than instances of Model         | If an array is passed to Export, it must only contain Models.                            |
 | 34   | XML export requires the xmlwriter extension                   | The XML generated with an AS_XML Export() call is built with the xmlwriter extension.    |
-| 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification. 
+| 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification. |
