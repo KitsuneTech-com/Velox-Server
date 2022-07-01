@@ -436,7 +436,15 @@ class Connection {
         //Assemble the array of placeholders to be bound
         if ($query instanceof PreparedStatement){
             $paramArray = $query->getParams();
-            $placeholders = array_fill(0,$query->getParamCount(),null);
+            $namedParams = $query->getNamedParams();
+            if (count($namedParams) > 0){
+                for($i=0; $i<count($namedParams); $i++){
+                        $placeholders[$namedParams[$i]] = null;
+                }
+            }
+            else {
+                $placeholders = array_fill(1,$query->getParamCount(),null);
+            }
         }
 
         //Prepare the statements and bind the placeholder array (if applicable)
