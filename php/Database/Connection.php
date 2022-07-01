@@ -50,6 +50,7 @@ class Connection {
                 $connPrefix = "";
                 switch ($this->_serverType){
                     case DB_MYSQL:
+                        $connPrefix = "mysql:";
                         if ($connectionType === CONN_PDO && !extension_loaded('pdo_mysql')) {
                             throw new VeloxException("pdo_mysql required to connect to MySQL using PDO.",53);
                         }
@@ -62,6 +63,7 @@ class Connection {
                         }
                         break;
                     case DB_MSSQL:
+                        $connPrefix = "sqlsrv:";
                         if ($connectionType === CONN_PDO && !extension_loaded('pdo_sqlsrv')) {
                             throw new VeloxException("pdo_sqlsrv required to connect to SQL Server using PDO.",53);
                         }
@@ -76,7 +78,7 @@ class Connection {
                 }
                 try {
                     $connStr = http_build_query($dsnArray + $options, '', ";");
-                    $this->_conn = new \PDO("$connPrefix:$connStr", $uid, $pwd);
+                    $this->_conn = new \PDO("$connPrefix$connStr", $uid, $pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                     $connectionType = CONN_PDO;
                 }
