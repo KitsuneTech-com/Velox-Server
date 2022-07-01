@@ -20,7 +20,7 @@ class Connection {
         string $db_name,
         string $uid,
         string $pwd,
-        int|null $port,
+        int|null $port = null,
         int $serverType = DB_MYSQL,
         int|null $connectionType = null,
         array $options = []
