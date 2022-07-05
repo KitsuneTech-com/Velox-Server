@@ -501,7 +501,7 @@ class Connection {
                     }
             }
         }
-        catch (\Exception $ex){
+        catch (VeloxException $ex){
             throw new VeloxException("SQL statement failed to prepare",20,$ex);
         }
 
