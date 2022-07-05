@@ -424,7 +424,7 @@ class Connection {
                                             break;
                                     }
                             }
-			    $results = new ResultSet($resultArray);
+			                $results = new ResultSet($resultArray);
                             return $results;
                         case VELOX_RESULT_FIELDS:
                             $currentResult = [];
@@ -433,7 +433,7 @@ class Connection {
                                 $currentResult[] = $stmt->getColumnMeta($i);
                             }
                             $results = new ResultSet($currentResult);
-			    return $results;
+			                return $results;
                         default:
                             throw new VeloxException('Invalid result type constant', 56);
                     }
