@@ -14,9 +14,10 @@
         "ext-PDO": "Needed for MySQL/MariaDB support through PDO",
         "ext-pdo_mysql": "Needed for MySQL/MariaDB support through PDO",
         "ext-pdo_sqlsrv": "Microsoft SQL Server support through PDO",
+        "ext-pdo_odbc": "Needed for ODBC support through PDO",
         "ext-sqlsrv": "Microsoft SQL Server support through native driver",
         "ext-mysqli": "MySQL/MariaDB support through mysqli",
-        "ext-odbc": "Needed for ODBC support",
+        "ext-odbc": "Needed for standalone ODBC support",
         "ext-xmlwriter": "Needed for XML data export"
     },
     "autoload": {
