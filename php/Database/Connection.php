@@ -159,10 +159,10 @@ class Connection {
                     }
                     else {
                         $dsn = urldecode(http_build_query($options, '', ";"));
-                        if (!$uid && isset($dsn['uid'])){
+                        if (!$uid && isset($options['uid'])){
                             $uid = $dsn['uid'];
                         }
-                        if (!$pwd && isset($dsn['Pwd'])){
+                        if (!$pwd && isset($options['Pwd'])){
                             $pwd = $dsn['Pwd'];
                         }
                     }
