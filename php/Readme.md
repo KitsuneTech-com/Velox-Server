@@ -51,7 +51,7 @@ The second two examples above demonstrate ODBC connections. The first of these c
 $odbcDSNConnection = new Connection(host: $dsn_name, connectionType: DB_ODBC);
 $SQLServerODBCByConnectionString = new Connection(connectionType: CONN_ODBC, options: ["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
 ```
-That's easier, right? The full list of named parameters are, in order: host, db_name, uid, pwd, port, serverType, connectionType, and options. Any unused parameters can be omitted.
+That's easier, right? The full list of named parameters are, in order: host, dbName, uid, pwd, port, serverType, connectionType, and options. Any unused parameters can be omitted.
 
 All queries and procedures are handled through these Connection instances, and the specific functions and/or methods necessary for these are abstracted away, using the following classes contained in the Database\Procedures sub-namespace:
 
