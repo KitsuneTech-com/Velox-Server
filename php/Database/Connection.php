@@ -403,14 +403,16 @@ class Connection {
                                             break;
                                     }
                             }
-                            return new ResultSet($resultArray);
+			    $results = new ResultSet($resultArray);
+                            return $results;
                         case VELOX_RESULT_FIELDS:
                             $currentResult = [];
                             $columnCount = $stmt->columnCount;
                             for ($i = 0; $i < $columnCount - 1; $i++) {
                                 $currentResult[] = $stmt->getColumnMeta($i);
                             }
-                            return new ResultSet($currentResult);
+                            $results = new ResultSet($currentResult);
+			    return $results;
                         default:
                             throw new VeloxException('Invalid result type constant', 56);
                     }
@@ -515,9 +517,13 @@ class Connection {
                     }
                     $resultSet = executeStatement($this, $stmt, $queryType, $resultType, $placeholders);
                     if ($resultSet) {
-                        if ($i == 0 || $resultType == VELOX_RESULT_ARRAY) {
+			if ($resultType == VELOX_RESULT_ARRAY){
+			    array_merge($results,$resultSet->getRawData());
+			}
+                        else if ($i == 0) {
                             $results[] = $resultSet;
-                        } else {
+                        }
+			else {
                             $results[0]->merge($resultSet, ($resultType == VELOX_RESULT_UNION_ALL));
                         }
                     }
@@ -533,7 +539,14 @@ class Connection {
         catch (VeloxException $ex){
             throw new VeloxException("SQL statement failed to execute",21,$ex);
         }
-        return $results ?? true;
+	switch ($resultType){
+		case VELOX_RESULT_NONE:
+			return true;
+		case VELOX_RESULT_ARRAY:
+			return $results;
+		default:
+			return $results[0];
+	}
     }
     public function getHost() : string {
         return $this->_host;
