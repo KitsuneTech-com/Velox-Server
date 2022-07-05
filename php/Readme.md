@@ -28,9 +28,32 @@ Each of these sub-namespaces handles a different facet of the server-side compon
 ### Database
 
 The Database sub-namespace controls database communication. The Connection object serves as the interface for this communication, using
-whichever PHP extension is needed to connect to the given database. All queries and procedures are handled through one or more Connection
-instances, and the specific functions and methods necessary for this are abstracted away, using the following classes contained in the
-Database\Procedures sub-namespace:
+whichever PHP extension is needed to connect to the given database. The following are examples of how a Connection object can be instantiated:
+```
+$pdoMySQLConnection = new Connection($hostname,$database_name,$user_id,$password,$port,DB_MYSQL,CONN_PDO);
+$sqlsrvConnection = new Connection($hostname,$database_name,$user_id,$password,$port,DB_MSSQL,CONN_NATIVE);
+$odbcDSNConnection = new Connection($dsn_name,null,null,null,null,null,CONN_ODBC);
+$SQLServerODBCByConnectionString = new Connection(null,null,null,null,null,null,CONN_ODBC,["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
+```
+The first two examples are fairly self-explanatory. If the port is passed as null, the default port for the given database type is assumed. The last two arguments shown in these are constants representing the database engine and connection type, respectively. The database type can currently be one of the following:
+* DB_MYSQL (for MySQL / MariaDB)
+* DB_MSSQL (for Microsoft SQL Server)
+* DB_ODBC (for ODBC data sources)
+
+The connection type can be one of these:
+* CONN_PDO (this uses a PDO library compatible with the given database engine)
+* CONN_NATIVE (this uses a compatible non-PDO library [DB_MYSQL uses mysqli, DB_MSSQL uses sqlsrv])
+* CONN_ODBC (this uses the ODBC library)
+(note: if CONN_ODBC is used, the DB_ constants are ignored, so they can be left off)
+
+The second two examples above demonstrate ODBC connections. The first of these connects to a named DSN; the second to a DSN-less resource whose connection string attributes are given in the array. If the enormous number of nulls in these makes you cringe, you can instead call the constructor with named arguments:
+```
+$odbcDSNConnection = new Connection(host: $dsn_name, connectionType: DB_ODBC);
+$SQLServerODBCByConnectionString = new Connection(connectionType: CONN_ODBC, options: ["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
+```
+That's easier, right? The full list of named parameters are, in order: host, db_name, uid, pwd, port, serverType, connectionType, and options. Any unused parameters can be omitted.
+
+All queries and procedures are handled through these Connection instances, and the specific functions and/or methods necessary for these are abstracted away, using the following classes contained in the Database\Procedures sub-namespace:
 
 #### Query
 
@@ -67,7 +90,11 @@ set up with consecutive calls to its addQuery method, each of which appends the 
 insert interstitial code to be run between procedures; code defined in this way has access to both the previous and subsequent procedures, which allows
 this code to store and manipulate prior results, and to manipulate the following procedure as needed. The execution plan can then be run all at once,
 or one step at a time.
-  
+
+#### Constructor arguments
+
+The first argument for each of these is a reference to the Connection object that is to run them. This is the sole (and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed by a constant describing what type of query it is (QUERY_SELECT, QUERY_INSERT, QUERY_UPDATE, QUERY_DELETE, or QUERY_PROC [for a stored procedure]). If omitted, QUERY_SELECT is assumed.
+
 ### Structures
 
 The Structures sub-namespace contains data structure classes used by the server-side component. Two of these - Diff and ResultSet - are used to
