@@ -39,6 +39,7 @@ The first two examples are fairly self-explanatory. If the port is passed as nul
 * DB_MYSQL (for MySQL / MariaDB)
 * DB_MSSQL (for Microsoft SQL Server)
 * DB_ODBC (for ODBC data sources)
+
 The connection type can be one of these:
 * CONN_PDO (this uses a PDO library compatible with the given database engine)
 * CONN_NATIVE (this uses a compatible non-PDO library [DB_MYSQL uses mysqli, DB_MSSQL uses sqlsrv])
