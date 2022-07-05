@@ -25,16 +25,16 @@ class Connection {
         int|null $connectionType = null,
         array $options = []
     ) {
-        if (!$host && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
+        if (!$host && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database host not provided",11);
         }
-        if (!$db_name && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
+        if (!$db_name && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database name not provided",12);
         }
-        if (!$uid && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
+        if (!$uid && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database user not provided",13);
         }
-        if (!$pwd && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
+        if (!$pwd && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database password not provided",14);
         }
         $this->_host = $host;
