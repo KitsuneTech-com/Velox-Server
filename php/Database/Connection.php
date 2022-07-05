@@ -88,7 +88,7 @@ class Connection {
                         break;
                 }
                 try {
-                    $connStr = http_build_query($dsnArray + $options, '', ";");
+                    $connStr = urldecode(http_build_query($dsnArray + $options, '', ";"));
                     $this->_conn = new \PDO("$connPrefix$connStr", $uid, $pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                     $connectionType = CONN_PDO;
@@ -158,7 +158,7 @@ class Connection {
                         $dsn = $this->_host;
                     }
                     else {
-                        $dsn = http_build_query($options, '', ";");
+                        $dsn = urldecode(http_build_query($options, '', ";"));
                     }
                     $this->_conn = odbc_connect($dsn,$uid,$pwd);
                     if (!$this->_conn){

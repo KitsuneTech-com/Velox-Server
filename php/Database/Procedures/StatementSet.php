@@ -5,7 +5,6 @@ namespace KitsuneTech\Velox\Database\Procedures;
 
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\recur_ksort;
 
