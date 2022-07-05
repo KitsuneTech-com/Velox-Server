@@ -150,7 +150,7 @@ class Connection {
                 }
                 if ($connectionType && $connectionType !== CONN_ODBC) break;
             case CONN_ODBC:
-                if (!$connectionType === CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
+                if ($connectionType === CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
                     if (!function_exists("odbc_connect")){
                         throw new VeloxException("This PHP installation has not been built with ODBC support.",59);
                     }
