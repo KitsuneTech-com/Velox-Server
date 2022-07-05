@@ -8,13 +8,12 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
                        
 class Connection {
     private $_conn;
-    private string $_host;
-    private string $_db;
+    private ?string $_host;
+    private ?string $_db;
     private int $_serverType;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
     private string $_timestampFileLoc;
-    private bool $_usePDO = false;
     public function __construct (
         string|null $host = null,
         string|null $dbName = null,
