@@ -6,6 +6,11 @@ const VELOX_ERR_STACKTRACE = 4;
 
 const DB_MYSQL = 0;
 const DB_MSSQL = 1;
+const DB_ODBC  = 2;
+
+const CONN_NATIVE = 0;
+const CONN_PDO = 1;
+const CONN_ODBC = 2;
 
 const VELOX_RESULT_NONE = 0;
 const VELOX_RESULT_ARRAY = 1;
