@@ -6,6 +6,7 @@ const VELOX_ERR_STACKTRACE = 4;
 
 const DB_MYSQL = 0;
 const DB_MSSQL = 1;
+const DB_ODBC  = 2;
 
 const CONN_NATIVE = 0;
 const CONN_PDO = 1;

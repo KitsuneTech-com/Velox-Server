@@ -25,10 +25,10 @@ class Connection {
         int|null $connectionType = null,
         array $options = []
     ) {
-        if (!$host) {
+        if (!$host && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
             throw new VeloxException("Database host not provided",11);
         }
-        if (!$db_name) {
+        if (!$db_name && ($connectionType !== CONN_ODBC || $serverType !== DB_ODBC)) {
             throw new VeloxException("Database name not provided",12);
         }
         if (!$uid) {
@@ -73,6 +73,18 @@ class Connection {
                         ];
                         if ($this->_port) {
                             $dsnArray['Server'].=",$this->_port";
+                        }
+                        break;
+                    case DB_ODBC:
+                        $connPrefix = "odbc:";
+                        if ($connectionType === CONN_PDO && !extension_loaded('pdo_odbc')) {
+                            throw new VeloxException("pdo_odbc required to connect to ODBC using PDO.",53);
+                        }
+                        if ($this->_host){
+                            $dsnArray['dsn'] = $this->_host;
+                        }
+                        else {
+                            $dsnArray = $options;
                         }
                         break;
                 }
@@ -137,9 +149,15 @@ class Connection {
             case CONN_ODBC:
                 if (!$connectionType === CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
                     if (!function_exists("odbc_connect")){
-                        throw new VeloxException("This PHP installation has not been built with ODBC support.",51);
+                        throw new VeloxException("This PHP installation has not been built with ODBC support.",59);
                     }
-                    $this->_conn = odbc_connect($host,$uid,$pwd);
+                    if ($this->_host){
+                        $dsn = $this->_host;
+                    }
+                    else {
+                        $dsn = http_build_query($options, '', ";");
+                    }
+                    $this->_conn = odbc_connect($dsn,$uid,$pwd);
                     if (!$this->_conn){
                         throw new VeloxException("ODBC error: ".odbc_errormsg(), (int)odbc_error());
                     }
