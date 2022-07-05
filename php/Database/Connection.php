@@ -159,6 +159,12 @@ class Connection {
                     }
                     else {
                         $dsn = urldecode(http_build_query($options, '', ";"));
+                        if (!$uid && isset($dsn['uid']){
+                            $uid = $dsn['uid'];
+                        }
+                        if (!$pwd && isset($dsn['Pwd']){
+                            $pwd = $dsn['Pwd'];
+                        }
                     }
                     $this->_conn = odbc_connect($dsn,$uid,$pwd);
                     if (!$this->_conn){
