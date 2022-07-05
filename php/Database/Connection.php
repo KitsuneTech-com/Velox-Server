@@ -28,7 +28,7 @@ class Connection {
         if (!$host && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database host not provided",11);
         }
-        if (!$db_name && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
+        if (!$dbName && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
             throw new VeloxException("Database name not provided",12);
         }
         if (!$uid && ($connectionType !== CONN_ODBC && $serverType !== DB_ODBC)) {
