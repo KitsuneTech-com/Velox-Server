@@ -17,7 +17,7 @@ class Connection {
     private bool $_usePDO = false;
     public function __construct (
         string|null $host = null,
-        string|null $db_name = null,
+        string|null $dbName = null,
         string|null $uid = null,
         string|null $pwd = null,
         int|null $port = null,
@@ -38,7 +38,7 @@ class Connection {
             throw new VeloxException("Database password not provided",14);
         }
         $this->_host = $host;
-        $this->_db = $db_name;
+        $this->_db = $dbName;
         $this->_serverType = $serverType;
         $this->_port = $port;
         $this->_inTransaction = false;
