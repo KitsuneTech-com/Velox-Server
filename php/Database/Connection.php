@@ -160,10 +160,10 @@ class Connection {
                     else {
                         $dsn = urldecode(http_build_query($options, '', ";"));
                         if (!$uid && isset($options['uid'])){
-                            $uid = $dsn['uid'];
+                            $uid = $options['uid'];
                         }
                         if (!$pwd && isset($options['Pwd'])){
-                            $pwd = $dsn['Pwd'];
+                            $pwd = $options['Pwd'];
                         }
                     }
                     $this->_conn = odbc_connect($dsn,$uid,$pwd);
