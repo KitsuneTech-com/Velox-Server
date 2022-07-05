@@ -16,10 +16,10 @@ class Connection {
     private string $_timestampFileLoc;
     private bool $_usePDO = false;
     public function __construct (
-        string $host,
-        string $db_name,
-        string $uid,
-        string $pwd,
+        string|null $host = null,
+        string|null $db_name = null,
+        string|null $uid = null,
+        string|null $pwd = null,
         int|null $port = null,
         int $serverType = DB_MYSQL,
         int|null $connectionType = null,
@@ -142,10 +142,14 @@ class Connection {
                         }
                         $connectionType = CONN_NATIVE;
                         break;
+                    case DB_ODBC:
+                        $connectionType = CONN_ODBC;
+                        //Defer to CONN_ODBC below
+                        break;
                     default:
                         throw new VeloxException("Unidentified database engine or incorrect parameters",16);
                 }
-                if ($connectionType) break;
+                if ($connectionType && $connectionType !== CONN_ODBC) break;
             case CONN_ODBC:
                 if (!$connectionType === CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
                     if (!function_exists("odbc_connect")){
