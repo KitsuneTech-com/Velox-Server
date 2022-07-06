@@ -123,7 +123,7 @@ class Connection {
                         if ($this->_port) {
                             $mssqlHost .= ",$this->_port";
                         }
-                        $this->_conn = sqlsrv_connect($mssqlHost,["Database"=>$db_name, "UID"=>$uid, "PWD"=>$pwd] + $options);
+                        $this->_conn = sqlsrv_connect($mssqlHost,["Database"=>$dbName, "UID"=>$uid, "PWD"=>$pwd] + $options);
                         if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
                             if (!$this->_serverType){
                                 throw new VeloxException("Unidentified database engine or incorrect parameters",16);
