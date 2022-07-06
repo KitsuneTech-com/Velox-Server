@@ -40,127 +40,130 @@ class Query {
         $this->results = [];
         $this->_lastAffected = [];
     }
-    public function execute() : bool {
-        function executeStatement(Connection &$connObj, &$stmt, int $queryType, int $resultType, array &$parameters = null) : ResultSet {
-            $resultSet = new ResultSet();
-            switch ($connObj->connectionType()) {
-                case CONN_PDO:
-                    if (!$stmt->execute()) {
-                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorCode());
-                    }
-                    break;
-                case CONN_ODBC:
-                    if (!odbc_execute($stmt, $parameters)) {
-                        throw new VeloxException('ODBC Error: ' . odbc_errormsg(), (int)odbc_error());
-                    }
-                    break;
-                case CONN_NATIVE:
-                    switch ($connObj->serverType()) {
-                        case DB_MYSQL:
-                            if ($parameters) {
-                                $success = $stmt->execute($parameters);
-                            } else {
-                                $success = $stmt->execute();
+    private function executeStatement(&$stmt, array &$parameters = null) : ResultSet {
+        $connObj = $this->conn;
+        $queryType = $this->queryType;
+        $resultType = $this->resultType;
+        $resultSet = new ResultSet();
+        switch ($connObj->connectionType()) {
+            case CONN_PDO:
+                if (!$stmt->execute()) {
+                    throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorCode());
+                }
+                break;
+            case CONN_ODBC:
+                if (!odbc_execute($stmt, $parameters)) {
+                    throw new VeloxException('ODBC Error: ' . odbc_errormsg(), (int)odbc_error());
+                }
+                break;
+            case CONN_NATIVE:
+                switch ($connObj->serverType()) {
+                    case DB_MYSQL:
+                        if ($parameters) {
+                            $success = $stmt->execute($parameters);
+                        } else {
+                            $success = $stmt->execute();
+                        }
+                        if (!$success) {
+                            throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), $stmt->errorCode());
+                        }
+                        break;
+                    case DB_MSSQL:
+                        if (!sqlsrv_execute($stmt)) {
+                            $errors = sqlsrv_errors();
+                            $errorStrings = [];
+                            foreach ($errors as $error) {
+                                $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
                             }
-                            if (!$success) {
-                                throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), $stmt->errorCode());
+                            if (count($errorStrings) > 0) {
+                                throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
                             }
-                            break;
-                        case DB_MSSQL:
-                            if (!sqlsrv_execute($stmt)) {
-                                $errors = sqlsrv_errors();
-                                $errorStrings = [];
-                                foreach ($errors as $error) {
-                                    $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
-                                }
-                                if (count($errorStrings) > 0) {
-                                    throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
-                                }
-                            }
-                            break;
-                    }
-                    break;
-            }
-            switch ($queryType) {
-                case QUERY_INSERT:
-                case QUERY_UPDATE:
-                case QUERY_PROC:
-                    switch ($connObj->connectionType()) {
-                        case CONN_PDO:
-                            $resultSet->appendAffected([$connObj->connectionInstance()->lastInsertId()]);
-                            break;
-                        case CONN_ODBC:
-                            $insertIdSql = match ($connObj->serverType()) {
-                                DB_MYSQL => "SELECT LAST_INSERT_ID()",
-                                DB_MSSQL => "SELECT SCOPE_IDENTITY()",
-                            };
-                            $insertIdStmt = $connObj->connectionInstance()->prepare($insertIdSql);
-                            odbc_execute($insertIdStmt);
-                            $resultSet->appendAffected([odbc_result($insertIdStmt, 1)]);
-                            break;
-                        case CONN_NATIVE:
-                            switch ($connObj->serverType()) {
-                                case DB_MYSQL:
-                                    $resultSet->appendAffected([$connObj->connectionInstance()->insert_id]);
-                                    break;
-                                case DB_MSSQL:
-                                    $insertIdStmt = sqlsrv_query($connObj->_conn, "SELECT SCOPE_IDENTITY()");
-                                    $resultSet->appendAffected(sqlsrv_fetch_array($insertIdStmt)[0]);
-                            }
-                            break;
-                        default:
-                            throw new VeloxException("Unknown connection type", 55);
-                    }
-                    if ($queryType !== QUERY_PROC) {
-                        //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
-                        //Therefore, QUERY_PROC falls through to QUERY_SELECT.
-                        return $resultSet;
-                    }
-                case QUERY_SELECT:
-                    $resultArray = [];
-                    switch ($resultType) {
-                        case VELOX_RESULT_ARRAY:
-                        case VELOX_RESULT_UNION:
-                        case VELOX_RESULT_UNION_ALL:
-                            switch ($connObj->connectionType()) {
-                                case CONN_PDO:
-                                    $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                    break;
-                                case CONN_ODBC:
-                                    while ($row = odbc_fetch_array($stmt)) {
-                                        $resultArray[] = $row;
-                                    }
-                                    break;
-                                case CONN_NATIVE:
-                                    switch ($connObj->serverType()) {
-                                        case DB_MYSQL:
-                                            $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                            break;
-                                        case DB_MSSQL:
-                                            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                                                $resultArray[] = $row;
-                                            }
-                                            break;
-                                    }
-                            }
-                            $resultSet->merge(new ResultSet($resultArray));
-                            return $resultSet;
-                        case VELOX_RESULT_FIELDS:
-                            $currentResult = [];
-                            $columnCount = $stmt->columnCount;
-                            for ($i = 0; $i < $columnCount - 1; $i++) {
-                                $currentResult[] = $stmt->getColumnMeta($i);
-                            }
-                            return new ResultSet($currentResult);
-                        case VELOX_RESULT_NONE:
-                            return $resultSet;
-                        default:
-                            throw new VeloxException('Invalid result type constant', 56);
-                    }
-                default:
-                    throw new VeloxException('Invalid query type constant', 57);
-            }
+                        }
+                        break;
+                }
+                break;
         }
+        switch ($queryType) {
+            case QUERY_INSERT:
+            case QUERY_UPDATE:
+            case QUERY_PROC:
+                switch ($connObj->connectionType()) {
+                    case CONN_PDO:
+                        $resultSet->appendAffected([$connObj->connectionInstance()->lastInsertId()]);
+                        break;
+                    case CONN_ODBC:
+                        $insertIdSql = match ($connObj->serverType()) {
+                            DB_MYSQL => "SELECT LAST_INSERT_ID()",
+                            DB_MSSQL => "SELECT SCOPE_IDENTITY()",
+                        };
+                        $insertIdStmt = $connObj->connectionInstance()->prepare($insertIdSql);
+                        odbc_execute($insertIdStmt);
+                        $resultSet->appendAffected([odbc_result($insertIdStmt, 1)]);
+                        break;
+                    case CONN_NATIVE:
+                        switch ($connObj->serverType()) {
+                            case DB_MYSQL:
+                                $resultSet->appendAffected([$connObj->connectionInstance()->insert_id]);
+                                break;
+                            case DB_MSSQL:
+                                $insertIdStmt = sqlsrv_query($connObj->_conn, "SELECT SCOPE_IDENTITY()");
+                                $resultSet->appendAffected(sqlsrv_fetch_array($insertIdStmt)[0]);
+                        }
+                        break;
+                    default:
+                        throw new VeloxException("Unknown connection type", 55);
+                }
+                if ($queryType !== QUERY_PROC) {
+                    //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
+                    //Therefore, QUERY_PROC falls through to QUERY_SELECT.
+                    return $resultSet;
+                }
+            case QUERY_SELECT:
+                $resultArray = [];
+                switch ($resultType) {
+                    case VELOX_RESULT_ARRAY:
+                    case VELOX_RESULT_UNION:
+                    case VELOX_RESULT_UNION_ALL:
+                        switch ($connObj->connectionType()) {
+                            case CONN_PDO:
+                                $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                                break;
+                            case CONN_ODBC:
+                                while ($row = odbc_fetch_array($stmt)) {
+                                    $resultArray[] = $row;
+                                }
+                                break;
+                            case CONN_NATIVE:
+                                switch ($connObj->serverType()) {
+                                    case DB_MYSQL:
+                                        $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                                        break;
+                                    case DB_MSSQL:
+                                        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
+                                            $resultArray[] = $row;
+                                        }
+                                        break;
+                                }
+                        }
+                        $resultSet->merge(new ResultSet($resultArray));
+                        return $resultSet;
+                    case VELOX_RESULT_FIELDS:
+                        $currentResult = [];
+                        $columnCount = $stmt->columnCount;
+                        for ($i = 0; $i < $columnCount - 1; $i++) {
+                            $currentResult[] = $stmt->getColumnMeta($i);
+                        }
+                        return new ResultSet($currentResult);
+                    case VELOX_RESULT_NONE:
+                        return $resultSet;
+                    default:
+                        throw new VeloxException('Invalid result type constant', 56);
+                }
+            default:
+                throw new VeloxException('Invalid query type constant', 57);
+        }
+    }
+    public function execute() : bool {
         if (!$this->sql){
             throw new VeloxException("Query SQL is not set",19);
         }
@@ -247,7 +250,7 @@ class Query {
                     foreach ($paramArray[$i] as $key => $value) {
                         $placeholders[$key] = $value;
                     }
-                    $resultSet = executeStatement($this->conn, $stmt, $this->queryType, $this->resultType, $placeholders);
+                    $resultSet = $this->executeStatement($stmt, $placeholders);
                     if (count($resultSet) > 0) {
                         if ($this->resultType == VELOX_RESULT_ARRAY){
                             array_merge($results,$resultSet->getRawData());
@@ -262,7 +265,7 @@ class Query {
                 }
             }
             else {
-                $resultSet = executeStatement($this->conn, $stmt, $this->queryType, $this->resultType);
+                $resultSet = $this->executeStatement($stmt);
                 if (count($resultSet)>0) {
                     $results[] = $resultSet;
                 }
