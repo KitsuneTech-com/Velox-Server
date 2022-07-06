@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database\Procedures;
+use JetBrains\PhpStorm\ArrayShape;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
@@ -87,6 +88,7 @@ class Query {
                     switch ($connObj->connectionType()) {
                         case CONN_PDO:
                             $resultSet->appendAffected([$connObj->connectionInstance()->lastInsertId()]);
+                            break;
                         case CONN_ODBC:
                             $insertIdSql = match ($connObj->serverType()) {
                                 DB_MYSQL => "SELECT LAST_INSERT_ID()",
@@ -194,7 +196,7 @@ class Query {
                                 $stmt->bindParam($key, $placeholders[$key]);
                             }
                             catch (\PDOException $ex) {
-                                if (!($queryType == QUERY_PROC && str_starts_with($key, ':op_'))) {
+                                if (!($this->queryType == QUERY_PROC && str_starts_with($key, ':op_'))) {
                                     throw new VeloxException('Placeholder ' . $key . ' does not exist in prepared statement SQL', 46);
                                 }
                             }
@@ -246,7 +248,7 @@ class Query {
                         $placeholders[$key] = $value;
                     }
                     $resultSet = executeStatement($this->conn, $stmt, $this->queryType, $this->resultType, $placeholders);
-                    if ($resultSet) {
+                    if (count($resultSet) > 0) {
                         if ($this->resultType == VELOX_RESULT_ARRAY){
                             array_merge($results,$resultSet->getRawData());
                         }
@@ -261,7 +263,7 @@ class Query {
             }
             else {
                 $resultSet = executeStatement($this->conn, $stmt, $this->queryType, $this->resultType);
-                if ($resultSet) {
+                if (count($resultSet)>0) {
                     $results[] = $resultSet;
                 }
             }
@@ -297,6 +299,7 @@ class Query {
 	    return $this->_lastAffected;
     }
     
+    #[ArrayShape(["type" => "string", "connection" => "array", "procedure" => "string", "parameters" => "null"])]
     public function dumpQuery() : array {
         return [
             "type"=>"Query",
