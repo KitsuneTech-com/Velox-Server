@@ -377,6 +377,7 @@ class Connection {
             switch ($queryType) {
                 case QUERY_INSERT:
                 case QUERY_UPDATE:
+                case QUERY_PROC:
                     switch ($connObj->_connectionType) {
                         case CONN_PDO:
                             $connObj->_lastAffected[] = $connObj->_conn->lastInsertId();
@@ -402,7 +403,11 @@ class Connection {
                         default:
                             throw new VeloxException("Unknown connection type", 55);
                     }
-                    return null;
+                    if ($queryType !== QUERY_PROC) {
+                        //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
+                        //Therefore, QUERY_PROC falls through to QUERY_SELECT.
+                        return null;
+                    }
                 case QUERY_SELECT:
                     $resultArray = [];
                     switch ($resultType) {
