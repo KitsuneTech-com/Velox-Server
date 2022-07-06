@@ -27,7 +27,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
     //(such as when several Models are stored in an array)
     public string|null $instanceName = null;
-    public array $submodels = [];
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
         $this->_select = $select;
@@ -123,38 +122,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             else {
                 $this->_data = [];
-            }  
-
-            foreach ($this->submodels as $name => $submodel){
-                if (!$this->primaryKey){
-                    throw new VeloxException('Primary key column name must be specified for parent Model',41);
-                }
-                $submodel->select();
-                $pk = $this->primaryKey;
-                $fk = $submodel->foreignKey;
-                $submodel->object->sort($fk,SORT_ASC);
-                $fk_column = array_column($submodel->object->data(),$fk);
-                if (!$fk_column){
-                    throw new VeloxException("Foreign key column '".$fk."' does not exist in submodel.",43);
-                }
-                $this->sort($pk,SORT_ASC);
-                foreach ($this->_data as $index => $row){
-                    $fk_value = $this->_data[$pk];
-                    $fk_indices = array_keys($fk_column,$fk_value);
-                    $subdata = [];
-                    foreach ($fk_indices as $idx){
-                        $subdata[] = $submodel->object->data()[$idx];
-                    }
-                    $this->_data[$name] = $subdata;
-                }
-=======
-            $this->_data = $results;
-            if ($this->_select->results instanceof ResultSet){
-                $this->_columns = $this->_select->results->columns();
-            }
-            if ($this->_filter){
-                $this->setFilter($this->_filter);
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
             }
             
             if ($diff) {
@@ -188,7 +155,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$this->_update){
             throw new VeloxException('The associated procedure for update has not been defined.',37);
         }
-<<<<<<< HEAD
         elseif ($hasSubmodels){
             if (!$this->_select){
                 throw new VeloxException('Select query required for DML queries on nested Models',40);
@@ -212,78 +178,21 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 break;
             case "StatementSet":
-                if ($hasSubmodels){
-                    foreach ($rows as &$row){
-                        foreach ($row as $column => $subcriteria){
-                            if (is_object($subcriteria)){
-                                $this->setFilter($subcriteria);
-                                $filteredResults = $this->data();
-                                $filteredKeys = array_column($filteredResults,$this->primaryKey);
-                                $fk = $this->submodels[$name]->foreignKey;
-                                $whereCount = count($subcriteria->where);
-                                for ($i=0; $i<$whereCount; $i++){
-                                    $subcriteria->where[$i]->$fk = ["IN",$filteredKeys];
-                                }
-                                $this->submodels[$column]->object->_update->addCriteria($subcriteria);
-                                unset ($row[$column]);
-                            }
-                        }
-                    }
-                }
                 $currentProcedure->addCriteria($rows);
                 break;
         }
         
         $transaction = new Transaction;
         $transaction->addQuery($currentProcedure);
-        if ($hasSubmodels){
-            foreach ($cachedSubmodels as $name){
-                $transaction->addQuery($this->submodels[$name]->object->_update);
-            }
-        }
+
         $transaction->executeAll();
         
-=======
-        elseif ($this->_update instanceof PreparedStatement){
-            $this->_update->clear();
-        }
-        $reflection = new \ReflectionClass($this->_update);
-        switch ($reflection->getShortName()){
-            case "PreparedStatement":
-                foreach($rows as $row){
-                    $this->_update->addParameterSet($row);
-                }
-                break;
-            case "StatementSet":
-                $this->_update->addCriteria($rows);
-                break;
-        }
-        
-        $this->_update->execute();
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
         if (!$this->_delaySelect){
             $this->select();
         }
         return true;
     }
     
-<<<<<<< HEAD
-    public function insert(array $rows, bool $diff = false, bool $defer = false) : bool {
-        $hasSubmodels = !!$this->submodels;
-        if (!$this->_insert){
-            throw new VeloxException('The associated procedure for insert has not been defined.',37);
-        }
-        elseif ($hasSubmodels){
-            if (!$this->_select){
-                throw new VeloxException('Select query required for DML queries on nested Models',40);
-            }
-            $this->select();
-        }
-        $transaction = new Transaction;
-        $currentProcedure = clone $this->_insert;
-        $reflection = new \ReflectionClass($currentProcedure);
-        
-=======
     public function insert(array $rows) : bool {
         if (!$this->_insert){
             throw new VeloxException('The associated procedure for insert has not been defined.',37);
@@ -292,11 +201,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             $this->_insert->clear();
         }
         $reflection = new \ReflectionClass($this->_insert);
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
+
         switch ($reflection->getShortName()){
             case "PreparedStatement":
                 $namedParams = $this->_insert->getNamedParams();
-                foreach($rows as $idx => $row){
+                foreach($rows as $row){
                     foreach($namedParams as $param){
                         //set nulls for missing parameters of prepared statement
                         $row[$param] = $row[$param] ?? null;
@@ -305,7 +214,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         if (is_iterable($row[$param])){
                             throw new VeloxException("Model->insert: Invalid value passed for PreparedStatement parameter.",47);
                         }
-<<<<<<< HEAD
                     }
                     if ($hasSubmodels){
                         //Check the row for any nested datasets; cache them in an array and remove them from the row 
@@ -316,9 +224,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                                 unset($row[$column]);
                             }
                         }
-=======
                         $this->_insert->addParameterSet($row);
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
                     }
                     //If any nested datasets are found (and parameter sets already exist for the current procedure)...
                     if (isset($submodelDataCache) && $currentProcedure->getSetCount() > 0){
@@ -329,38 +235,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                     //Add the adjusted row to the current procedure
                     $currentProcedure->addParameterSet($row);
-                    
-                    if (isset($submodelDataCache)){
-                         $parentModel = $this;
-                         //Note: bridge function is called during Transaction execution, not as part of this method.
-                         $bridge = function(Query &$previous, PreparedStatement|StatementSet &$next) use (&$submodelDataCache, &$parentModel){
-                            foreach ($submodelDataCache as $submodelName => $rows){
-                                $rowCount = count($rows);
-                                $pk_value = $previous->getResults()[0][$parentMode->primaryKey];
-                                
-                                for ($i=0; $i<$rowCount; $i++){
-                                    $fk_name = $submodelDataCache[$submodelName]->foreignKey;
-                                    //add primary key values to each foreign key of each submodel insert
-                                    if ($next instanceof PreparedStatement){
-                                        $paramArray = &$next->getParams();
-                                        array_walk($paramArray,function(&$paramSet) use ($fk_name, $pk_value){
-                                            $paramSet[$fk_name] = $pk_value;
-                                        });
-                                    }
-                                    elseif ($next instanceof StatementSet){
-                                        
-                                    }
-                                }
-                            }
-                        };
-                        
-                        foreach($submodelDataCache as $submodelName => $rows){
-                            //Clone the submodel insert procedure, attach the parameters, and add the procedure to the Transaction
-                            $proc = $this->submodels[$submodelName]->insert($rows);
-                            $transaction->addQuery($proc);
-                        }
-                        unset($submodelDataCache);
-                    }
                 }
                 break;
             case "StatementSet":
@@ -484,31 +358,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             return $this->_data;
         }
     }
-<<<<<<< HEAD
     public function diff() : Diff {
         return $this->_diff;
     }
-    public function addSubmodel(string $name, Model $submodel, string $foreignKey) : void {
-        //$name is the desired column name for export
-        //$submodel is the Model object to be used as the submodel
-        //$foreignKey is the column in the submodel containing the values to be matched against the Model's primary key column
-        if (!$this->primaryKey){
-            throw new VeloxException('Primary key column name must be specified for parent Model',41);
-        }
-        if ($name == "" || $foreignKey == ""){
-            throw new VeloxException('Name and foreign key arguments cannot be empty strings',42);   
-        }
-        if ($this->_update instanceof PreparedStatement && isset($submodel->getDefinedQueries()['update'])){
-            throw new VeloxException('Submodel updates are not allowed when the parent Model update is a PreparedStatement',45);
-        }
-        if ($this->_delete instanceof PreparedStatement && isset($submodel->getDefinedQueries()['delete'])){
-            throw new VeloxException('Submodel deletes are not allowed when the parent Model delete is a PreparedStatement',45);
-        }
-        $submodel->instanceName = $name;
-        $this->submodels[$name] = (object)['object'=>$submodel,'foreignKey'=>$foreignKey];
-    }
-=======
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
     public function setFilter(Diff|array|null $filter) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
