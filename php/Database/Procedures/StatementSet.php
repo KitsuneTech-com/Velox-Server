@@ -5,13 +5,14 @@ namespace KitsuneTech\Velox\Database\Procedures;
 
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\recur_ksort;
 
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
+    private array $_keys = [];
+
     public ResultSet|array|bool|null $results;
     
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = []){
@@ -80,7 +81,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function offsetUnset(mixed $offset) : void {
         unset($this->_statements[$offset]);
     }
-    public function offsetGet(mixed $offset) : PreparedStatement {
+    public function offsetGet(mixed $offset) : PreparedStatement|null {
         return $this->_statements[$offset] ?? null;
     }
     
@@ -150,7 +151,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
     }
     public function setStatements() : void {
-        $setId = uniqid();
         $statements = [];
         $criteria = $this->criteria;
 
@@ -272,14 +272,14 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                         try {
                             $parameterSet['w_'.$column] = $data[1];
                         }
-                        catch (Exception $ex){
+                        catch (\Exception $ex){
                             throw new VeloxException("Operand missing in 'where' array",23);
                         }
                         if ($data[0] == "BETWEEN" || $data[0] == "NOT BETWEEN") {
                             try {
                                 $parameterSet['wb_'.$column] = $data[2];
                             }
-                            catch (Exception $ex){
+                            catch (\Exception $ex){
                                 throw new VeloxException($data[0].' operator used without second operand',24);
                             }
                         }
