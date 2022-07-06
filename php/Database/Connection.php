@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database;
 use KitsuneTech\Velox\VeloxException;
-use KitsuneTech\Velox\Database\Procedures\{Query,PreparedStatement};
-use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
+use KitsuneTech\Velox\Database\Procedures\Query;
+use KitsuneTech\Velox\Structures\ResultSet;
                        
 class Connection {
     private $_conn;
@@ -13,7 +13,6 @@ class Connection {
     private int $_serverType;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
-    private string $_timestampFileLoc;
     public function __construct (
         string|null $host = null,
         string|null $dbName = null,
@@ -176,6 +175,9 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
+    public function connectionInstance() : object {
+        return $this->_conn;
+    }
     public function beginTransaction() : bool {
         $this->_inTransaction = true;
         switch ($this->_connectionType){
@@ -308,13 +310,11 @@ class Connection {
     public function connectionType() : int {
         return $this->_connectionType;
     }
-
     public function getLastAffected() : array {     //Note: the side effect of calling this method is that the array of previously affected ids will
         $lastAffected = $this->_lastAffected;       //be cleared.
         $this->_lastAffected = [];
         return $lastAffected;
     }
-    
     public function close() : bool {
         switch ($this->_connectionType){
             case CONN_PDO:
@@ -333,252 +333,11 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
-    
     public function execute(string|Query $query, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) : ResultSet|array|bool {
-        function executeStatement(&$connObj, &$stmt, $queryType, $resultType, &$parameters = null) : ResultSet|null{
-            switch ($connObj->_connectionType) {
-                case CONN_PDO:
-                    if (!$stmt->execute()) {
-                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorCode());
-                    }
-                    break;
-                case CONN_ODBC:
-                    if (!odbc_execute($stmt, $parameters)) {
-                        throw new VeloxException('ODBC Error: ' . odbc_errormsg(), (int)odbc_error());
-                    }
-                    break;
-                case CONN_NATIVE:
-                    switch ($connObj->_serverType) {
-                        case DB_MYSQL:
-                            if ($parameters) {
-                                $success = $stmt->execute($parameters);
-                            } else {
-                                $success = $stmt->execute();
-                            }
-                            if (!$success) {
-                                throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), $stmt->errorCode());
-                            }
-                            break;
-                        case DB_MSSQL:
-                            if (!sqlsrv_execute($stmt)) {
-                                $errors = sqlsrv_errors();
-                                $errorStrings = [];
-                                foreach ($errors as $error) {
-                                    $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
-                                }
-                                if (count($errorStrings) > 0) {
-                                    throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
-                                }
-                            }
-                            break;
-                    }
-                    break;
-            }
-            switch ($queryType) {
-                case QUERY_INSERT:
-                case QUERY_UPDATE:
-                case QUERY_PROC:
-                    switch ($connObj->_connectionType) {
-                        case CONN_PDO:
-                            $connObj->_lastAffected[] = $connObj->_conn->lastInsertId();
-                        case CONN_ODBC:
-                            $insertIdSql = match ($connObj->_serverType) {
-                                DB_MYSQL => "SELECT LAST_INSERT_ID()",
-                                DB_MSSQL => "SELECT SCOPE_IDENTITY()",
-                            };
-                            $insertIdStmt = $connObj->_conn->prepare($insertIdSql);
-                            odbc_execute($insertIdStmt);
-                            $connObj->_lastAffected[] = odbc_result($insertIdStmt, 1);
-                            break;
-                        case CONN_NATIVE:
-                            switch ($connObj->_serverType) {
-                                case DB_MYSQL:
-                                    $connObj->_lastAffected[] = $connObj->_conn->insert_id;
-                                    break;
-                                case DB_MSSQL:
-                                    $insertIdStmt = sqlsrv_query($connObj->_conn, "SELECT SCOPE_IDENTITY()");
-                                    $connObj->_lastAffected[] = sqlsrv_fetch_array($insertIdStmt)[0];
-                            }
-                            break;
-                        default:
-                            throw new VeloxException("Unknown connection type", 55);
-                    }
-                    if ($queryType !== QUERY_PROC) {
-                        //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
-                        //Therefore, QUERY_PROC falls through to QUERY_SELECT.
-                        return null;
-                    }
-                case QUERY_SELECT:
-                    $resultArray = [];
-                    switch ($resultType) {
-                        case VELOX_RESULT_ARRAY:
-                        case VELOX_RESULT_UNION:
-                        case VELOX_RESULT_UNION_ALL:
-                            switch ($connObj->_connectionType) {
-                                case CONN_PDO:
-                                    $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                    break;
-                                case CONN_ODBC:
-                                    while ($row = odbc_fetch_array($stmt)) {
-                                        $resultArray[] = $row;
-                                    }
-                                    break;
-                                case CONN_NATIVE:
-                                    switch ($connObj->_serverType) {
-                                        case DB_MYSQL:
-                                            $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                                            break;
-                                        case DB_MSSQL:
-                                            while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-                                                $resultArray[] = $row;
-                                            }
-                                            break;
-                                    }
-                            }
-			                $results = new ResultSet($resultArray);
-                            return $results;
-                        case VELOX_RESULT_FIELDS:
-                            $currentResult = [];
-                            $columnCount = $stmt->columnCount;
-                            for ($i = 0; $i < $columnCount - 1; $i++) {
-                                $currentResult[] = $stmt->getColumnMeta($i);
-                            }
-                            $results = new ResultSet($currentResult);
-			                return $results;
-                        default:
-                            throw new VeloxException('Invalid result type constant', 56);
-                    }
-                default:
-                    throw new VeloxException('Invalid query type constant', 57);
-
-            }
-        }
-
         if (gettype($query) == "string"){
             $query = new Query($this,$query,$queryType,$resultType);
         }
-        else {
-            $queryType = $query->queryType;
-            $resultType = $query->resultType;
-        }
-        if (!$query->sql){
-            throw new VeloxException("Query SQL is not set",19);
-        }
-        $paramArray = [];
-        $placeholders = [];
-
-        //Assemble the array of placeholders to be bound
-        if ($query instanceof PreparedStatement){
-            $paramArray = $query->getParams();
-            $namedParams = $query->getNamedParams();
-            if (count($namedParams) > 0){
-                for($i=0; $i<count($namedParams); $i++){
-                        $placeholders[$namedParams[$i]] = null;
-                }
-            }
-            else {
-                $placeholders = array_fill(1,$query->getParamCount(),null);
-            }
-        }
-
-        //Prepare the statements and bind the placeholder array (if applicable)
-        try {
-            $sql = $query->sql;
-            switch ($this->_connectionType){
-                case CONN_PDO:
-                    $stmt = $this->_conn->prepare($sql);
-                    if (count($placeholders) > 0){
-                        foreach ($placeholders as $key => $value) {
-                            $placeholders[$key] = $value;
-                            try {
-                                //PDOStatement::bindParam() is called once for each parameter.
-                                //Equivalent non-PDO parameter binding tends to be done once per statement using an array of parameters, so these calls happen outside the loop.
-                                $stmt->bindParam($key, $placeholders[$key]);
-                            }
-                            catch (\PDOException $ex) {
-                                if (!($queryType == QUERY_PROC && str_starts_with($key, ':op_'))) {
-                                    throw new VeloxException('Placeholder ' . $key . ' does not exist in prepared statement SQL', 46);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case CONN_ODBC:
-                    $stmt = odbc_prepare($this->_conn,$sql);
-                    break;
-                case CONN_NATIVE:
-                    switch ($this->_serverType){
-                        case DB_MYSQL:
-                            $stmt = $this->_conn->prepare($sql);
-                            if (count($placeholders) > 0){
-                                if (!$stmt->bind_param(str_repeat("s", count($placeholders)), ...$placeholders)) {
-                                    throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), (int)$stmt->errorCode());
-                                };
-                            }
-                            break;
-                        case DB_MSSQL:
-                            $args = [$this->_conn, $sql];
-                            if (count($placeholders) > 0){
-                                $args[] = $placeholders;
-                            }
-                            if (!($stmt = sqlsrv_prepare(...$args))){
-                                $errors = sqlsrv_errors();
-                                $errorStrings = [];
-                                foreach ($errors as $error){
-                                    $errorStrings[] = "SQLSTATE " . $error['SQLSTATE'] . " (" . $error['code'] . "): " . $error['message'];
-                                }
-                                if (count($errorStrings) > 0) {
-                                    throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
-                                }
-                            }
-                            break;
-                    }
-            }
-        }
-        catch (VeloxException $ex){
-            throw new VeloxException("SQL statement failed to prepare",20,$ex);
-        }
-
-        //Execute the statement (for each parameter set, if applicable)
-        $results = [];
-        try {
-            if (count($paramArray) > 0) {
-                for ($i = 0; $i < count($paramArray); $i++) {
-                    foreach ($paramArray[$i] as $key => $value) {
-                        $placeholders[$key] = $value;
-                    }
-                    $resultSet = executeStatement($this, $stmt, $queryType, $resultType, $placeholders);
-                    if ($resultSet) {
-			if ($resultType == VELOX_RESULT_ARRAY){
-			    array_merge($results,$resultSet->getRawData());
-			}
-                        else if ($i == 0) {
-                            $results[] = $resultSet;
-                        }
-			else {
-                            $results[0]->merge($resultSet, ($resultType == VELOX_RESULT_UNION_ALL));
-                        }
-                    }
-                }
-            }
-            else {
-                $resultSet = executeStatement($this, $stmt, $queryType, $resultType);
-                if ($resultSet) {
-                    $results[] = $resultSet;
-                }
-            }
-        }
-        catch (VeloxException $ex){
-            throw new VeloxException("SQL statement failed to execute",21,$ex);
-        }
-	switch ($resultType){
-		case VELOX_RESULT_NONE:
-			return true;
-		case VELOX_RESULT_ARRAY:
-			return $results;
-		default:
-			return $results[0];
-	}
+        $query->execute();
     }
     public function getHost() : string {
         return $this->_host;

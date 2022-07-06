@@ -6,7 +6,7 @@ namespace KitsuneTech\Velox\Structures;
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private array $_columns = [];
     private int $_position = 0;
-    
+    private array $_lastAffected = [];
     public function __construct(private array $_resultArray = []) {
         if (count($this->_resultArray) > 0){
             $this->_columns = array_keys($this->_resultArray[0]);
@@ -62,6 +62,12 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     }
     
     //Class-specific functionality
+    public function lastAffected() : array {
+        return $this->_lastAffected;
+    }
+    public function appendAffected(array $affected) : void {
+        $this->_lastAffected = array_merge($this->_lastAffected,$affected);
+    }
     public function merge(ResultSet $mergeResultSet, bool $filterDuplicates = false) : void {
         foreach ($mergeResultSet as $row){
             if (!$filterDuplicates || !in_array($row,$this->_resultArray)){
@@ -69,6 +75,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         $this->keys = array_keys($this->_resultArray);
+        $this->appendAffected($mergeResultSet->lastAffected());
     }
     public function getRawData() : array {
         return $this->_resultArray;
