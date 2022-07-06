@@ -11,7 +11,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
         if (count($this->_resultArray) > 0){
             $this->_columns = array_keys($this->_resultArray[0]);
         }
-        $this->_keys = array_keys($this->_resultArray);
+        $this->_keys = array_keys($this->_resultArray) ?? [];
     }
     
     // Countable implementation
@@ -74,7 +74,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
                 $this->_resultArray[] = $row;
             }
         }
-        $this->keys = array_keys($this->_resultArray);
+        $this->_keys = array_keys($this->_resultArray);
         $this->appendAffected($mergeResultSet->lastAffected());
     }
     public function getRawData() : array {
