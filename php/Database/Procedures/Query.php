@@ -274,7 +274,7 @@ class Query {
         $finalResult = match ($this->resultType) {
             VELOX_RESULT_NONE => null,
             VELOX_RESULT_ARRAY => $results,
-            default => $results[0]
+            default => $results[0] ?? new ResultSet()
         };
         $this->results = $finalResult;
         if ($this instanceof PreparedStatement){
