@@ -75,6 +75,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         $this->_keys = array_keys($this->_resultArray);
+        $this->_columns = array_unique(array_merge($this->_columns, $mergeResultSet->columns()));
         $this->appendAffected($mergeResultSet->lastAffected());
     }
     public function getRawData() : array {
