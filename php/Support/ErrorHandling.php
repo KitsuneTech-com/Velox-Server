@@ -18,19 +18,21 @@ function VeloxExceptionHandler(\Throwable $ex) : void {
         echo $ex->code;
     }
     else {
-        $outputObj = (object)['Exception'=>getExceptionObject($ex)];
-        if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_STDERR){
-        fwrite(STDERR,$exObj->class." [".$exObj->code."] encountered in ".$exObj->file." (line ".$exObj->line."): ".$exObj->message);
-        if (isset($exObj->trace)){
-            $traceStr = 'Stack trace:\n';
-            foreach ($exObj->trace as $item){
-                $traceStr .= "Function ".$item['function']." in ".$item['file']." , line ".$item['line']."\n";
+        $exObj = getExceptionObject($ex);
+        $outputObj = (object)['Exception'=>$exObj];
+        if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_STDERR) {
+            fwrite(STDERR, $exObj->class . " [" . $exObj->code . "] encountered in " . $exObj->file . " (line " . $exObj->line . "): " . $exObj->message);
+            if (isset($exObj->trace)) {
+                $traceStr = 'Stack trace:\n';
+                foreach ($exObj->trace as $item) {
+                    $traceStr .= "Function " . $item['function'] . " in " . $item['file'] . " , line " . $item['line'] . "\n";
+                }
             }
         }
-    }
-    if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_JSONOUT){
-        header('Content-Type: application/json');
-        echo json_encode($outputObj, JSON_PRETTY_PRINT);
+        if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_JSONOUT){
+            header('Content-Type: application/json');
+            echo json_encode($outputObj, JSON_PRETTY_PRINT);
+        }
     }
 }
 
