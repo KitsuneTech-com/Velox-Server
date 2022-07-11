@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database\Procedures;
-use JetBrains\PhpStorm\ArrayShape;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
@@ -304,8 +303,7 @@ class Query {
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
     }
-    
-    #[ArrayShape(["type" => "string", "connection" => "array", "procedure" => "string", "parameters" => "null"])]
+	
     public function dumpQuery() : array {
         return [
             "type"=>"Query",
