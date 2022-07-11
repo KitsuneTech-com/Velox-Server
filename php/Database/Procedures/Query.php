@@ -271,7 +271,7 @@ class Query {
                 }
             }
         }
-        catch (VeloxException $ex){
+        catch (Exception $ex){
             throw new VeloxException("SQL statement failed to execute",21,$ex);
         }
         $finalResult = match ($this->resultType) {
