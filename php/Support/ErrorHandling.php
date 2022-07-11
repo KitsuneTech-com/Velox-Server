@@ -13,6 +13,7 @@ function VeloxExceptionHandler(\Throwable $ex) : void {
     if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_STACKTRACE){
 	$exObj->trace = $ex->getTrace();
     }
+    $exObj->previous = $ex->getPrevious();
     $outputObj = (object)['Exception'=>$exObj];
     if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_STDERR){
 	fwrite(STDERR,$exObj->class." [".$exObj->code."] encountered in ".$exObj->file." (line ".$exObj->line."): ".$exObj->message);
