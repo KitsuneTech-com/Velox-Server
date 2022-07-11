@@ -159,6 +159,9 @@ class Query {
                     default:
                         throw new VeloxException('Invalid result type constant', 56);
                 }
+            case QUERY_DELETE:
+                //No results for DELETE queries.
+                return new ResultSet([]);
             default:
                 throw new VeloxException('Invalid query type constant', 57);
         }
