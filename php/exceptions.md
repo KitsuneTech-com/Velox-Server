@@ -30,6 +30,11 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | ***   | ODBC error:                                                                             | odbc_connect returned an error when connecting to database (error code is ODBC state)                                                                      |
 | ***   | MySQLi error:                                                                           | MySQLi returned an error when connecting to database (error code is SQLSTATE)                                                                              |
 
+### Database\oneShot
+| Code  | Text                                                                                    | Explanation                                                                                                                                                |
+|-------|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 60    | Input is not supported for Query objects.                                               | Query objects do not support parameters; therefore no input can be specified.                                                                                    |
+
 ### Database\Procedures\Query
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
