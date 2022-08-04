@@ -105,7 +105,7 @@ class Query {
                                 $lastAffected = $connObj->connectionInstance()->insert_id;
                                 break;
                             case DB_MSSQL:
-                                $insertIdStmt = sqlsrv_query($connObj->_conn, "SELECT SCOPE_IDENTITY()");
+                                $insertIdStmt = sqlsrv_query($connObj->connectionInstance(), "SELECT SCOPE_IDENTITY()");
                                 $lastAffected = sqlsrv_fetch_array($insertIdStmt)[0];
                         }
                         break;
