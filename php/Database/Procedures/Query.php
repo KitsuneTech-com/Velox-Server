@@ -88,7 +88,7 @@ class Query {
             case QUERY_PROC:
                 switch ($connObj->connectionType()) {
                     case CONN_PDO:
-                        $resultSet->appendAffected([$connObj->connectionInstance()->lastInsertId()]);
+                        $lastAffected = $connObj->connectionInstance()->lastInsertId();
                         break;
                     case CONN_ODBC:
                         $insertIdSql = match ($connObj->serverType()) {
@@ -97,21 +97,23 @@ class Query {
                         };
                         $insertIdStmt = $connObj->connectionInstance()->prepare($insertIdSql);
                         odbc_execute($insertIdStmt);
-                        $resultSet->appendAffected([odbc_result($insertIdStmt, 1)]);
+                        $lastAffected = odbc_result($insertIdStmt, 1);
                         break;
                     case CONN_NATIVE:
                         switch ($connObj->serverType()) {
                             case DB_MYSQL:
-                                $resultSet->appendAffected([$connObj->connectionInstance()->insert_id]);
+                                $lastAffected = $connObj->connectionInstance()->insert_id;
                                 break;
                             case DB_MSSQL:
                                 $insertIdStmt = sqlsrv_query($connObj->_conn, "SELECT SCOPE_IDENTITY()");
-                                $resultSet->appendAffected(sqlsrv_fetch_array($insertIdStmt)[0]);
+                                $lastAffected = sqlsrv_fetch_array($insertIdStmt)[0];
                         }
                         break;
                     default:
                         throw new VeloxException("Unknown connection type", 55);
                 }
+                $this->_lastAffected[] = $lastAffected;
+                $resultSet->appendAffected([$lastAffected]);
                 if ($queryType !== QUERY_PROC) {
                     //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
                     //Therefore, QUERY_PROC falls through to QUERY_SELECT.
@@ -171,6 +173,7 @@ class Query {
         }
         $paramArray = [];
         $placeholders = [];
+        $this->_lastAffected = [];
 
         //Assemble the array of placeholders to be bound
         if ($this instanceof PreparedStatement){
