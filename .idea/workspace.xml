@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="2fbac1a1-8213-4095-a374-288d014d9ca8" name="Changes" comment="Fixed connection reference for sqlsrv_query" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings" doNotAsk="true" notifyAboutMissingVendor="false" synchronizationState="SYNCHRONIZE">
+    <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
+    <execution>
+      <executable path="composer" />
+    </execution>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2A2ihdV74tPvv2cFqPB469kGszH" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowPanel.toolwindow.highlight.mappings&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowPanel.toolwindow.highlight.symlinks&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowPanel.toolwindow.show.date&quot;: &quot;false&quot;,
+    &quot;WebServerToolWindowPanel.toolwindow.show.permissions&quot;: &quot;false&quot;,
+    &quot;WebServerToolWindowPanel.toolwindow.show.size&quot;: &quot;false&quot;,
+    &quot;php.override.implement.member.chooser.php.doc&quot;: &quot;NONE&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.webide.settings.project.settings.php.composer&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2fbac1a1-8213-4095-a374-288d014d9ca8" name="Changes" comment="" />
+      <created>1654214200895</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1654214200895</updated>
+      <workItem from="1654214201999" duration="48727000" />
+      <workItem from="1654262933069" duration="3169000" />
+      <workItem from="1654266697896" duration="845000" />
+      <workItem from="1654268383554" duration="6828000" />
+      <workItem from="1654788772045" duration="21000" />
+      <workItem from="1655820760403" duration="1587000" />
+      <workItem from="1656629868873" duration="799000" />
+      <workItem from="1656682010901" duration="2456000" />
+      <workItem from="1656691209752" duration="23939000" />
+      <workItem from="1656718315705" duration="630000" />
+      <workItem from="1657052422796" duration="4587000" />
+      <workItem from="1657059784807" duration="4362000" />
+      <workItem from="1657128149384" duration="7332000" />
+      <workItem from="1657138610324" duration="953000" />
+      <workItem from="1657139617577" duration="2285000" />
+      <workItem from="1657143322263" duration="429000" />
+      <workItem from="1657147311735" duration="3309000" />
+      <workItem from="1657234719423" duration="171000" />
+      <workItem from="1657581901623" duration="529000" />
+      <workItem from="1657582846286" duration="523000" />
+      <workItem from="1657725140534" duration="952000" />
+      <workItem from="1659629729577" duration="3338000" />
+      <workItem from="1659964923032" duration="635000" />
+    </task>
+    <task id="LOCAL-00001" summary="Added missing semicolon">
+      <created>1654263333932</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1654263333932</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Defined void return type on Model::offsetSet()">
+      <created>1654263498074</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1654263498074</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Defined Model::submodels property">
+      <created>1654263656114</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1654263656114</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Added missing $diff parameter on Model::select()">
+      <created>1654263846501</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1654263846501</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Removed cases for null server type&#10;Defining parameter $serverType defaults to DB_MYSQL if not provided. Any other database type must be explicitly declared through this parameter.">
+      <created>1654266469308</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1654266469308</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Removed unnecessary else clauses">
+      <created>1654266781012</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1654266781012</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Attach results to Model::_data property">
+      <created>1654268454730</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1654268454730</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Removed enforced type for Connection::_conn&#10;sqlsrv_connect returns a resource, not an object, and since there is no data type for a resource, strict typing can't be enforced on this property">
+      <created>1654269871788</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1654269871788</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Ignore errors 5701 and 5703 on SQL Server connection&#10;These &quot;errors&quot; are only informational, indicating the database and language being used, respectively, and are thrown on every connection. They're useless here.">
+      <created>1654270365356</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1654270365356</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Fixed property reference">
+      <created>1654270575515</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1654270575515</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Changed Exception reference to VeloxException">
+      <created>1654270679812</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1654270679812</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Fixed error handling for SQL Server prepared statement calls">
+      <created>1654271213864</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1654271213864</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Added support for SQL Server through PDO">
+      <created>1654273584333</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1654273584333</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Added support for SQL Server through PDO">
+      <created>1654273640345</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1654273640345</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added support for SQL Server through PDO">
+      <created>1654273671378</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1654273671378</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Generalized PDO exception">
+      <created>1654274389882</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1654274389882</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Catch PDOException">
+      <created>1654276435780</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1654276435780</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Added exception to catch when non-scalars are passed as parameters&#10;Exception 50 is thrown; non-scalar values won't work in the context of a SQL prepared statement.">
+      <created>1655822281174</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1655822281174</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Added MySQLi and ODBC support&#10;Additionally, PDO support for MySQL and pdo_sqlsrv is condensed and combined">
+      <created>1656717146149</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1656717146149</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Added MySQLi and ODBC support&#10;Additionally, PDO support for MySQL and pdo_sqlsrv is condensed and combined">
+      <created>1656717465166</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1656717465166</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Fixed prefix">
+      <created>1656717708727</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1656717708727</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Added support for pdo_odbc extension&#10;Also fleshed out connection string building">
+      <created>1657053204368</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1657053204368</updated>
+    </task>
+    <task id="LOCAL-00023" summary="All parameters are nullable">
+      <created>1657058086874</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1657058086874</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Fixed indentation">
+      <created>1657059671285</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1657059671285</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Added urldecode wrapper&#10;DSN strings don't need URL encoding">
+      <created>1657060773841</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1657060773841</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Removed wrong not operator">
+      <created>1657060849920</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1657060849920</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Insert uid and pwd from options array if they don't already exist">
+      <created>1657061002468</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1657061002468</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Insert uid and pwd from options array if they don't already exist">
+      <created>1657061167529</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1657061167529</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Merge remote-tracking branch 'origin/odbc-support' into odbc-support&#10;&#10;# Conflicts:&#10;#&#9;php/Database/Connection.php">
+      <created>1657061307675</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1657061307675</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Merge remote-tracking branch 'origin/odbc-support' into odbc-support">
+      <created>1657061389150</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1657061389150</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Add QUERY_PROC handling">
+      <created>1657132865561</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1657132865561</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Cleanup after merge">
+      <created>1657142051981</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1657142051981</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Changed executeStatement into private method">
+      <created>1657143680717</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1657143680717</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Removed submodel WIP code&#10;Submodel code belongs on nested-queries branch for now.">
+      <created>1657148119996</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1657148119996</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Updated suggestions">
+      <created>1657234758594</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1657234758594</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Fixed syntax">
+      <created>1657582247447</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1657582247447</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Changed expected exception type">
+      <created>1657582382758</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1657582382758</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Added correct handling for delete queries">
+      <created>1657582957283</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1657582957283</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Added support for Query in oneShot">
+      <created>1657725478883</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1657725478883</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Added lastAffected property population to Query">
+      <created>1659630217656</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1659630217656</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Fixed connection reference for sqlsrv_query">
+      <created>1659632847399</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1659632847399</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added support for SQL Server through PDO" />
+    <MESSAGE value="Generalized PDO exception" />
+    <MESSAGE value="Catch PDOException" />
+    <MESSAGE value="Added exception to catch when non-scalars are passed as parameters&#10;Exception 50 is thrown; non-scalar values won't work in the context of a SQL prepared statement." />
+    <MESSAGE value="Added MySQLi and ODBC support&#10;Additionally, PDO support for MySQL and pdo_sqlsrv is condensed and combined" />
+    <MESSAGE value="Fixed prefix" />
+    <MESSAGE value="Added support for pdo_odbc extension&#10;Also fleshed out connection string building" />
+    <MESSAGE value="All parameters are nullable" />
+    <MESSAGE value="Fixed indentation" />
+    <MESSAGE value="Added urldecode wrapper&#10;DSN strings don't need URL encoding" />
+    <MESSAGE value="Removed wrong not operator" />
+    <MESSAGE value="Insert uid and pwd from options array if they don't already exist" />
+    <MESSAGE value="Merge remote-tracking branch 'origin/odbc-support' into odbc-support&#10;&#10;# Conflicts:&#10;#&#9;php/Database/Connection.php" />
+    <MESSAGE value="Merge remote-tracking branch 'origin/odbc-support' into odbc-support" />
+    <MESSAGE value="Add QUERY_PROC handling" />
+    <MESSAGE value="Cleanup after merge" />
+    <MESSAGE value="Changed executeStatement into private method" />
+    <MESSAGE value="Removed submodel WIP code&#10;Submodel code belongs on nested-queries branch for now." />
+    <MESSAGE value="Updated suggestions" />
+    <MESSAGE value="Fixed syntax" />
+    <MESSAGE value="Changed expected exception type" />
+    <MESSAGE value="Added correct handling for delete queries" />
+    <MESSAGE value="Added support for Query in oneShot" />
+    <MESSAGE value="Added lastAffected property population to Query" />
+    <MESSAGE value="Fixed connection reference for sqlsrv_query" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed connection reference for sqlsrv_query" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
