@@ -21,14 +21,14 @@
     },
     "autoload": {
         "psr-4": {
-            "KitsuneTech\\Velox\\": "php/"
+            "KitsuneTech\\Velox\\": "src/"
         },
         "files": [
-            "php/Database/oneShot.php",
-            "php/Support/Constants.php",
-            "php/Support/ErrorHandling.php",
-            "php/Support/Utility.php",
-            "php/Transport/Export.php",
+            "src/Database/oneShot.php",
+            "src/Support/Constants.php",
+            "src/Support/ErrorHandling.php",
+            "src/Support/Utility.php",
+            "src/Transport/Export.php",
             "config/config.php"
         ]
     }
