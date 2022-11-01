@@ -5,12 +5,14 @@ namespace KitsuneTech\Velox\Database;
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
-                       
+
 class Connection {
     private $_conn;
     private ?string $_host;
     private ?string $_db;
     private int $_serverType;
+    private int $_port;
+    private int $_connectionType;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
     public function __construct (
@@ -49,7 +51,7 @@ class Connection {
                 switch ($this->_serverType){
                     case DB_MYSQL:
                         $connPrefix = "mysql:";
-                        if ($connectionType === CONN_PDO && !extension_loaded('pdo_mysql')) {
+                        if (!extension_loaded('pdo_mysql')) {
                             throw new VeloxException("pdo_mysql required to connect to MySQL using PDO.",53);
                         }
                         $dsnArray = [
@@ -62,7 +64,7 @@ class Connection {
                         break;
                     case DB_MSSQL:
                         $connPrefix = "sqlsrv:";
-                        if ($connectionType === CONN_PDO && !extension_loaded('pdo_sqlsrv')) {
+                        if (!extension_loaded('pdo_sqlsrv')) {
                             throw new VeloxException("pdo_sqlsrv required to connect to SQL Server using PDO.",53);
                         }
                         $dsnArray = [
@@ -75,7 +77,7 @@ class Connection {
                         break;
                     case DB_ODBC:
                         $connPrefix = "odbc:";
-                        if ($connectionType === CONN_PDO && !extension_loaded('pdo_odbc')) {
+                        if (!extension_loaded('pdo_odbc')) {
                             throw new VeloxException("pdo_odbc required to connect to ODBC using PDO.",53);
                         }
                         if ($this->_host){
