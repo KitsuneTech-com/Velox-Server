@@ -7,7 +7,7 @@ dependency by including the following in the composer.json file in your project 
 {
   "repositories": [
     {
-      "url": "https://github.com/KitsuneTech-com/Velox.git",
+      "url": "https://github.com/KitsuneTech-com/Velox-Server.git",
       "type": "git"
     }
   ],
