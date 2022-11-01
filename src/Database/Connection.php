@@ -6,6 +6,34 @@ use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
 
+/**
+ * Database\Connection: A class to establish a connection to a database.
+ *
+ * Database\Connection establishes a connection to a given database. Supported databases include MySQL/MariaDB,
+ * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using either native extensions
+ * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, Connection assumes the database is MySQL/MariaDB.
+ * If a connection type isn't specified, Connection will first attempt to use PDO and fall back to native extensions if
+ * PDO cannot be used.
+ *
+ * The database connection is established at the time of instantiation, and remains open until the Connection object is
+ * destroyed. The connection can be closed manually by calling the close() method.
+ *
+ * @author KitsuneTech
+ * @package Velox
+ * @subpackage Database
+ * @version 1.0 beta 1
+ * @since 1.0 beta 1
+ *
+ * @param string $host The hostname or IP address of the database server
+ * @param string $db_name The name of the database to connect to
+ * @param string $uid The username to use for authentication
+ * @param string $pwd The password to use for authentication
+ * @param int $port The port to use for the connection (defaults to the default port for the database type)
+ * @param int $serverType The type of database server to connect to (see src/Support/Constants.php for available options)
+ * @param int $connectionType The type of connection to use (see src/Support/Constants.php for available options)
+ * @param array $options An array of options to use for the connection
+ */
+
 class Connection {
     private $_conn;
     private ?string $_host;
