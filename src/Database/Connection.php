@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpUnused */
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Database;
@@ -7,20 +8,16 @@ use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
 
 /**
- * Database\Connection: A class to establish a connection to a database.
- *
- * Database\Connection establishes a connection to a given database. Supported databases include MySQL/MariaDB,
- * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using either native extensions
+ * Connection establishes a connection to a given database. Supported databases include MySQL/MariaDB,
+ * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using native extensions
  * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, Connection assumes the database is MySQL/MariaDB.
  * If a connection type isn't specified, Connection will first attempt to use PDO and fall back to native extensions if
- * PDO cannot be used.
+ * PDO cannot be used. ODBC connections are established purely through connection strings and ignore the database type.
  *
- * The database connection is established at the time of instantiation, and remains open until the Connection object is
+ * The database connection itself is established at the time of instantiation, and remains open until the Connection object is
  * destroyed. The connection can be closed manually by calling the close() method.
  *
  * @author KitsuneTech
- * @package Velox
- * @subpackage Database
  * @version 1.0 beta 1
  * @since 1.0 beta 1
  *
@@ -29,11 +26,12 @@ use KitsuneTech\Velox\Structures\ResultSet;
  * @param string $uid The username to use for authentication
  * @param string $pwd The password to use for authentication
  * @param int $port The port to use for the connection (defaults to the default port for the database type)
- * @param int $serverType The type of database server to connect to (see src/Support/Constants.php for available options)
- * @param int $connectionType The type of connection to use (see src/Support/Constants.php for available options)
+ * @param int $serverType The type of database server to connect to (see the DB_* constants in src/Support/Constants.php for available options)
+ * @param int $connectionType The type of connection to use (see the CONN_* constants in src/Support/Constants.php for available options)
  * @param array $options An array of options to use for the connection
+ *
+ * @throws VeloxException if the connection cannot be established (exception specifies the reason)
  */
-
 class Connection {
     private $_conn;
     private ?string $_host;
@@ -205,9 +203,24 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
+    public function __destruct(){
+        $this->close();
+    }
+
+    /**
+     * Returns the internal reference to the database connection. This is only public for use by the Query class and
+     * should not be used by application code.
+     * @return object The database connection reference
+     */
     public function connectionInstance() : object {
         return $this->_conn;
     }
+
+    /**
+     * Initiates a transaction, if supported by the database engine.
+     * @return bool True if the transaction was successfully started, as indicated by the appropriate library.
+     * @throws VeloxException If the database engine does not support transactions.
+     */
     public function beginTransaction() : bool {
         $this->_inTransaction = true;
         switch ($this->_connectionType){
@@ -226,9 +239,18 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
+
+    /** Identifies whether the connection has an active transaction.
+     * @return bool True if a transaction exists.
+     */
     public function inTransaction() : bool {
         return $this->_inTransaction;
     }
+
+    /** Sets a transaction savepoint for rollback.
+     * @return bool True if the savepoint was successfully set.
+     * @throws VeloxException If no active transaction exists.
+     */
     public function setSavepoint() : bool {
         if (!$this->_inTransaction){
             throw new VeloxException("Transactional method called without active transaction",18);
@@ -258,6 +280,12 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
+
+    /** Rolls back the active transaction.
+     * @param bool $toSavepoint If true, rolls back to the last savepoint. If false or unspecified, rolls back the entire transaction.
+     * @return bool True if the rollback was successful.
+     * @throws VeloxException If no active transaction exists.
+     */
     public function rollBack(bool $toSavepoint = false) : bool {
         if (!$this->_inTransaction){
             throw new VeloxException("Transactional method called without active transaction",18);
@@ -309,6 +337,11 @@ class Connection {
             }
         }
     }
+
+    /** Commits the active transaction.
+     * @return bool True if the commit was successful.
+     * @throws VeloxException If no active transaction exists.
+     */
     public function commit() : bool {
         if (!$this->_inTransaction){
             throw new VeloxException("Transactional method called without active transaction",18);
@@ -334,17 +367,37 @@ class Connection {
         $this->_inTransaction = !$success;
         return (bool)$success;
     }
+
+    /** Returns the server type constant for this connection. See the DB_* constants in src/Support/Constants.php.
+     * @return int The server type constant.
+     */
     public function serverType() : int {
         return $this->_serverType;
     }
+
+    /** Returns the connection type constant for this connection. See the CONN_* constants in src/Support/Constants.php.
+     * @return int The connection type constant.
+     */
     public function connectionType() : int {
         return $this->_connectionType;
     }
-    public function getLastAffected() : array {     //Note: the side effect of calling this method is that the array of previously affected ids will
-        $lastAffected = $this->_lastAffected;       //be cleared.
+
+    /** Returns the last affected indices of the most recent query (equivalent to LAST_INSERT_ID in MySQL). Note: calling
+     * this method will clear the stored indices; if you need to use them more than once, store them in a variable.
+     * @return array The last affected indices.
+     */
+    public function getLastAffected() : array {
+        $lastAffected = $this->_lastAffected;
         $this->_lastAffected = [];
         return $lastAffected;
     }
+
+    /** Closes the active connection. Note: once the connection is closed, it cannot be reopened. PDO connections remain
+     * open until the object is destroyed, so this method cannot be used to close these; therefore, the preferred means
+     * to close a database connection is to destroy the object.
+     * @return bool True if the connection was successfully closed.
+     * @throws VeloxException If this method is attempted on a PDO connection.
+     */
     public function close() : bool {
         switch ($this->_connectionType){
             case CONN_PDO:
@@ -363,18 +416,39 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
+    /** Executes a given query. This can either be an instance of the Query class or a standalone SQL query string. If the
+     * latter is passed, a new Query instance will be created from it.
+     * @param Query|string $query The query to execute.
+     * @param int $queryType The type of query to execute (default is QUERY_SELECT). See the QUERY_* constants in src/Support/Constants.php.
+     * @param int $resultType The type of result to return (default is VELOX_RESULT_ARRAY). See the VELOX_RESULT_* constants in src/Support/Constants.php.
+     * @return ResultSet|array|bool The result of the query, or false if the query failed.
+     * @throws VeloxException If the query failed. The exception will be passed through from the Query class.
+     */
     public function execute(string|Query $query, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) : ResultSet|array|bool {
         if (gettype($query) == "string"){
             $query = new Query($this,$query,$queryType,$resultType);
         }
         $query->execute();
+        return $query->getResults();
     }
+
+    /** Returns the specified host for this connection.
+     * @return string The host as originally specified.
+     */
     public function getHost() : string {
         return $this->_host;
     }
+
+    /** Returns the database name for this connection.
+     * @return string The database name as originally specified.
+     */
     public function getDB() : string {
         return $this->_db;
     }
+
+    /** Returns the server type for this connection, in user-readable format (presently either MySQL or SQL Server).
+     * @return string The server type.
+     */
     public function getServerType() : string {
         return match ($this->_serverType) {
             DB_MYSQL => "MySQL",
