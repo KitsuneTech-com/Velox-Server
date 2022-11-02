@@ -182,7 +182,7 @@ class Connection {
                         }
                         $connectionType = Connection::CONN_NATIVE;
                         break;
-                    case DB_ODBC:
+                    case Connection::DB_ODBC:
                         $connectionType = Connection::CONN_ODBC;
                         //Defer to CONN_ODBC below
                         break;
