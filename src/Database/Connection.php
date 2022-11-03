@@ -28,8 +28,8 @@ class Connection {
     private ?string $_host;
     private ?string $_db;
     private int $_serverType;
-    private int $_port;
-    private int $_connectionType;
+    private ?int $_port;
+    private ?int $_connectionType;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
 
