@@ -221,7 +221,9 @@ class Connection {
         }
     }
     public function __destruct(){
-        $this->close();
+        if ($this->_connectionType !== Connection::CONN_PDO){
+            $this->close();
+        }
     }
 
     /**
