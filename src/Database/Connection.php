@@ -7,6 +7,8 @@ use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
 
 /**
+ * Connection - A generalized database connection class
+ *
  * Connection establishes a connection to a given database. Supported databases include MySQL/MariaDB,
  * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using native extensions
  * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, Connection assumes the database is MySQL/MariaDB.
@@ -20,16 +22,6 @@ use KitsuneTech\Velox\Structures\ResultSet;
  * @version 1.0 beta 1
  * @since 1.0 beta 1
  *
- * @param string $host The hostname or IP address of the database server
- * @param string $db_name The name of the database to connect to
- * @param string $uid The username to use for authentication
- * @param string $pwd The password to use for authentication
- * @param int $port The port to use for the connection (defaults to the default port for the database type)
- * @param int $serverType The type of database server to connect to (see the DB_* constants in src/Support/Constants.php for available options)
- * @param int $connectionType The type of connection to use (see the CONN_* constants in src/Support/Constants.php for available options)
- * @param array $options An array of options to use for the connection
- *
- * @throws VeloxException if the connection cannot be established (exception specifies the reason)
  */
 class Connection {
     private $_conn;
@@ -55,6 +47,17 @@ class Connection {
     /** @var int Use ODBC functions */
     public const CONN_ODBC = 2;
 
+    /**
+     * @param string|null $host The hostname or IP address of the database server
+     * @param string|null $dbName The name of the database to connect to
+     * @param string|null $uid The username to use for authentication
+     * @param string|null $pwd The password to use for authentication
+     * @param int|null $port The port to use for the connection (defaults to the default port for the database type)
+     * @param int $serverType The type of database server to connect to (see the DB_* constants in src/Support/Constants.php for available options)
+     * @param int|null $connectionType The type of connection to use (see the CONN_* constants in src/Support/Constants.php for available options)
+     * @param array $options An array of options to use for the connection
+     * @throws VeloxException if the connection cannot be established (exception specifies the reason)
+     */
     public function __construct (
         string|null $host = null,
         string|null $dbName = null,
