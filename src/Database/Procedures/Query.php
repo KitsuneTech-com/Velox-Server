@@ -16,37 +16,58 @@ use KitsuneTech\Velox\VeloxException;
  * @version 1.0 beta 1
  * @since 1.0 beta 1
  *
- * @param Connection $conn The Connection instance to use for this query
- * @param string $sql The SQL query to execute
- * @param int $queryType The type of query to execute. This affects how placeholders are assigned and what type of result is expected.
- * @param int $resultType The type of result to return. This determines what response is stored in Query::results.
  */
 class Query {
     /** @var array|ResultSet|bool The results of the executed query */
     public array|ResultSet|bool $results = [];
     private array $_lastAffected = [];
     
-    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = VELOX_RESULT_ARRAY) {
+    /** @var int SELECT */
+    public const QUERY_SELECT = 1;
+    /** @var int UPDATE */
+    public const QUERY_UPDATE = 2;
+    /** @var int INSERT */
+    public const QUERY_INSERT = 3;
+    /** @var int DELETE */
+    public const QUERY_DELETE = 4;
+    /** @var int CALL/EXECUTE (for stored procedure) */
+    public const QUERY_PROC = 5;
+
+    /** @var int No result expected (used for DML queries) */
+    const RESULT_NONE = 0;
+    /** @var int Results */
+    const RESULT_ARRAY = 1;
+    const RESULT_UNION = 2;
+    const RESULT_UNION_ALL = 3;
+    const RESULT_FIELDS = 4;
+
+    /**
+     * @param Connection $conn The Connection instance to use for this query
+     * @param string $sql The SQL query to execute
+     * @param int|null $queryType The type of query to execute. This affects how placeholders are assigned and what type of result is expected.
+     * @param int $resultType The type of result to return. This determines what response is stored in Query::results.
+     */
+    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = Query::RESULT_ARRAY) {
         if (!$this->queryType){
             //Attempt to determine type by first keyword if query type isn't specified
             $lc_query = strtolower($this->sql);
             if (str_starts_with($lc_query,"select")){
-                $this->queryType = QUERY_SELECT;
+                $this->queryType = Query::QUERY_SELECT;
             }
             elseif (str_starts_with($lc_query,"insert")){
-                $this->queryType = QUERY_INSERT;
+                $this->queryType = Query::QUERY_INSERT;
             }
             elseif (str_starts_with($lc_query,"update")){
-                $this->queryType = QUERY_UPDATE;
+                $this->queryType = Query::QUERY_UPDATE;
             }
             elseif (str_starts_with($lc_query,"delete")){
-                $this->queryType = QUERY_DELETE;
+                $this->queryType = Query::QUERY_DELETE;
             }
             elseif (str_starts_with($lc_query,"call")){
-                $this->queryType = QUERY_PROC;
+                $this->queryType = Query::QUERY_PROC;
             }
             else {
-                $this->queryType = QUERY_SELECT;
+                $this->queryType = Query::QUERY_SELECT;
             }
         }
     }
@@ -55,6 +76,7 @@ class Query {
         $this->results = [];
         $this->_lastAffected = [];
     }
+
     private function executeStatement(&$stmt, array &$parameters = null) : ResultSet {
         $connObj = $this->conn;
         $queryType = $this->queryType;
@@ -99,9 +121,9 @@ class Query {
                 break;
         }
         switch ($queryType) {
-            case QUERY_INSERT:
-            case QUERY_UPDATE:
-            case QUERY_PROC:
+            case Query::QUERY_INSERT:
+            case Query::QUERY_UPDATE:
+            case Query::QUERY_PROC:
                 switch ($connObj->connectionType()) {
                     case Connection::CONN_PDO:
                         $lastAffected = $connObj->connectionInstance()->lastInsertId();
@@ -130,17 +152,17 @@ class Query {
                 }
                 $this->_lastAffected[] = $lastAffected;
                 $resultSet->appendAffected([$lastAffected]);
-                if ($queryType !== QUERY_PROC) {
+                if ($queryType !== Query::QUERY_PROC) {
                     //Stored procedure calls don't have a specific query type, so treat them as both SELECT and DML.
                     //Therefore, QUERY_PROC falls through to QUERY_SELECT.
                     return $resultSet;
                 }
-            case QUERY_SELECT:
+            case Query::QUERY_SELECT:
                 $resultArray = [];
                 switch ($resultType) {
-                    case VELOX_RESULT_ARRAY:
-                    case VELOX_RESULT_UNION:
-                    case VELOX_RESULT_UNION_ALL:
+                    case Query::RESULT_ARRAY:
+                    case Query::RESULT_UNION:
+                    case Query::RESULT_UNION_ALL:
                         switch ($connObj->connectionType()) {
                             case Connection::CONN_PDO:
                                 $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -164,25 +186,34 @@ class Query {
                         }
                         $resultSet->merge(new ResultSet($resultArray));
                         return $resultSet;
-                    case VELOX_RESULT_FIELDS:
+                    case Query::RESULT_FIELDS:
                         $currentResult = [];
                         $columnCount = $stmt->columnCount;
                         for ($i = 0; $i < $columnCount - 1; $i++) {
                             $currentResult[] = $stmt->getColumnMeta($i);
                         }
                         return new ResultSet($currentResult);
-                    case VELOX_RESULT_NONE:
+                    case Query::RESULT_NONE:
                         return $resultSet;
                     default:
                         throw new VeloxException('Invalid result type constant', 56);
                 }
-            case QUERY_DELETE:
+            case Query::QUERY_DELETE:
                 //No results for DELETE queries.
                 return new ResultSet([]);
             default:
                 throw new VeloxException('Invalid query type constant', 57);
         }
     }
+
+    /**
+     * Prepares and executes the query. If the query is being run as a prepared statement with placeholders and parameters,
+     * the query is prepared and executed once for each set of parameters.
+     *
+     * @return bool True if the query was executed successfully, false otherwise.
+     * @throws VeloxException If the query cannot be prepared and/or executed successfully. The content of the exception
+     * will vary depending on the nature of the error.
+     */
     public function execute() : bool {
         if (!$this->sql){
             throw new VeloxException("Query SQL is not set",19);
@@ -220,7 +251,7 @@ class Query {
                                 $stmt->bindParam($key, $placeholders[$key]);
                             }
                             catch (\PDOException $ex) {
-                                if (!($this->queryType == QUERY_PROC && str_starts_with($key, ':op_'))) {
+                                if (!($this->queryType == Query::QUERY_PROC && str_starts_with($key, ':op_'))) {
                                     throw new VeloxException('Placeholder ' . $key . ' does not exist in prepared statement SQL', 46);
                                 }
                             }
@@ -273,14 +304,14 @@ class Query {
                     }
                     $resultSet = $this->executeStatement($stmt, $placeholders);
                     if (count($resultSet) > 0) {
-                        if ($this->resultType == VELOX_RESULT_ARRAY){
+                        if ($this->resultType == Query::RESULT_ARRAY){
                             array_merge($results,$resultSet->getRawData());
                         }
                         else if ($i == 0) {
                             $results[] = $resultSet;
                         }
                         else {
-                            $results[0]->merge($resultSet, ($this->resultType === VELOX_RESULT_UNION_ALL));
+                            $results[0]->merge($resultSet, ($this->resultType === Query::RESULT_UNION_ALL));
                         }
                     }
                 }
@@ -296,8 +327,8 @@ class Query {
             throw new VeloxException("SQL statement failed to execute",21,$ex);
         }
         $finalResult = match ($this->resultType) {
-            VELOX_RESULT_NONE => null,
-            VELOX_RESULT_ARRAY => $results,
+            Query::RESULT_NONE => null,
+            Query::RESULT_ARRAY => $results,
             default => $results[0] ?? new ResultSet()
         };
         $this->results = $finalResult;
@@ -310,19 +341,34 @@ class Query {
     public function __invoke() : bool {
         return $this->execute();
     }
-    
+    /**
+     * Returns the results of the query as executed. The return type will vary depending on which result type was set
+     * for the query.
+     * @return ResultSet|array|null The results of the query, or null if the query was run as QUERY_NONE.
+     * @throws VeloxException If the query has not yet returned results. It may be useful to try-catch this method
+     * in a sleep() loop while waiting for the query to complete.
+     */
     public function getResults() : array|ResultSet|null {
-        if ($this->resultType !== VELOX_RESULT_NONE && !isset($this->results)){
+        if ($this->resultType !== Query::RESULT_NONE && !isset($this->results)){
             throw new VeloxException("Query results not yet available",22);
         }
         else {
             return $this->results;
         }
     }
+    /** Returns an array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
+     * are returned by different database engines for different queries, it's best not to use this for queries that could
+     * affect several rows per execution.
+     * @return array An array of the last affected indices from this query.
+     */
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
     }
-	
+
+    /** Returns an array containing the execution context for this query, including the base SQL and connection parameters.
+     * This may be useful for debugging.
+     * @return array An array containing the execution context for this query.
+     */
     public function dumpQuery() : array {
         return [
             "type"=>"Query",
