@@ -53,8 +53,8 @@ class Connection {
      * @param string|null $uid The username to use for authentication
      * @param string|null $pwd The password to use for authentication
      * @param int|null $port The port to use for the connection (defaults to the default port for the database type)
-     * @param int $serverType The type of database server to connect to (see the DB_* constants in src/Support/Constants.php for available options)
-     * @param int|null $connectionType The type of connection to use (see the CONN_* constants in src/Support/Constants.php for available options)
+     * @param int $serverType The type of database server to connect to (see the DB_ constants above)
+     * @param int|null $connectionType The type of connection to use (see the CONN_ constants above)
      * @param array $options An array of options to use for the connection
      * @throws VeloxException if the connection cannot be established (exception specifies the reason)
      */
