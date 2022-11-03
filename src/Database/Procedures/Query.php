@@ -6,7 +6,23 @@ use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
+/**
+ * Query is the base class for all Velox query procedures. An instance of Query can be used to execute any SQL query the
+ * underlying database supports; however, for any queries that require input, PreparedStatement or StatementSet should be
+ * used instead. These classes provide automatic sanitation of input parameters, and StatementSet provides the ability to
+ * execute multiple queries in a single call.
+ *
+ * @author KitsuneTech
+ * @version 1.0 beta 1
+ * @since 1.0 beta 1
+ *
+ * @param Connection $conn The Connection instance to use for this query
+ * @param string $sql The SQL query to execute
+ * @param int $queryType The type of query to execute. This affects how placeholders are assigned and what type of result is expected.
+ * @param int $resultType The type of result to return. This determines what response is stored in Query::results.
+ */
 class Query {
+    /** @var array|ResultSet|bool The results of the executed query */
     public array|ResultSet|bool $results = [];
     private array $_lastAffected = [];
     
@@ -45,19 +61,19 @@ class Query {
         $resultType = $this->resultType;
         $resultSet = new ResultSet();
         switch ($connObj->connectionType()) {
-            case CONN_PDO:
+            case Connection::CONN_PDO:
                 if (!$stmt->execute()) {
                     throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorCode());
                 }
                 break;
-            case CONN_ODBC:
+            case Connection::CONN_ODBC:
                 if (!odbc_execute($stmt, $parameters)) {
                     throw new VeloxException('ODBC Error: ' . odbc_errormsg(), (int)odbc_error());
                 }
                 break;
-            case CONN_NATIVE:
+            case Connection::CONN_NATIVE:
                 switch ($connObj->serverType()) {
-                    case DB_MYSQL:
+                    case Connection::DB_MYSQL:
                         if ($parameters) {
                             $success = $stmt->execute($parameters);
                         } else {
@@ -67,7 +83,7 @@ class Query {
                             throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), $stmt->errorCode());
                         }
                         break;
-                    case DB_MSSQL:
+                    case Connection::DB_MSSQL:
                         if (!sqlsrv_execute($stmt)) {
                             $errors = sqlsrv_errors();
                             $errorStrings = [];
@@ -87,24 +103,24 @@ class Query {
             case QUERY_UPDATE:
             case QUERY_PROC:
                 switch ($connObj->connectionType()) {
-                    case CONN_PDO:
+                    case Connection::CONN_PDO:
                         $lastAffected = $connObj->connectionInstance()->lastInsertId();
                         break;
-                    case CONN_ODBC:
+                    case Connection::CONN_ODBC:
                         $insertIdSql = match ($connObj->serverType()) {
-                            DB_MYSQL => "SELECT LAST_INSERT_ID()",
-                            DB_MSSQL => "SELECT SCOPE_IDENTITY()",
+                            Connection::DB_MYSQL => "SELECT LAST_INSERT_ID()",
+                            Connection::DB_MSSQL => "SELECT SCOPE_IDENTITY()",
                         };
                         $insertIdStmt = $connObj->connectionInstance()->prepare($insertIdSql);
                         odbc_execute($insertIdStmt);
                         $lastAffected = odbc_result($insertIdStmt, 1);
                         break;
-                    case CONN_NATIVE:
+                    case Connection::CONN_NATIVE:
                         switch ($connObj->serverType()) {
-                            case DB_MYSQL:
+                            case Connection::DB_MYSQL:
                                 $lastAffected = $connObj->connectionInstance()->insert_id;
                                 break;
-                            case DB_MSSQL:
+                            case Connection::DB_MSSQL:
                                 $insertIdStmt = sqlsrv_query($connObj->connectionInstance(), "SELECT SCOPE_IDENTITY()");
                                 $lastAffected = sqlsrv_fetch_array($insertIdStmt)[0];
                         }
@@ -126,20 +142,20 @@ class Query {
                     case VELOX_RESULT_UNION:
                     case VELOX_RESULT_UNION_ALL:
                         switch ($connObj->connectionType()) {
-                            case CONN_PDO:
+                            case Connection::CONN_PDO:
                                 $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
                                 break;
-                            case CONN_ODBC:
+                            case Connection::CONN_ODBC:
                                 while ($row = odbc_fetch_array($stmt)) {
                                     $resultArray[] = $row;
                                 }
                                 break;
-                            case CONN_NATIVE:
+                            case Connection::CONN_NATIVE:
                                 switch ($connObj->serverType()) {
-                                    case DB_MYSQL:
+                                    case Connection::DB_MYSQL:
                                         $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
                                         break;
-                                    case DB_MSSQL:
+                                    case Connection::DB_MSSQL:
                                         while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
                                             $resultArray[] = $row;
                                         }
@@ -193,7 +209,7 @@ class Query {
         try {
             $sql = $this->sql;
             switch ($this->conn->connectionType()){
-                case CONN_PDO:
+                case Connection::CONN_PDO:
                     $stmt = $this->conn->connectionInstance()->prepare($sql);
                     if (count($placeholders) > 0){
                         foreach ($placeholders as $key => $value) {
@@ -211,12 +227,12 @@ class Query {
                         }
                     }
                     break;
-                case CONN_ODBC:
+                case Connection::CONN_ODBC:
                     $stmt = odbc_prepare($this->conn->connectionInstance(),$sql);
                     break;
-                case CONN_NATIVE:
+                case Connection::CONN_NATIVE:
                     switch ($this->_serverType){
-                        case DB_MYSQL:
+                        case Connection::DB_MYSQL:
                             $stmt = $this->conn->connectionInstance()->prepare($sql);
                             if (count($placeholders) > 0){
                                 if (!$stmt->bind_param(str_repeat("s", count($placeholders)), ...$placeholders)) {
@@ -224,7 +240,7 @@ class Query {
                                 };
                             }
                             break;
-                        case DB_MSSQL:
+                        case Connection::DB_MSSQL:
                             $args = [$this->conn->connectionInstance(), $sql];
                             if (count($placeholders) > 0){
                                 $args[] = $placeholders;
