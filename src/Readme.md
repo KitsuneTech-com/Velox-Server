@@ -30,26 +30,26 @@ Each of these sub-namespaces handles a different facet of the server-side compon
 The Database sub-namespace controls database communication. The Connection object serves as the interface for this communication, using
 whichever PHP extension is needed to connect to the given database. The following are examples of how a Connection object can be instantiated:
 ```
-$pdoMySQLConnection = new Connection($hostname,$database_name,$user_id,$password,$port,DB_MYSQL,CONN_PDO);
-$sqlsrvConnection = new Connection($hostname,$database_name,$user_id,$password,$port,DB_MSSQL,CONN_NATIVE);
-$odbcDSNConnection = new Connection($dsn_name,null,null,null,null,null,CONN_ODBC);
-$SQLServerODBCByConnectionString = new Connection(null,null,null,null,null,null,CONN_ODBC,["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
+$pdoMySQLConnection = new Connection($hostname,$database_name,$user_id,$password,$port,Connection::DB_MYSQL,Connection::CONN_PDO);
+$sqlsrvConnection = new Connection($hostname,$database_name,$user_id,$password,$port,Connection::DB_MSSQL,Connection::CONN_NATIVE);
+$odbcDSNConnection = new Connection($dsn_name,null,null,null,null,null,Connection::CONN_ODBC);
+$SQLServerODBCByConnectionString = new Connection(null,null,null,null,null,null,Connection::CONN_ODBC,["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
 ```
 The first two examples are fairly self-explanatory. If the port is passed as null, the default port for the given database type is assumed. The last two arguments shown in these are constants representing the database engine and connection type, respectively. The database type can currently be one of the following:
-* DB_MYSQL (for MySQL / MariaDB)
-* DB_MSSQL (for Microsoft SQL Server)
-* DB_ODBC (for ODBC data sources)
+* Connection::DB_MYSQL (for MySQL / MariaDB)
+* Connection::DB_MSSQL (for Microsoft SQL Server)
+* Connection::DB_ODBC (for ODBC data sources)
 
 The connection type can be one of these:
-* CONN_PDO (this uses a PDO library compatible with the given database engine)
-* CONN_NATIVE (this uses a compatible non-PDO library [DB_MYSQL uses mysqli, DB_MSSQL uses sqlsrv])
-* CONN_ODBC (this uses the ODBC library)
+* Connection::CONN_PDO (this uses a PDO library compatible with the given database engine)
+* Connection::CONN_NATIVE (this uses a compatible non-PDO library [DB_MYSQL uses mysqli, DB_MSSQL uses sqlsrv])
+* Connection::CONN_ODBC (this uses the ODBC library)
 (note: if CONN_ODBC is used, the DB_ constants are ignored, so they can be left off)
 
 The second two examples above demonstrate ODBC connections. The first of these connects to a named DSN; the second to a DSN-less resource whose connection string attributes are given in the array. If the enormous number of nulls in these makes you cringe, you can instead call the constructor with named arguments:
 ```
-$odbcDSNConnection = new Connection(host: $dsn_name, connectionType: DB_ODBC);
-$SQLServerODBCByConnectionString = new Connection(connectionType: CONN_ODBC, options: ["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
+$odbcDSNConnection = new Connection(host: $dsn_name, connectionType: Connection::DB_ODBC);
+$SQLServerODBCByConnectionString = new Connection(connectionType: Connection::CONN_ODBC, options: ["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
 ```
 That's easier, right? The full list of named parameters are, in order: host, dbName, uid, pwd, port, serverType, connectionType, and options. Any unused parameters can be omitted.
 
