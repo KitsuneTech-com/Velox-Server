@@ -174,8 +174,8 @@ class Query {
                 $resultArray = [];
                 switch ($resultType) {
                     case Query::RESULT_ARRAY:
+                    case Query::RESULT_DISTINCT:
                     case Query::RESULT_UNION:
-                    case Query::RESULT_UNION_ALL:
                         switch ($connObj->connectionType()) {
                             case Connection::CONN_PDO:
                                 $resultArray = $stmt->fetchAll(\PDO::FETCH_ASSOC);
