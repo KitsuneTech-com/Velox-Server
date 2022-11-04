@@ -7,9 +7,9 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 /**
- * Query is the base class for all Velox query procedures. An instance of Query can be used to execute any SQL query the
- * underlying database supports; however, for any queries that require input, PreparedStatement or StatementSet should be
- * used instead. These classes provide automatic sanitation of input parameters, and StatementSet provides the ability to
+ * `Query` is the base class for all Velox query procedures. An instance of `Query` can be used to execute any SQL query the
+ * underlying database supports; however, for any queries that require input, `PreparedStatement` or `StatementSet` should be
+ * used instead. These classes provide automatic sanitation of input parameters, and `StatementSet` provides the ability to
  * execute multiple queries in a single call.
  *
  * @author KitsuneTech
@@ -18,34 +18,47 @@ use KitsuneTech\Velox\VeloxException;
  *
  */
 class Query {
-    /** @var array|ResultSet|bool The results of the executed query */
-    public array|ResultSet|bool $results = [];
-    private array $_lastAffected = [];
-    
     /** @var int SELECT */
     public const QUERY_SELECT = 1;
+
     /** @var int UPDATE */
     public const QUERY_UPDATE = 2;
+
     /** @var int INSERT */
     public const QUERY_INSERT = 3;
+
     /** @var int DELETE */
     public const QUERY_DELETE = 4;
+
     /** @var int CALL/EXECUTE (for stored procedure) */
     public const QUERY_PROC = 5;
 
     /** @var int No result expected (used for DML queries) */
     const RESULT_NONE = 0;
-    /** @var int Results */
+
+    /** @var int Results will be stored in an array of associative arrays, each key of which is the field name for that item. */
     const RESULT_ARRAY = 1;
-    const RESULT_UNION = 2;
-    const RESULT_UNION_ALL = 3;
+
+    /** @var int Results will be stored in an array of ResultSet objects, each of which represents one query execution. Use this for one-off queries. */
+    const RESULT_DISTINCT = 2;
+
+    /** @var int Results will be stored in a single ResultSet object, which represents the combined result of all executions of this query. This should be used in
+     * {@see PreparedStatement} or {@see StatementSet} calls where an aggregate result is desired from multiple executions of the same query. */
+    const RESULT_UNION = 3;
+
+    /** @var int Only the field names are returned. Use this if you're only trying to determine which columns the query will return. */
     const RESULT_FIELDS = 4;
 
+    private array $_lastAffected = [];
+
+    /** @var array|ResultSet|bool The results of the executed query */
+    public array|ResultSet|bool $results = [];
+
     /**
-     * @param Connection $conn The Connection instance to use for this query
-     * @param string $sql The SQL query to execute
-     * @param int|null $queryType The type of query to execute. This affects how placeholders are assigned and what type of result is expected.
-     * @param int $resultType The type of result to return. This determines what response is stored in Query::results.
+     * @param Connection $conn      The Connection instance to use for this query
+     * @param string $sql           The SQL query to execute
+     * @param int|null $queryType   The type of query to execute. This affects how placeholders are assigned and what type of result is expected. See the QUERY_* constants for possible values.
+     * @param int $resultType       The type of result to return. This determines what response is stored in Query::results. See the RESULT_* constants for possible values.
      */
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = Query::RESULT_ARRAY) {
         if (!$this->queryType){
@@ -67,6 +80,9 @@ class Query {
                 $this->queryType = Query::QUERY_PROC;
             }
             else {
+                //Assume SELECT for query that doesn't start with the above keywords. Note: this does not account for DDL queries,
+                //which should not be run with Velox. Remember the principle of least privilege when delegating permissions for
+                //web-accessible scripts.
                 $this->queryType = Query::QUERY_SELECT;
             }
         }
@@ -96,11 +112,7 @@ class Query {
             case Connection::CONN_NATIVE:
                 switch ($connObj->serverType()) {
                     case Connection::DB_MYSQL:
-                        if ($parameters) {
-                            $success = $stmt->execute($parameters);
-                        } else {
-                            $success = $stmt->execute();
-                        }
+                        $success = $parameters ? $stmt->execute($parameters) : $stmt->execute();
                         if (!$success) {
                             throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), $stmt->errorCode());
                         }
@@ -124,6 +136,7 @@ class Query {
             case Query::QUERY_INSERT:
             case Query::QUERY_UPDATE:
             case Query::QUERY_PROC:
+                // Retrieve affected indices
                 switch ($connObj->connectionType()) {
                     case Connection::CONN_PDO:
                         $lastAffected = $connObj->connectionInstance()->lastInsertId();
@@ -199,7 +212,7 @@ class Query {
                         throw new VeloxException('Invalid result type constant', 56);
                 }
             case Query::QUERY_DELETE:
-                //No results for DELETE queries.
+                //DELETE queries have neither results nor affected indices.
                 return new ResultSet([]);
             default:
                 throw new VeloxException('Invalid query type constant', 57);
@@ -311,7 +324,7 @@ class Query {
                             $results[] = $resultSet;
                         }
                         else {
-                            $results[0]->merge($resultSet, ($this->resultType === Query::RESULT_UNION_ALL));
+                            $results[0]->merge($resultSet, ($this->resultType === Query::RESULT_UNION));
                         }
                     }
                 }
