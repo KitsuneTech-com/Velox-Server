@@ -7,16 +7,16 @@ use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
 
 /**
- * Connection - A generalized database connection class
+ * `Connection` - A generalized database connection class
  *
- * Connection establishes a connection to a given database. Supported databases include MySQL/MariaDB,
+ * `Connection` establishes a connection to a given database. Supported databases include MySQL/MariaDB,
  * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using native extensions
  * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, Connection assumes the database is MySQL/MariaDB.
- * If a connection type isn't specified, Connection will first attempt to use PDO and fall back to native extensions if
+ * If a connection type isn't specified, `Connection` will first attempt to use PDO and fall back to native extensions if
  * PDO cannot be used. ODBC connections are established purely through connection strings and ignore the database type.
  *
- * The database connection itself is established at the time of instantiation, and remains open until the Connection object is
- * destroyed. The connection can be closed manually by calling the close() method.
+ * The database connection itself is established at the time of instantiation, and remains open until the `Connection` object is
+ * destroyed. The connection can be closed manually by calling the `close()` method.
  *
  * @author KitsuneTech
  * @version 1.0 beta 1
@@ -33,11 +33,11 @@ class Connection {
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
 
-    /** @var int MySQL/MariaDB */
+    /** @var int MySQL/MariaDB database*/
     public const DB_MYSQL = 0;
-    /** @var int Microsoft SQL Server */
+    /** @var int Microsoft SQL Server database */
     public const DB_MSSQL = 1;
-    /** @var int ODBC */
+    /** @var int ODBC data source */
     public const DB_ODBC  = 2;
 
     /** @var int Use native extensions */
@@ -48,14 +48,15 @@ class Connection {
     public const CONN_ODBC = 2;
 
     /**
-     * @param string|null $host The hostname or IP address of the database server
-     * @param string|null $dbName The name of the database to connect to
-     * @param string|null $uid The username to use for authentication
-     * @param string|null $pwd The password to use for authentication
-     * @param int|null $port The port to use for the connection (defaults to the default port for the database type)
-     * @param int $serverType The type of database server to connect to (see the DB_ constants above)
-     * @param int|null $connectionType The type of connection to use (see the CONN_ constants above)
-     * @param array $options An array of options to use for the connection
+     * @param string|null $host             The hostname or IP address of the database server
+     * @param string|null $dbName           The name of the database to connect to
+     * @param string|null $uid              The username to use for authentication
+     * @param string|null $pwd              The password to use for authentication
+     * @param int|null $port                The port to use for the connection (defaults to the default port for the database type)
+     * @param int $serverType               The type of database server to connect to (see the DB_ constants above)
+     * @param int|null $connectionType      The type of connection to use (see the CONN_ constants above)
+     * @param array $options                An array of options to use for the connection (as would be defined in a DSN connection string)
+     *
      * @throws VeloxException if the connection cannot be established (exception specifies the reason)
      */
     public function __construct (
@@ -68,18 +69,14 @@ class Connection {
         int|null $connectionType = null,
         array $options = []
     ) {
-        if (!$host && ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC)) {
-            throw new VeloxException("Database host not provided",11);
+
+        if ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC) {
+            if (!$host) throw new VeloxException("Database host not provided",11);
+            if (!$dbName) throw new VeloxException("Database name not provided",12);
+            if (!$uid) throw new VeloxException("Database username not provided",13);
+            if (!$pwd) throw new VeloxException("Database password not provided",14);
         }
-        if (!$dbName && ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC)) {
-            throw new VeloxException("Database name not provided",12);
-        }
-        if (!$uid && ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC)) {
-            throw new VeloxException("Database user not provided",13);
-        }
-        if (!$pwd && ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC)) {
-            throw new VeloxException("Database password not provided",14);
-        }
+
         $this->_host = $host;
         $this->_db = $dbName;
         $this->_serverType = $serverType;
@@ -227,7 +224,7 @@ class Connection {
     }
 
     /**
-     * Returns the internal reference to the database connection. This is only public for use by the Query class and
+     * Returns the internal reference to the database connection. This is only public for use by the `Query` class and
      * should not be used by application code.
      * @return object The database connection reference
      */
@@ -302,6 +299,7 @@ class Connection {
 
     /** Rolls back the active transaction.
      * @param bool $toSavepoint If true, rolls back to the last savepoint. If false or unspecified, rolls back the entire transaction.
+     *
      * @return bool True if the rollback was successful.
      * @throws VeloxException If no active transaction exists.
      */
@@ -387,22 +385,22 @@ class Connection {
         return (bool)$success;
     }
 
-    /** Returns the server type constant for this connection. See the DB_* constants in src/Support/Constants.php.
+    /** Returns the server type constant for this connection. See the `DB_*` constants defined above.
      * @return int The server type constant.
      */
     public function serverType() : int {
         return $this->_serverType;
     }
 
-    /** Returns the connection type constant for this connection. See the CONN_* constants in src/Support/Constants.php.
+    /** Returns the connection type constant for this connection. See the `CONN_*` constants defined above.
      * @return int The connection type constant.
      */
     public function connectionType() : int {
         return $this->_connectionType;
     }
 
-    /** Returns the last affected indices of the most recent query (equivalent to LAST_INSERT_ID in MySQL). Note: calling
-     * this method will clear the stored indices; if you need to use them more than once, store them in a variable.
+    /** Returns the last affected indices of the most recent query (equivalent to `LAST_INSERT_ID()` in MySQL). Note: calling
+     * this method will clear the stored indices; subsequent calls will return an empty array until another query is executed.
      * @return array The last affected indices.
      */
     public function getLastAffected() : array {
@@ -436,14 +434,13 @@ class Connection {
         }
     }
     /** Executes a given query. This can either be an instance of the Query class or a standalone SQL query string. If the
-     * latter is passed, a new Query instance will be created from it.
+     * latter is passed, a new `Query` instance will be created from it.
      * @param Query|string $query The query to execute.
-     * @param int $queryType The type of query to execute (default is QUERY_SELECT). See the QUERY_* constants in src/Support/Constants.php.
-     * @param int $resultType The type of result to return (default is VELOX_RESULT_ARRAY). See the VELOX_RESULT_* constants in src/Support/Constants.php.
+     * @param int $resultType The type of result to return (default is Query::RESULT_ARRAY). See {@see \KitsuneTech\Velox\Database\Procedures\Query Query} for the constants to use.
      * @return ResultSet|array|bool The result of the query, or false if the query failed.
      * @throws VeloxException If the query failed. The exception will be passed through from the Query class.
      */
-    public function execute(string|Query $query, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_ARRAY) : ResultSet|array|bool {
+    public function execute(string|Query $query, int $queryType = Query::QUERY_SELECT, int $resultType = Query::RESULT_ARRAY) : ResultSet|array|bool {
         if (gettype($query) == "string"){
             $query = new Query($this,$query,$queryType,$resultType);
         }
