@@ -264,7 +264,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         
             $substitutedSQL = str_replace(["<<condition>>","<<columns>>","<<values>>"],[$whereStr,$columnsStr,$valuesStr],$this->_baseSql);
             
-            $stmt = new PreparedStatement($this->conn, $substitutedSQL, $this->queryType, VELOX_RESULT_UNION);
+            $stmt = new PreparedStatement($this->conn, $substitutedSQL, $this->queryType, Query::RESULT_DISTINCT);
         
             foreach ($variation['data'] as $row){
                 $parameterSet = [];
