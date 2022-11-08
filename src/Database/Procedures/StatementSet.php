@@ -5,6 +5,7 @@ namespace KitsuneTech\Velox\Database\Procedures;
 
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
+use KitsuneTech\Velox\Database\Procedures\Query as Query;
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\recur_ksort;
 
@@ -24,19 +25,19 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             //Attempt to determine type by first keyword if query type isn't specified
             
             if (str_starts_with($lc_query,"select")){
-                $this->queryType = QUERY_SELECT;
+                $this->queryType = Query::QUERY_SELECT;
             }
             elseif (str_starts_with($lc_query,"insert")){
-                $this->queryType = QUERY_INSERT;
+                $this->queryType = Query::QUERY_INSERT;
             }
             elseif (str_starts_with($lc_query,"update")){
-                $this->queryType = QUERY_UPDATE;
+                $this->queryType = Query::QUERY_UPDATE;
             }
             elseif (str_starts_with($lc_query,"delete")){
-                $this->queryType = QUERY_DELETE;
+                $this->queryType = Query::QUERY_DELETE;
             }
             else {
-                $this->queryType = QUERY_SELECT;
+                $this->queryType = Query::QUERY_SELECT;
             }
         }
         if ($this->criteria instanceof Diff || count($this->criteria) > 0){
@@ -109,16 +110,16 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function addCriteria (array|Diff $criteria) : void {
         if ($criteria instanceof Diff){
             switch ($this->queryType){
-                case QUERY_SELECT:
+                case Query::QUERY_SELECT:
                     $this->addCriteria($criteria->select);
                     break;
-                case QUERY_INSERT:
+                case Query::QUERY_INSERT:
                     $this->addCriteria($criteria->insert);
                     break;
-                case QUERY_UPDATE:
+                case Query::QUERY_UPDATE:
                     $this->addCriteria($criteria->update);
                     break;
-                case QUERY_DELETE:
+                case Query::QUERY_DELETE:
                     $this->addCriteria($criteria->delete);
                     break;
             }
@@ -126,13 +127,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         else {
             $requiredKeys = [];
             switch ($this->queryType){
-                case QUERY_INSERT:
-                case QUERY_UPDATE:
+                case Query::QUERY_INSERT:
+                case Query::QUERY_UPDATE:
                     $requiredKeys[] = "values";
-                    if ($this->queryType == QUERY_INSERT) break;
-                case QUERY_SELECT:
-                case QUERY_DELETE:
-                //case QUERY_UPDATE: (fall-through)
+                    if ($this->queryType == Query::QUERY_INSERT) break;
+                case Query::QUERY_SELECT:
+                case Query::QUERY_DELETE:
+                //case Query::QUERY_UPDATE: (fall-through)
                     $requiredKeys[] = "where";
                     break;
             }
@@ -164,10 +165,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $valuesStr = "";
             $columnsStr = "";
             switch ($this->queryType){
-                case QUERY_SELECT:
-                case QUERY_DELETE:
-                case QUERY_UPDATE:
-                case QUERY_PROC:
+                case Query::QUERY_SELECT:
+                case Query::QUERY_DELETE:
+                case Query::QUERY_UPDATE:
+                case Query::QUERY_PROC:
                     //format where clause
                     $orArray = [];
                     foreach ($variation['where'] as $andSet){
@@ -231,22 +232,22 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                             $whereStr = "(".implode(" OR ",$orArray).")";
                             break;
                     }
-                    if ($this->queryType != QUERY_UPDATE && $this->queryType != QUERY_PROC){
+                    if ($this->queryType != Query::QUERY_UPDATE && $this->queryType != Query::QUERY_PROC){
                         break;
                     }
 
-                case QUERY_INSERT:  //and fall-through for QUERY_UPDATE and QUERY_PROC
+                case Query::QUERY_INSERT:  //and fall-through for Query::QUERY_UPDATE and Query::QUERY_PROC
                     //format values
                     $valuesArray = $variation['values'];
                     $valuesStrArray = [];
                     $columnsStrArray = [];
                     foreach (array_keys($valuesArray) as $column){
                         switch ($this->queryType){
-                            case QUERY_INSERT:
+                            case Query::QUERY_INSERT:
                                 $columnsStrArray[] = $column;
                                 $valuesStrArray[] = ":v_".$column;
                                 break;
-                            case QUERY_UPDATE:
+                            case Query::QUERY_UPDATE:
                                 $valuesStrArray[] = $column." = :v_".$column;
                                 break;
                         }
@@ -256,7 +257,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     break;
             }
         
-            if ($this->queryType == QUERY_INSERT){
+            if ($this->queryType == Query::QUERY_INSERT){
                 $valuesStr = "(".$columnsStr.") VALUES (".$valuesStr.")";
                 $columnsStr = "";
             }
@@ -283,7 +284,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 throw new VeloxException($data[0].' operator used without second operand',24);
                             }
                         }
-                        elseif ($this->queryType == QUERY_PROC){
+                        elseif ($this->queryType == Query::QUERY_PROC){
                             $parameterSet['op_'.$column] = $data[0];
                         }
                     }
