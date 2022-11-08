@@ -65,12 +65,12 @@ class Connection {
         string|null $uid = null,
         string|null $pwd = null,
         int|null $port = null,
-        int $serverType = Connection::DB_MYSQL,
+        int $serverType = self::DB_MYSQL,
         int|null $connectionType = null,
         array $options = []
     ) {
 
-        if ($connectionType !== Connection::CONN_ODBC && $serverType !== Connection::DB_ODBC) {
+        if ($connectionType !== self::CONN_ODBC && $serverType !== self::DB_ODBC) {
             if (!$host) throw new VeloxException("Database host not provided",11);
             if (!$dbName) throw new VeloxException("Database name not provided",12);
             if (!$uid) throw new VeloxException("Database username not provided",13);
@@ -82,14 +82,14 @@ class Connection {
         $this->_serverType = $serverType;
         $this->_port = $port;
         $this->_inTransaction = false;
-        $this->_connectionType = $connectionType ?? Connection::CONN_PDO;   //If not provided, start with PDO and fallback where applicable
+        $this->_connectionType = $connectionType ?? self::CONN_PDO;   //If not provided, start with PDO and fallback where applicable
 
         switch ($this->_connectionType) {
-            case Connection::CONN_PDO:
+            case self::CONN_PDO:
                 $dsnArray = [];
                 $connPrefix = "";
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         $connPrefix = "mysql:";
                         if (!extension_loaded('pdo_mysql')) {
                             throw new VeloxException("pdo_mysql required to connect to MySQL using PDO.",53);
@@ -102,7 +102,7 @@ class Connection {
                             $dsnArray['port'] = $this->_port;
                         }
                         break;
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         $connPrefix = "sqlsrv:";
                         if (!extension_loaded('pdo_sqlsrv')) {
                             throw new VeloxException("pdo_sqlsrv required to connect to SQL Server using PDO.",53);
@@ -115,7 +115,7 @@ class Connection {
                             $dsnArray['Server'].=",$this->_port";
                         }
                         break;
-                    case Connection::DB_ODBC:
+                    case self::DB_ODBC:
                         $connPrefix = "odbc:";
                         if (!extension_loaded('pdo_odbc')) {
                             throw new VeloxException("pdo_odbc required to connect to ODBC using PDO.",53);
@@ -132,15 +132,15 @@ class Connection {
                     $connStr = urldecode(http_build_query($dsnArray + $options, '', ";"));
                     $this->_conn = new \PDO("$connPrefix$connStr", $uid, $pwd);
                     $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-                    $connectionType = Connection::CONN_PDO;
+                    $connectionType = self::CONN_PDO;
                 }
                 catch (\PDOException $ex) {
                     throw new VeloxException("PDO error: ".$ex->getMessage(),(int)$ex->getCode(),$ex);
                 }
                 if ($connectionType) break;
-            case Connection::CONN_NATIVE:
+            case self::CONN_NATIVE:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         $connArgs = [
                             $this->_host,
                             $uid,
@@ -154,9 +154,9 @@ class Connection {
                         if ($this->_conn->connect_error) {
                             throw new VeloxException("MySQLi error: ".$this->_conn->connect_error,(int)$this->_conn->connect_errno);
                         }
-                        $connectionType = Connection::CONN_NATIVE;
+                        $connectionType = self::CONN_NATIVE;
                         break;
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         if (!extension_loaded('sqlsrv')) {
                             throw new VeloxException("SQL Server native connections require the sqlsrv extension to be loaded.",54);
                         }
@@ -180,18 +180,18 @@ class Connection {
                                 throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
                             }
                         }
-                        $connectionType = Connection::CONN_NATIVE;
+                        $connectionType = self::CONN_NATIVE;
                         break;
-                    case Connection::DB_ODBC:
-                        $connectionType = Connection::CONN_ODBC;
+                    case self::DB_ODBC:
+                        $connectionType = self::CONN_ODBC;
                         //Defer to CONN_ODBC below
                         break;
                     default:
                         throw new VeloxException("Unidentified database engine or incorrect parameters",16);
                 }
-                if ($connectionType && $connectionType !== Connection::CONN_ODBC) break;
-            case Connection::CONN_ODBC:
-                if ($connectionType === Connection::CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
+                if ($connectionType && $connectionType !== self::CONN_ODBC) break;
+            case self::CONN_ODBC:
+                if ($connectionType === self::CONN_ODBC){    //Fallback skips ODBC since ODBC connections require different parameters
                     if (!function_exists("odbc_connect")){
                         throw new VeloxException("This PHP installation has not been built with ODBC support.",59);
                     }
@@ -218,7 +218,7 @@ class Connection {
         }
     }
     public function __destruct(){
-        if ($this->_connectionType !== Connection::CONN_PDO){
+        if ($this->_connectionType !== self::CONN_PDO){
             $this->close();
         }
     }
@@ -240,15 +240,15 @@ class Connection {
     public function beginTransaction() : bool {
         $this->_inTransaction = true;
         switch ($this->_connectionType){
-            case Connection::CONN_PDO:
+            case self::CONN_PDO:
                 return $this->_conn->beginTransaction();
-            case Connection::CONN_ODBC:
+            case self::CONN_ODBC:
                 return odbc_autocommit($this->_conn,false);
-            case Connection::CONN_NATIVE:
+            case self::CONN_NATIVE:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         return $this->_conn->begin_transaction();
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         return sqlsrv_begin_transaction($this->_conn);
                 }
             default:
@@ -272,24 +272,24 @@ class Connection {
             throw new VeloxException("Transactional method called without active transaction",18);
         }
         switch ($this->_connectionType){
-            case Connection::CONN_PDO:
-            case Connection::CONN_ODBC:
+            case self::CONN_PDO:
+            case self::CONN_ODBC:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         $savepointQuery = "SAVEPOINT currentQuery";
                         break;
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         $savepointQuery = "SAVE TRANSACTION currentQuery";
                         break;
                     default:
                         throw new VeloxException("Savepoint not supported on this database engine",19);
                 }
                 return $this->_conn->exec($savepointQuery) !== false;
-            case Connection::CONN_NATIVE:
+            case self::CONN_NATIVE:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         return $this->_conn->savepoint("currentQuery");
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         return (bool)sqlsrv_query($this->_conn,"SAVE TRANSACTION currentQuery");
                 }
             default:
@@ -309,23 +309,23 @@ class Connection {
         }
         if ($toSavepoint){
             switch ($this->_serverType){
-                case Connection::DB_MYSQL:
+                case self::DB_MYSQL:
                     $rollbackQuery = "ROLLBACK TO SAVEPOINT currentQuery";
                     break;
-                case Connection::DB_MSSQL:
+                case self::DB_MSSQL:
                     $rollbackQuery = "ROLLBACK TRANSACTION currentQuery";
                     break;
             }
             switch ($this->_connectionType){
-                case Connection::CONN_PDO:
+                case self::CONN_PDO:
                     return $this->_conn->exec($rollbackQuery) !== false;
-                case Connection::CONN_ODBC:
+                case self::CONN_ODBC:
                     return odbc_exec($this->_conn,$rollbackQuery) !== false;
-                case Connection::CONN_NATIVE:
+                case self::CONN_NATIVE:
                     switch ($this->_serverType){
-                        case Connection::DB_MYSQL:
+                        case self::DB_MYSQL:
                             return $this->_conn->rollback(0,"currentQuery");
-                        case Connection::DB_MSSQL:
+                        case self::DB_MSSQL:
                             return sqlsrv_query($this->_conn,$rollbackQuery);
                         default:
                             throw new VeloxException("Invalid database type constant",10);
@@ -336,15 +336,15 @@ class Connection {
         }
         else {
             switch ($this->_connectionType){
-                case Connection::CONN_PDO:
+                case self::CONN_PDO:
                     return $this->_conn->rollBack();
-                case Connection::CONN_ODBC:
+                case self::CONN_ODBC:
                     return odbc_rollback($this->_conn);
-                case Connection::CONN_NATIVE:
+                case self::CONN_NATIVE:
                     switch ($this->_serverType){
-                        case Connection::DB_MYSQL:
+                        case self::DB_MYSQL:
                             return $this->_conn->rollback();
-                        case Connection::DB_MSSQL:
+                        case self::DB_MSSQL:
                             return sqlsrv_rollback($this->_conn);
                         default:
                             throw new VeloxException("Invalid database type constant", 10);
@@ -365,18 +365,18 @@ class Connection {
         }
         $success = false;
         switch ($this->_connectionType){
-            case Connection::CONN_PDO:
+            case self::CONN_PDO:
                 $success = $this->_conn->commit();
                 break;
-            case Connection::CONN_ODBC:
+            case self::CONN_ODBC:
                 $success = odbc_commit($this->_conn);
                 break;
-            case Connection::CONN_NATIVE:
+            case self::CONN_NATIVE:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         $success = $this->_conn->commit();
                         break;
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         $success = sqlsrv_commit($this->_conn);
                         break;
                 }
@@ -417,16 +417,16 @@ class Connection {
      */
     public function close() : bool {
         switch ($this->_connectionType){
-            case Connection::CONN_PDO:
+            case self::CONN_PDO:
                 throw new VeloxException("PDO connection cannot be closed with the close() method",52);
-            case Connection::CONN_ODBC:
+            case self::CONN_ODBC:
                 odbc_close($this->_conn);
                 return true;
-            case Connection::CONN_NATIVE:
+            case self::CONN_NATIVE:
                 switch ($this->_serverType){
-                    case Connection::DB_MYSQL:
+                    case self::DB_MYSQL:
                         return $this->_conn->close();
-                    case Connection::DB_MSSQL:
+                    case self::DB_MSSQL:
                         return sqlsrv_close($this->_conn);
                 }
             default:
@@ -467,8 +467,8 @@ class Connection {
      */
     public function getServerType() : string {
         return match ($this->_serverType) {
-            Connection::DB_MYSQL => "MySQL",
-            Connection::DB_MSSQL => "SQL Server",
+            self::DB_MYSQL => "MySQL",
+            self::DB_MSSQL => "SQL Server",
             default => "Unknown",
         };
     }
