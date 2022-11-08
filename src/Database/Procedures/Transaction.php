@@ -25,7 +25,7 @@ class Transaction {
     }
     
     //Assembly
-    public function addQuery(string|Query|StatementSet &$query, ?int $resultType = VELOX_RESULT_NONE) : void {
+    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE) : void {
         $executionCount = count($this->executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
@@ -72,7 +72,7 @@ class Transaction {
         // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
         // ------------------
         // $transactionInstance = new Transaction();
-        // $myFunction = function(Query|callable|null &$previous, Query|callable|null &$next) : void {
+        // $myFunction = function(Query|callable|null $previous, Query|callable|null $next) : void {
         //     //function code goes here
         // }
         // $transactionInstance.addFunction($myFunction);
@@ -82,8 +82,8 @@ class Transaction {
         
         $executionCount = count($this->executionOrder);
         $scopedFunction = function() use (&$function,$executionCount){
-            $previous = &$this->executionOrder[$executionCount-1] ?? null;
-            $next = &$this->executionOrder[$executionCount+1] ?? null;
+            $previous = $this->executionOrder[$executionCount - 1] ?? null;
+            $next = $this->executionOrder[$executionCount + 1] ?? null;
             $boundFunction = $function->bindTo($this);
             $boundFunction($previous,$next);
         };
