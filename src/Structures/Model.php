@@ -2,7 +2,7 @@
 
 namespace KitsuneTech\Velox\Structures;
 use KitsuneTech\Velox\VeloxException as VeloxException;
-use KitsuneTech\Velox\Database\Procedures\{PreparedStatement, StatementSet, Transaction};
+use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
@@ -29,18 +29,26 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public string|null $instanceName = null;
     
     public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
-        $this->_select = $select;
+        if ($select && $select->queryType != Query::QUERY_PROC){
+            $select->queryType = Query::QUERY_SELECT;
+        }
         if ($update && !($update instanceof Transaction)) {
-            $update->queryType = QUERY_UPDATE;
-            $update->resultType = VELOX_RESULT_NONE;
+            if ($select->queryType != Query::QUERY_PROC){
+                $update->queryType = Query::QUERY_UPDATE;
+            }
+            $update->resultType = Query::RESULT_NONE;
         }
         if ($insert && !($insert instanceof Transaction)) {
-            $insert->queryType = QUERY_INSERT;
-            $insert->resultType = VELOX_RESULT_NONE;
+            if ($select->queryType != Query::QUERY_PROC){
+                $insert->queryType = Query::QUERY_INSERT;
+            }
+            $insert->resultType = Query::RESULT_NONE;
         }
         if ($delete && !($delete instanceof Transaction)) {
-            $delete->queryType = QUERY_DELETE;
-            $delete->resultType = VELOX_RESULT_NONE;
+            if ($select->queryType != Query::QUERY_PROC){
+                $delete->queryType = Query::QUERY_DELETE;
+            }
+            $delete->resultType = Query::RESULT_NONE;
         }
         $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
         $this->_select = $select ?? null;
@@ -98,7 +106,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
-        if ($this->_select->queryType == QUERY_PROC){
+        if ($this->_select->queryType == Query::QUERY_PROC){
             //add criteria to query first   
         }
         if ($this->_select->execute()){
@@ -113,7 +121,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         $results = $this->_select->results[0];
                         break;
                     default:
-                        throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL.',29);
+                        throw new VeloxException('The PreparedStatement returned multiple result sets. Make sure that $resultType is set to Query::RESULT_DISTINCT or Query::RESULT_UNION.',29);
                 }
             }
             elseif ($this->_select->results instanceof ResultSet){
@@ -145,6 +153,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             else {
                 return true;
             }
+        }
+        else {
+            return false;
         }
     }
     
