@@ -94,6 +94,18 @@ class Transaction {
         if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
             $this->executionOrder[0]->addParameterSet($paramArray,$prefix);
         }
+        else {
+            throw new VeloxException("Attempted to add parameter set to Transaction without a leading PreparedStatement",61);
+        }
+    }
+    public function addCriteria(array $criteria, string $prefix = '') : void {
+        $this->_paramArray[] = $criteria;
+        if (!!$this->executionOrder && $this->executionOrder[0] instanceof StatementSet){
+            $this->executionOrder[0]->addCriteria($criteria);
+        }
+        else {
+            throw new VeloxException("Attempted to add criteria to Transaction without a leading StatementSet",62);
+        }
     }
     public function getParams() : array {
         return $this->_paramArray;
@@ -142,12 +154,7 @@ class Transaction {
         if (is_null($queryIndex)){
             $queryIndex = count($this->executionOrder)-1;
         }
-        if (isset($this->_results[$queryIndex])){
-            return $this->_results[$queryIndex];
-        }
-        else {
-            return false;
-        }
+        return $this->_results[$queryIndex] ?? false;
     }
   
     public function executeAll() : bool {
