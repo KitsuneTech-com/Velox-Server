@@ -69,7 +69,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 28   | Specified key column does not exist                           | The column name specified for the key column doesn't exist in the results           |
 
-### Database\Structures\Model
+### Structures\Model
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
