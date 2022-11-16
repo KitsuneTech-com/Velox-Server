@@ -64,7 +64,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
  | 61   | Attempted to add parameter set to Transaction without a leading PreparedStatement | Transaction::addParameterSet() requires the first assigned procedure to be a PreparedStatement. |
  | 62   | Attempted to add criteria to Transaction without a leading StatementSet | Transaction::addCriteria() requires the first assigned procedure to be a StatementSet. |
 
-### Database\Structures\ResultSet
+### Structures\ResultSet
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 28   | Specified key column does not exist                           | The column name specified for the key column doesn't exist in the results           |
