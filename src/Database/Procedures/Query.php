@@ -59,8 +59,9 @@ class Query {
      * @param string $sql           The SQL query to execute
      * @param int|null $queryType   The type of query to execute. This affects how placeholders are assigned and what type of result is expected. See the QUERY_* constants for possible values.
      * @param int $resultType       The type of result to return. This determines what response is stored in Query::results. See the RESULT_* constants for possible values.
+     * @param string|null $name     The name of this query. This is used to identify the query in a {@see Transaction}.
      */
-    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = Query::RESULT_ARRAY) {
+    public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = Query::RESULT_ARRAY, public ?string $name = null) {
         if (!$this->queryType){
             //Attempt to determine type by first keyword if query type isn't specified
             $lc_query = strtolower($this->sql);

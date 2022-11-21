@@ -17,7 +17,7 @@ class Transaction {
     private array $_paramArray = [];
     public array $executionOrder = [];
     
-    public function __construct(?Connection &$conn = null) {
+    public function __construct(?Connection &$conn = null, ?string $name = null) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
@@ -25,7 +25,7 @@ class Transaction {
     }
     
     //Assembly
-    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE) : void {
+    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name) : void {
         $executionCount = count($this->executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
@@ -34,7 +34,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->executionOrder[] = new Query($this->_baseConn,$query,$resultType);
+            $this->executionOrder[] = ["procedure" => new Query($this->_baseConn,$query,$resultType), "arguments" => null, "name" => $name];
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -62,17 +62,23 @@ class Transaction {
                         break;
                 }
             }
-            $this->executionOrder[] = &$query;
+            $this->executionOrder[] = ["procedure" => &$query, "arguments" => null, "name" => $name || $query->name];
         }   
     }
-    public function addFunction(callable $function) : void {
-        // Any functions added with this method are passed two arguments (in order):
-        //  * A reference to the previous function or Velox procedure (if any),
-        //  * and a reference to the following function or Velox procedure (if any).
-        // Thus, the definition should resemble the following (type hinting is, of course, optional, but the reference operators are not):
+    public function addFunction(callable $function, ?string $name) : void {
+        // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
+        // is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
+        // The first array corresponds to the last procedure or function that was added to the transaction, and the second array corresponds to
+        // the next procedure or function that will be added to the transaction. Whatever arguments or parameters were passed to the previous procedure will be
+        // available in the first array, and any arguments already defined for the next procedure will be available in the second array. These can be modified as
+        //
+        // If no previous or next procedure exists, the corresponding argument will be null. If this function expects parameters itself [as might be defined in
+        // Transaction::addTransactionParameters()], these will be chained to the argument list after the second array.
+        //
+        // Thus, the definition should resemble the following (type hinting is, of course, optional):
         // ------------------
         // $transactionInstance = new Transaction();
-        // $myFunction = function(Query|callable|null $previous, Query|callable|null $next) : void {
+        // $myFunction = function(array|null $previous, array|null $next, $optionalArgument1, $optionalArgument2...) : void {
         //     //function code goes here
         // }
         // $transactionInstance.addFunction($myFunction);
@@ -85,19 +91,14 @@ class Transaction {
             $previous = $this->executionOrder[$executionCount - 1] ?? null;
             $next = $this->executionOrder[$executionCount + 1] ?? null;
             $boundFunction = $function->bindTo($this);
-            $boundFunction($previous,$next);
+            $boundFunction($previous,$next,...$this->executionOrder["arguments"]);
         };
-        $this->executionOrder[] = $scopedFunction->bindTo($this,$this);
+        $this->executionOrder[] = ["procedure" => $scopedFunction->bindTo($this,$this), "arguments" => null];
     }
     public function addParameterSet(array $paramArray, string $prefix = '') : void {
         $this->_paramArray[] = $paramArray;
-<<<<<<< HEAD
-        if (!!$this->executionOrder && $this->executionOrder[0] instanceof PreparedStatement){
-            $this->executionOrder[0]->addParameterSet($paramArray,$prefix);
-=======
-        if (count($this->_executionOrder) > 0 && $this->_executionOrder[0] instanceof PreparedStatement){
-            $this->_executionOrder[0]->addParameterSet($paramArray,$prefix);
->>>>>>> 81737c0 (Reverting prior state due to overzealous merge)
+        if (!!$this->executionOrder && $this->executionOrder[0]['procedure'] instanceof PreparedStatement){
+            $this->executionOrder[0]['procedure']->addParameterSet($paramArray,$prefix);
         }
         else {
             throw new VeloxException("Attempted to add parameter set to Transaction without a leading PreparedStatement",61);
@@ -105,11 +106,25 @@ class Transaction {
     }
     public function addCriteria(array $criteria, string $prefix = '') : void {
         $this->_paramArray[] = $criteria;
-        if (!!$this->executionOrder && $this->executionOrder[0] instanceof StatementSet){
-            $this->executionOrder[0]->addCriteria($criteria);
+        if (!!$this->executionOrder && $this->executionOrder[0]['procedure'] instanceof StatementSet){
+            $this->executionOrder[0]['procedure']->addCriteria($criteria);
         }
         else {
             throw new VeloxException("Attempted to add criteria to Transaction without a leading StatementSet",62);
+        }
+    }
+    public function addTransactionParameters(array $procedureParams) : void {
+        foreach ($procedureParams as $procedure => $paramArray) {
+            if (is_int($procedure)){
+                $this->executionOrder[$procedure]["arguments"] = $paramArray;
+            }
+            else {
+                for ($i = 0; $i < count($this->executionOrder); $i++){
+                    if ($this->executionOrder[$i]["name"] == $procedure){
+                        $this->executionOrder[$i]["arguments"] = $paramArray;
+                    }
+                }
+            }
         }
     }
     public function getParams() : array {
@@ -126,27 +141,46 @@ class Transaction {
         if (!(isset($this->executionOrder[$this->_currentIndex]))){
             return false;
         }
-        
-        $currentQuery = $this->executionOrder[$this->_currentIndex];
-        $lastQuery = $this->executionOrder[$this->_currentIndex-1] ?? null;
+        $currentExecution = $this->executionOrder[$this->_currentIndex];
+        $query = $currentExecution['procedure'];
+        $arguments = $currentExecution['arguments'];
         try {
-            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet) {
-                $currentQuery->conn->setSavepoint();
+            if ($query instanceof Query || $query instanceof StatementSet) {
+                $query->conn->setSavepoint();
+                if ($arguments){
+                    $refl = new \ReflectionObject($query);
+                    $className = $refl->getShortName();
+
+                    switch ($className){
+                        case "PreparedStatement":
+                            foreach ($arguments as $paramSet){
+                                $query->addParameterSet($paramSet);
+                            }
+                            break;
+                        case "StatementSet":
+                            foreach ($arguments as $criteria){
+                                $query->addCriteria($criteria);
+                            }
+                            break;
+                    }
+                }
+                $query();
             }
-            
-            $currentQuery();
-            
-            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
-                $this->_results[] = $currentQuery->results;
-                $this->_lastAffected = $currentQuery->getLastAffected();
+            else {
+
+            }
+
+            if ($query instanceof Query || $query instanceof StatementSet){
+                $this->_results[] = $query->results;
+                $this->_lastAffected = $query->getLastAffected();
             }
             
             $this->_currentIndex++;
             return true;
         }
         catch (Exception $ex){
-            if ($currentQuery instanceof Query || $currentQuery instanceof StatementSet){
-                $currentQuery->conn->rollBack(true);
+            if ($query instanceof Query || $query instanceof StatementSet){
+                $query->conn->rollBack(true);
                 throw new VeloxException("Query in transaction failed",27,$ex);
             }
             else {
