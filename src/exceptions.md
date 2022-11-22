@@ -54,7 +54,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 | 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
 | 47   | Element at index xxxx does not contain the correct keys.      | The given element in the array passed to addCriteria() does not contain the appropriate properties for this type of query. |  
-
+| 63   | Criteria format is invalid                                    | The structure of the array passed to addCriteria() isn't in the form expected. Check to see if the proper nesting is used. |
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
