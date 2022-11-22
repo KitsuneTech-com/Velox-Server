@@ -216,6 +216,10 @@ class Transaction {
             throw $ex;
         }
     }
+    //Magic method wrapper for executeAll() to make Query instance callable
+    public function __invoke() : bool {
+        return $this->executeAll();
+    }
     public function getLastAffected() : array {
         return $this->_lastAffected;
     }
