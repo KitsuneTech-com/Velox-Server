@@ -167,7 +167,7 @@ class Transaction {
                 $query();
             }
             else {
-
+                $query();
             }
 
             if ($query instanceof Query || $query instanceof StatementSet){
