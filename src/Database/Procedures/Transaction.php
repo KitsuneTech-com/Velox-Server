@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Database\Procedures;
 
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\{PreparedStatement,Query,StatementSet};
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
@@ -12,21 +11,23 @@ class Transaction {
     private Connection $_baseConn;
     private array $_connections = [];
     private array $_results = [];
-    private int $_currentIndex = 0;
+    private int $_currentProcedureIndex = 0;
+    private int $_currentIterationIndex = 0;
     private array $_lastAffected = [];
-    private array $_paramArray = [];
-    public array $executionOrder = [];
-    
+    public array $procedures = [];
+    private array $_iterations = [];
+    private array $_currentIteration = [];
+
     public function __construct(?Connection &$conn = null, ?string $name = null) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
         }
     }
-    
+
     //Assembly
     public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name = null) : void {
-        $executionCount = count($this->executionOrder);
+        $executionCount = count($this->procedures);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
             if (!isset($this->_baseConn)){
@@ -34,36 +35,17 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->executionOrder[] = ["procedure" => new Query($this->_baseConn,$query,$resultType), "arguments" => null, "name" => $name];
+            $this->procedures[] = ["instance" => new Query($this->_baseConn,$query,$resultType), "name" => $name];
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
             if (!in_array($query->conn,$this->_connections,true)){
                 $this->_connections[] = $query->conn;
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
+
             }
-            
-            //Add initial parameters (for PreparedStatement) or criteria (for StatementSet)
-            if (!$this->executionOrder && !!$this->_paramArray){
-                //Get class name for following switch
-                $refl = new \ReflectionObject($query);
-                $className = $refl->getShortName();
-                
-                switch ($className){
-                    case "PreparedStatement":
-                        foreach ($this->_paramArray as $paramSet){
-                            $query->addParameterSet($paramSet);
-                        }
-                        break;
-                    case "StatementSet":
-                        foreach ($this->_paramArray as $criteria){
-                            $query->addCriteria($criteria);
-                        }
-                        break;
-                }
-            }
-            $this->executionOrder[] = ["procedure" => &$query, "arguments" => null, "name" => $name || $query->name];
-        }   
+            $this->procedures[] = ["instance" => &$query, "name" => $name ?? $query->name];
+        }
     }
     public function addFunction(callable $function, ?string $name = null) : void {
         // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
@@ -85,102 +67,77 @@ class Transaction {
         // -------------------
         // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
         // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
-        
-        $executionCount = count($this->executionOrder);
-        $scopedFunction = function() use (&$function,$executionCount){
-            $previous = $this->executionOrder[$executionCount - 1] ?? null;
-            $next = $this->executionOrder[$executionCount + 1] ?? null;
+
+        $procedureIndex = count($this->procedures);
+        $scopedFunction = function() use (&$function,$procedureIndex){
+            $previousProcedure = $this->procedures[$procedureIndex - 1] ?? null;
+            $nextProcedure = $this->procedures[$procedureIndex + 1] ?? null;
+            $previousArguments =& $this->_iterations[$this->_currentIterationIndex][$previousProcedure["name"]] ?? null;
+            $nextArguments =& $this->_iterations[$this->_currentIterationIndex][$nextProcedure["name"]] ?? null;
+            $previous = ["procedure" => $previousProcedure, "arguments" => &$previousArguments];
+            $next = ["procedure" => $nextProcedure, "arguments" => &$nextArguments];
             $boundFunction = $function->bindTo($this);
-            $boundFunction($previous,$next,...$this->executionOrder["arguments"]);
-        };
-        $this->executionOrder[] = ["procedure" => $scopedFunction->bindTo($this,$this), "arguments" => null];
-    }
-    public function addParameterSet(array $paramArray, string $prefix = '') : void {
-        $this->_paramArray[] = $paramArray;
-        if (!!$this->executionOrder && $this->executionOrder[0]['procedure'] instanceof PreparedStatement){
-            $this->executionOrder[0]['procedure']->addParameterSet($paramArray,$prefix);
-        }
-        else {
-            throw new VeloxException("Attempted to add parameter set to Transaction without a leading PreparedStatement",61);
-        }
-    }
-    public function addCriteria(array $criteria, string $prefix = '') : void {
-        $this->_paramArray[] = $criteria;
-        if (!!$this->executionOrder && $this->executionOrder[0]['procedure'] instanceof StatementSet){
-            $this->executionOrder[0]['procedure']->addCriteria($criteria);
-        }
-        else {
-            throw new VeloxException("Attempted to add criteria to Transaction without a leading StatementSet",62);
-        }
-    }
-    public function addTransactionParameters(array $procedureParams) : void {
-        foreach ($procedureParams as $procedure => $paramArray) {
-            if (is_int($procedure)){
-                $this->executionOrder[$procedure]["arguments"] = $paramArray;
+            $arguments = $this->_iterations[$this->_currentIterationIndex][$this->procedures[$procedureIndex]["name"]] ?? null;
+            if ($arguments){
+                $boundFunction($previous,$next,...$arguments);
             }
             else {
-                for ($i = 0; $i < count($this->executionOrder); $i++){
-                    if ($this->executionOrder[$i]["name"] == $procedure){
-                        $this->executionOrder[$i]["arguments"] = $paramArray;
-                    }
-                }
+                $boundFunction($previous,$next);
             }
-        }
+        };
+        $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $name ?? $procedureIndex];
     }
-    public function getParams() : array {
-        return $this->_paramArray;
+    public function addTransactionParameters(array $procedureParams) : void {
+        $this->_iterations = array_merge($this->_iterations,$procedureParams);
     }
-    
+
     //Execution
     public function begin() : void {
         foreach ($this->_connections as $conn){
             $conn->beginTransaction();
         }
     }
-    public function executeNext() : bool {
-        if (!(isset($this->executionOrder[$this->_currentIndex]))){
+    public function executeNextProcedure() : bool {
+        if (!(isset($this->procedures[$this->_currentProcedureIndex]))){
             return false;
         }
-        $currentExecution = $this->executionOrder[$this->_currentIndex];
-        $query = $currentExecution['procedure'];
-        $arguments = $currentExecution['arguments'];
+        $currentProcedure = $this->procedures[$this->_currentProcedureIndex];
+        $currentIteration = $this->_iterations[$this->_currentIterationIndex];
+        $procedure = $currentProcedure['instance'];
+
         try {
-            if ($query instanceof Query || $query instanceof StatementSet) {
-                $query->conn->setSavepoint();
+            if ($procedure instanceof Query || $procedure instanceof StatementSet) {
+                $procedure->conn->setSavepoint();
+                $arguments = $currentIteration[$currentProcedure['name']] ?? [];
                 if ($arguments){
-                    $refl = new \ReflectionObject($query);
+                    $refl = new \ReflectionObject($procedure);
                     $className = $refl->getShortName();
 
                     switch ($className){
                         case "PreparedStatement":
                             foreach ($arguments as $paramSet){
-                                $query->addParameterSet($paramSet);
+                                $procedure->addParameterSet($paramSet);
                             }
                             break;
                         case "StatementSet":
-                            foreach ($arguments as $criteria){
-                                $query->addCriteria($criteria);
-                            }
+                            $procedure->addCriteria($arguments);
                             break;
                     }
                 }
-                $query();
             }
-            else {
-                $query();
+            $procedure();
+
+            if ($procedure instanceof Query || $procedure instanceof StatementSet){
+                $this->_results[] = $procedure->results;
+                $this->_lastAffected = $procedure->getLastAffected();
             }
 
-            if ($query instanceof Query || $query instanceof StatementSet){
-                $this->_results[] = $query->results;
-                $this->_lastAffected = $query->getLastAffected();
-            }
-            
-            $this->_currentIndex++;
+            $this->_currentProcedureIndex++;
             return true;
         }
         catch (Exception $ex){
-            if ($query instanceof Query || $query instanceof StatementSet){
-                $query->conn->rollBack(true);
+            if ($procedure instanceof Query || $procedure instanceof StatementSet){
+                $procedure->conn->rollBack(true);
                 throw new VeloxException("Query in transaction failed",27,$ex);
             }
             else {
@@ -188,21 +145,26 @@ class Transaction {
             }
         }
     }
-  
+
     public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
         if (is_null($queryIndex)){
-            $queryIndex = count($this->executionOrder)-1;
+            $queryIndex = count($this->procedures)-1;
         }
         return $this->_results[$queryIndex] ?? false;
     }
-  
-    public function executeAll() : bool {
+
+    public function executeIteration(bool $commit = false) : bool {
         try {
-            while ($next = $this->executeNext()){}
-            foreach ($this->_connections as $conn){
-                $conn->commit();
+            if (!isset($this->_iterations[$this->_currentIterationIndex])) return false;
+            while ($this->executeNextProcedure()){ /* continue execution */ }
+            if ($commit){
+                foreach ($this->_connections as $conn){
+                    $conn->commit();
+                }
             }
-            return true;
+            $this->_currentIterationIndex++;
+            $this->_currentProcedureIndex = 0;
+            return (!isset($this->_iterations[$this->_currentIterationIndex]));
         }
         catch (VeloxException $ex){
             foreach ($this->_connections as $conn){
@@ -216,17 +178,35 @@ class Transaction {
             throw $ex;
         }
     }
-    //Magic method wrapper for executeAll() to make Query instance callable
-    public function __invoke() : bool {
-        return $this->executeAll();
+
+    public function executeAll() : void {
+        while ($this->executeIteration()){ /* continue execution */ }
+        foreach ($this->_connections as $conn){
+            $conn->commit();
+        }
+    }
+    //Magic method wrapper for executeAll() to make Transaction callable
+    public function __invoke(bool $commit = false) : void {
+        $this->executeAll();
     }
     public function getLastAffected() : array {
         return $this->_lastAffected;
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
-        foreach ($this->executionOrder as $query){
-            $queryDumpArray[] = $query->dumpQuery();
+        foreach ($this->_iterations as $iteration){
+            $queryDumpArray[] = array_map(function($procedure) use ($iteration){
+                $procedureName = $procedure['name'];
+                $procedure = $procedure['procedure'];
+                $refl = new \ReflectionObject($procedure);
+                $className = $refl->getShortName();
+                $procedureDump = [
+                    "type" => $className,
+                    "name" => $procedureName,
+                    "arguments" => $iteration[$procedureName] ?? []
+                ];
+                return $procedureDump;
+            },$this->procedures);
         }
         return $queryDumpArray;
     }
