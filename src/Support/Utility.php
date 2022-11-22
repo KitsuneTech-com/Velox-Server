@@ -58,3 +58,7 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
             throw new VeloxException("Unsupported operator",36);
     }
 }
+
+function isAssoc($array){
+    return (array_values($array) !== $array);
+}
