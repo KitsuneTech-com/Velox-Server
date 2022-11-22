@@ -25,7 +25,7 @@ class Transaction {
     }
     
     //Assembly
-    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name) : void {
+    public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name = null) : void {
         $executionCount = count($this->executionOrder);
         //If a string is passed, build a Query from it, using the base connection of this instance
         if (gettype($query) == "string"){
@@ -65,7 +65,7 @@ class Transaction {
             $this->executionOrder[] = ["procedure" => &$query, "arguments" => null, "name" => $name || $query->name];
         }   
     }
-    public function addFunction(callable $function, ?string $name) : void {
+    public function addFunction(callable $function, ?string $name = null) : void {
         // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
         // is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
         // The first array corresponds to the last procedure or function that was added to the transaction, and the second array corresponds to

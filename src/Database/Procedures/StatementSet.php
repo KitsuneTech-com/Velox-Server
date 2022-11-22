@@ -16,7 +16,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
     public ResultSet|array|bool|null $results;
     
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = []){
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
             throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
