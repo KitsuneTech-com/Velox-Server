@@ -7,7 +7,7 @@ use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Database\Procedures\Query as Query;
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
-use function KitsuneTech\Velox\Utility\recur_ksort;
+use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
@@ -15,7 +15,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_keys = [];
 
     public ResultSet|array|bool|null $results;
-    
+
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
@@ -23,7 +23,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         if (!$this->queryType){
             //Attempt to determine type by first keyword if query type isn't specified
-            
+
             if (str_starts_with($lc_query,"select")){
                 $this->queryType = Query::QUERY_SELECT;
             }
@@ -44,12 +44,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $this->addCriteria($this->criteria);
         }
     }
-    
+
     // Countable implementation
     public function count() : int {
         return count($this->_keys);
     }
-    
+
     //Iterator implementation
     public function current() : PreparedStatement {
         return $this->_statements[$this->_position];
@@ -66,7 +66,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function valid() : bool {
         return isset($this->_statements[$this->_position]);
     }
-    
+
     //ArrayAccess implementation
     public function offsetSet(mixed $offset, mixed $stmt) : void {
         if (is_null($offset)){
@@ -85,7 +85,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function offsetGet(mixed $offset) : PreparedStatement|null {
         return $this->_statements[$offset] ?? null;
     }
-    
+
     //Class-specific methods
     private function criterionHash(object|array $criterion) : string {
         $criterion = (array)$criterion;
@@ -106,7 +106,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         recur_ksort($criterion);
         return (string)crc32(serialize($criterion));
     }
-    
+
     public function addCriteria (array|Diff $criteria) : void {
         if ($criteria instanceof Diff){
             switch ($this->queryType){
@@ -133,9 +133,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     if ($this->queryType == Query::QUERY_INSERT) break;
                 case Query::QUERY_SELECT:
                 case Query::QUERY_DELETE:
-                //case Query::QUERY_UPDATE: (fall-through)
+                    //case Query::QUERY_UPDATE: (fall-through)
                     $requiredKeys[] = "where";
                     break;
+            }
+            if (isAssoc($criteria)){
+                throw new VeloxException("Criteria format is invalid",63);
             }
             $criteriaCount = count($criteria);
             for ($i=0; $i<$criteriaCount; $i++){
@@ -220,7 +223,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 break;
                         }
                     }
-            
+
                     switch (count($orArray)){
                         case 0:
                             $whereStr = "1=1";
@@ -256,16 +259,16 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     $columnsStr = implode(",", $columnsStrArray);
                     break;
             }
-        
+
             if ($this->queryType == Query::QUERY_INSERT){
                 $valuesStr = "(".$columnsStr.") VALUES (".$valuesStr.")";
                 $columnsStr = "";
             }
-        
+
             $substitutedSQL = str_replace(["<<condition>>","<<columns>>","<<values>>"],[$whereStr,$columnsStr,$valuesStr],$this->_baseSql);
-            
+
             $stmt = new PreparedStatement($this->conn, $substitutedSQL, $this->queryType, Query::RESULT_DISTINCT);
-        
+
             foreach ($variation['data'] as $row){
                 $parameterSet = [];
                 foreach ($row['where'] as $or){
