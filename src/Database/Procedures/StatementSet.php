@@ -7,7 +7,7 @@ use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Database\Procedures\Query as Query;
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
-use function KitsuneTech\Velox\Utility\recur_ksort;
+use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
@@ -136,6 +136,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 //case Query::QUERY_UPDATE: (fall-through)
                     $requiredKeys[] = "where";
                     break;
+            }
+            if (isAssoc($criteria)){
+                throw new VeloxException("Criteria format is invalid",63);
             }
             $criteriaCount = count($criteria);
             for ($i=0; $i<$criteriaCount; $i++){
