@@ -5,7 +5,7 @@ namespace KitsuneTech\Velox\Database\Procedures;
 
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
-use KitsuneTech\Velox\Database\Procedures\Query as Query;
+use KitsuneTech\Velox\Database\Procedures\{Query, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
@@ -310,30 +310,32 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             }
         }
         if (!$this->conn->inTransaction()){
-            $transaction = new Transaction($this->conn);
-            $transaction->addQuery($this);
-            $transaction->begin();
-            $transaction->executeAll();
-            $this->results = $transaction->getQueryResults();
+            $this->conn->beginTransaction();
+            $newTransaction = true;
         }
         else {
-            $this->results = null;
-            foreach ($this->_statements as $stmt){
-                $stmt->execute();
-                $results = $stmt->getResults();
-                if (!$this->results){
-                    $this->results = $stmt->getResults();
+            $newTransaction = false;
+        }
+        $this->results = null;
+        foreach ($this->_statements as $stmt){
+            $stmt->execute();
+            $results = $stmt->getResults();
+            if (!$this->results){
+                $this->results = $stmt->getResults();
+            }
+            else {
+                if ($this->results instanceof ResultSet){
+                    $this->results->merge($stmt->results);
                 }
-                else {
-                    if ($this->results instanceof ResultSet){
-                        $this->results->merge($stmt->results);
-                    }
-                    elseif (is_array($this->results)){
-                        $this->results[] = $stmt->getResults();
-                    }
+                elseif (is_array($this->results)){
+                    $this->results[] = $stmt->getResults();
                 }
             }
         }
+        if ($newTransaction){
+            $this->conn->commit();
+        }
+
         return true;
     }
     public function __invoke() : bool {
