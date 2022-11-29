@@ -37,6 +37,9 @@ function VeloxExceptionHandler(\Throwable $ex) : void {
 }
 
 set_exception_handler('\KitsuneTech\Velox\VeloxExceptionHandler');
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
 
 $errorLevel = VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE;
 
