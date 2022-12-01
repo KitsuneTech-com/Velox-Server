@@ -10,11 +10,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     
     // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
     // In Model::update() and Model::insert(), $values is an array of associative arrays, the keys of which are the column names represented
-    // in the model. In Model::insert(), any columns not specified are set as NULL.   
-    private PreparedStatement|StatementSet|null $_select;
-    private PreparedStatement|StatementSet|Transaction|null $_update;
-    private PreparedStatement|StatementSet|Transaction|null $_insert;
-    private PreparedStatement|StatementSet|Transaction|null $_delete;
+    // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
     private object $_diff;
@@ -24,40 +20,29 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
     
-    //Model->instanceName has no bearing on the execution of Model. This is here as a user-defined property to help distinguish instances
-    //(such as when several Models are stored in an array)
-    public string|null $instanceName = null;
-    
-    public function __construct(PreparedStatement|StatementSet $select = null, PreparedStatement|StatementSet|Transaction $update = null, PreparedStatement|StatementSet|Transaction $insert = null, PreparedStatement|StatementSet|Transaction $delete = null){
-        if ($select && $select->queryType != Query::QUERY_PROC){
-            $select->queryType = Query::QUERY_SELECT;
-        }
-        if ($update && !($update instanceof Transaction)) {
-            if ($select->queryType != Query::QUERY_PROC){
-                $update->queryType = Query::QUERY_UPDATE;
+    public function __construct(
+        private PreparedStatement|StatementSet|null             $_select = null,
+        private PreparedStatement|StatementSet|Transaction|null $_update = null,
+        private PreparedStatement|StatementSet|Transaction|null $_insert = null,
+        private PreparedStatement|StatementSet|Transaction|null $_delete = null,
+        public ?string                                          $instanceName = null){
+            $props = ["_select","_update","_insert","_delete"];
+            $conn = $this->_select->conn ?? $this->_update->conn ?? $this->_insert->conn ?? $this->_delete->conn;
+            foreach($props as $prop){
+                if (isset($this->$prop)){
+                    if ($this->$prop->queryType != Query::QUERY_PROC){
+                        $this->$prop->queryType = constant("Query::QUERY_".strtoupper($prop));
+                    }
+                    if ($prop != "_select"){
+                        $this->$prop->resultType = Query::RESULT_NONE;
+                    }
+                }
+                else {
+                    $this->$prop = $prop == "_select" ? new Transaction($conn) : null;
+                }
             }
-            $update->resultType = Query::RESULT_NONE;
-        }
-        if ($insert && !($insert instanceof Transaction)) {
-            if ($select->queryType != Query::QUERY_PROC){
-                $insert->queryType = Query::QUERY_INSERT;
-            }
-            $insert->resultType = Query::RESULT_NONE;
-        }
-        if ($delete && !($delete instanceof Transaction)) {
-            if ($select->queryType != Query::QUERY_PROC){
-                $delete->queryType = Query::QUERY_DELETE;
-            }
-            $delete->resultType = Query::RESULT_NONE;
-        }
-        $conn = $select->conn ?? $update->conn ?? $insert->conn ?? $delete->conn;
-        $this->_select = $select ?? null;
-        $this->_update = $update ?? new Transaction($conn);
-        $this->_insert = $insert ?? new Transaction($conn);
-        $this->_delete = $delete ?? new Transaction($conn);
-        $this->_diff = new Diff('{}');
-        $this->instanceName = null;
-        $this->select();
+            $this->_diff = new Diff('{}');
+            $this->select();
     }
     
     // Countable implementation
