@@ -5,7 +5,65 @@ namespace KitsuneTech\Velox\Transport;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
 
-function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
+class WebhookResponse {
+    public function __construct(public string $response, public int $code){}
+}
+function WebhookExport(Model|array $models, int $type, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $errorHandler = null) : void {
+    function sendRequest($payload, $contentType, $url) : WebhookResponse {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: '.$contentType,
+            'Content-Length: ' . strlen($payload)
+        ]);
+        $result = curl_exec($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        return new WebhookResponse($result,$code);
+    }
+    $results = [];
+    $payload = Export($models,TO_STRING+$type);
+    $contentType = "Content-Type: ";
+    $responseCode = 0;
+    switch ($type){
+        case AS_JSON:
+            $contentType .= "application/json";
+            break;
+        case AS_XML:
+            $contentType .= "application/xml";
+            break;
+        case AS_HTML:
+            $contentType .= "text/html";
+            break;
+        case AS_CSV:
+            $contentType .= "text/csv";
+            break;
+    }
+    foreach ($subscribers as $subscriber){
+        $response = sendRequest($payload,$contentType,$subscriber);
+        $responseCode = $response->code;
+        if ($responseCode >= 400){
+            $retryCount = 0;
+            while ($retryCount < $retryAttempts){
+                sleep($retryInterval);
+                $response = sendRequest($payload,$contentType,$subscriber);
+                $responseCode = $response->code;
+                if ($responseCode < 400){
+                    break;
+                }
+                $retryCount++;
+            }
+            if ($responseCode >= 400 && $errorHandler !== null){
+                $errorHandler($subscriber,$responseCode);
+            }
+        }
+        $results[$subscriber] = $response;
+    }
+}
+
+function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool|WebhookResponse {
     function isPowerOf2($num){
         return ($num != 0) && (($num & ($num-1)) == 0);
     }
