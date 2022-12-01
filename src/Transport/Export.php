@@ -23,10 +23,8 @@ function WebhookExport(Model|array $models, int $type, array $subscribers, int $
         curl_close($ch);
         return new WebhookResponse($result,$code);
     }
-    $results = [];
     $payload = Export($models,TO_STRING+$type);
     $contentType = "Content-Type: ";
-    $responseCode = 0;
     switch ($type){
         case AS_JSON:
             $contentType .= "application/json";
@@ -41,29 +39,38 @@ function WebhookExport(Model|array $models, int $type, array $subscribers, int $
             $contentType .= "text/csv";
             break;
     }
+    $results = [];
     foreach ($subscribers as $subscriber){
-        $response = sendRequest($payload,$contentType,$subscriber);
-        $responseCode = $response->code;
-        if ($responseCode >= 400){
-            $retryCount = 0;
-            while ($retryCount < $retryAttempts){
-                sleep($retryInterval);
-                $response = sendRequest($payload,$contentType,$subscriber);
-                $responseCode = $response->code;
-                if ($responseCode < 400){
-                    break;
+        //If we can, fork a process for each subscriber to keep laggy subscribers from holding up the others (if we can't, just work each one sequentially)
+        $pid = function_exists('pcntl_fork') ? pcntl_fork() : -1;
+        if ($pid < 1){
+            $response = sendRequest($payload,$contentType,$subscriber);
+            $responseCode = $response->code;
+            if ($responseCode >= 400){
+                $retryCount = 0;
+                if (isset($errorHandler)){
+                    $errorHandler($response);
                 }
-                $retryCount++;
+                //Use exponential backoff for retries
+                while ($retryCount < $retryAttempts){
+                    sleep((2 ** $retryCount) * $retryInterval);
+                    $response = sendRequest($payload,$contentType,$subscriber);
+                    $responseCode = $response->code;
+                    if ($responseCode < 400){
+                        break;
+                    }
+                    if (isset($errorHandler)){
+                        $errorHandler($response);
+                    }
+                    $retryCount++;
+                }
             }
-            if ($responseCode >= 400 && $errorHandler !== null){
-                $errorHandler($subscriber,$responseCode);
-            }
+            if ($pid == 0) break;
         }
-        $results[$subscriber] = $response;
     }
 }
 
-function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool|WebhookResponse {
+function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     function isPowerOf2($num){
         return ($num != 0) && (($num & ($num-1)) == 0);
     }
@@ -260,24 +267,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
         case TO_STDOUT:
             fwrite(STDOUT,$output);
             return true;
-        case TO_WEBHOOK:
-            $ch = curl_init($location);
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $output);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FAILONERROR, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                $contentType,
-                'Content-Length: ' . strlen($output))
-            );
-            if ($result = curl_exec($ch)){
-                curl_close($ch);
-                return $result;
-            }
-            else {
-                $error = curl_error($ch);
-                curl_close($ch);
-                return $error;
-            }
+        default:
+            return false; //Not a valid destination
     }
 }
