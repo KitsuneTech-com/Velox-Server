@@ -75,8 +75,8 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
         return ($num != 0) && (($num & ($num-1)) == 0);
     }
     //unpack flags
-    $destination = $flags & 0x01F;  //First 5 bits
-    $format = $flags & 0x1E0;       //Next 4 bits
+    $destination = $flags & 0x0F;  //First 5 bits
+    $format = $flags & 0xF0;       //Next 4 bits
     if (!isPowerOf2($destination) || !isPowerOf2($format)){
         throw new VeloxException("Invalid flags set",30);
     }

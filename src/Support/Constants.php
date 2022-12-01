@@ -8,7 +8,6 @@ const TO_BROWSER = 1;
 const TO_FILE = 2;
 const TO_STRING = 4;
 const TO_STDOUT = 8;
-const TO_WEBHOOK = 16;
 
 const AS_JSON = 32;
 const AS_XML = 64;
