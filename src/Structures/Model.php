@@ -31,7 +31,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             foreach($props as $prop){
                 if (isset($this->$prop)){
                     if ($this->$prop->queryType != Query::QUERY_PROC){
-                        $this->$prop->queryType = constant("KitsuneTech\Velox\Database\Procedures\Query::QUERY_".strtoupper($prop));
+                        $this->$prop->queryType = constant("KitsuneTech\Velox\Database\Procedures\Query::QUERY".strtoupper($prop));
                     }
                     if ($prop != "_select"){
                         $this->$prop->resultType = Query::RESULT_NONE;
