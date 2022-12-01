@@ -17,7 +17,8 @@
         "ext-sqlsrv": "Microsoft SQL Server support through native driver",
         "ext-mysqli": "MySQL/MariaDB support through mysqli",
         "ext-odbc": "Needed for standalone ODBC support",
-        "ext-xmlwriter": "Needed for XML data export"
+        "ext-xmlwriter": "Needed for XML data export",
+        "ext-pcntl": "Needed for parallel webhook processing"
     },
     "autoload": {
         "psr-4": {
