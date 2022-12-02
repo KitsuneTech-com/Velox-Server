@@ -5,7 +5,7 @@ use KitsuneTech\Velox\Structures\Model as Model;
 use function KitsuneTech\Velox\Transport\Export;
 
 class WebhookResponse {
-    public function __construct(public string $response, public int $code){}
+    public function __construct(public string $text, public int $code){}
 }
 function WebhookExport(Model|array $models, int $contentType, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $callback = null, callable $errorHandler = null) : void {
     function sendRequest($payload, $contentType, $url) : WebhookResponse {
