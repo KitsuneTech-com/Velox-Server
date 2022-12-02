@@ -3,7 +3,7 @@
 The server-side component of Velox consists of a PHP library built as a Composer project. This project can be imported as a Composer
 dependency by including the following in the composer.json file in your project and then running the ```composer install``` command:
 
-```
+```json
 {
   "repositories": [
     {
@@ -47,7 +47,7 @@ The connection type can be one of these:
 (note: if CONN_ODBC is used, the DB_ constants are ignored, so they can be left off)
 
 The second two examples above demonstrate ODBC connections. The first of these connects to a named DSN; the second to a DSN-less resource whose connection string attributes are given in the array. If the enormous number of nulls in these makes you cringe, you can instead call the constructor with named arguments:
-```
+```php
 $odbcDSNConnection = new Connection(host: $dsn_name, connectionType: Connection::DB_ODBC);
 $SQLServerODBCByConnectionString = new Connection(connectionType: Connection::CONN_ODBC, options: ["Driver"=>"{ODBC Driver 18 for SQL Server}","server"=>$hostname,"database"=>$database_name,"Uid"=>$user_id,"Pwd"=>$password]);
 ```
@@ -75,7 +75,7 @@ of PreparedStatements depending on the values and criteria given to it. Among ot
 and for column names and values to only be specified as needed.
 Because of this unique, non-standard behavior, SQL used to define a StatementSet follows an augmented syntax, with placeholders similar to those used
 by Angular. Three basic placeholders are allowed (\<\<values\>\>, \<\<columns\>\>, and \<\<condition\>\>), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
-  ```
+  ```sql
   SELECT <<columns>> FROM myTable WHERE <<condition>>
   INSERT INTO myTable (<<columns>>) VALUES (<<values>>)
   UPDATE myTable SET <<values>> WHERE <<condition>>
@@ -134,19 +134,19 @@ id | address1       | address2 | city              | state | zip   |
 
 If you wanted to get any rows from Falls City, TX, using SQL, you might write the query as so:
   
-``` SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX'; ```
+```sql SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX'; ```
   
 With the Velox API, if the query definition file includes:
   
-``` $QUERIES['SELECT'] = new StatementSet($conn,"SELECT * FROM addresses WHERE <<criteria>>"); ```
+```sql $QUERIES['SELECT'] = new StatementSet($conn,"SELECT * FROM addresses WHERE <<criteria>>"); ```
   
 then the JSON used to perform the same query would be:
   
-```{"select": [{"where": [{"city": ["=","Falls City"], "state": ["=","TX"]}]}]}```
+```json {"select": [{"where": [{"city": ["=","Falls City"], "state": ["=","TX"]}]}]}```
   
 Alternatively, if this were to be built programmatically:
   
-```
+```js
 //Define the request body
 let request = {};
 request.select = [];
@@ -167,17 +167,17 @@ request.push(row);
 
 Similarly, if you wanted an UPDATE query to set any null address2 values to "---", using this in the query definition file:
   
-```
+```sql
 $QUERIES['UPDATE'] = new StatementSet($conn,"UPDATE addresses SET <<values>> WHERE <<condition>>");
 ```
   
 The JSON in the request would look like:
   
-``` {"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]} ```
+```json {"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]} ```
   
 Or programmatically:
   
-```
+```js
 //Define the request body
 let request = {};
 request.update = [];
@@ -207,5 +207,5 @@ to run the request; where possible, similar criteria are grouped together and ru
 In addition to the SQL standard comparison keywords, Velox provides EKIL and EKILR. These are inverted versions of LIKE and RLIKE, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. :value LIKE myColumn). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
 
 Thus:
-```{"select": [{"where": [{"number_pattern": ["EKIL","2053553"]}]}]}```
+```json {"select": [{"where": [{"number_pattern": ["EKIL","2053553"]}]}]} ```
 would match a row where number_pattern has the value "205%", since "2053553" LIKE "205%".
