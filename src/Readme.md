@@ -101,9 +101,9 @@ methods are automatically forwarded to the database by way of the associated pro
   
 ### Transport
 
-The Transport sub-namespace contains one primary class: Export. This is used in combination with one or more instances of Structures\Model as a means
+The Transport sub-namespace contains one primary class: `Export`. This is used in combination with one or more instances of Structures\Model as a means
 to send the contents of the given Models to the desired location (the browser, a file, a PHP object, or STDOUT) in the desired format (JSON, CSV,
-XML, or HTML) - set through a sum of flags (see Support/Constants.php).
+XML, or HTML) - set through a sum of flags (see Support/Constants.php). Webhook functionality is also available in this sub-namespace; however, its functionality has not yet been thoroughly tested and is not yet adequately documented. If you choose to use this and encounter problems, feel free to open an issue.
   
 ## API
 
