@@ -8,43 +8,45 @@ use KitsuneTech\Velox\Structures\Model as Model;
 class WebhookResponse {
     public function __construct(public string $response, public int $code){}
 }
-function WebhookExport(Model|array $models, int $type, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $errorHandler = null) : void {
+function WebhookExport(Model|array $models, int $contentType, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $callback = null, callable $errorHandler = null) : void {
     function sendRequest($payload, $contentType, $url) : WebhookResponse {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); //WebhookExport automatically follows 3xx redirects
+        curl_setopt($ch, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL); //POST should be maintained through redirects
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: '.$contentType,
+            'Content-Type: ' . $contentType,
             'Content-Length: ' . strlen($payload)
         ]);
         $result = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         curl_close($ch);
         return new WebhookResponse($result,$code);
     }
-    $payload = Export($models,TO_STRING+$type);
-    $contentType = "Content-Type: ";
-    switch ($type){
+    $payload = Export($models,TO_STRING+$contentType);
+    $contentTypeHeader = "Content-Type: ";
+    switch ($contentType){
         case AS_JSON:
-            $contentType .= "application/json";
+            $contentTypeHeader .= "application/json";
             break;
         case AS_XML:
-            $contentType .= "application/xml";
+            $contentTypeHeader .= "application/xml";
             break;
         case AS_HTML:
-            $contentType .= "text/html";
+            $contentTypeHeader .= "text/html";
             break;
         case AS_CSV:
-            $contentType .= "text/csv";
+            $contentTypeHeader .= "text/csv";
             break;
     }
-    $results = [];
     foreach ($subscribers as $subscriber){
         //If we can, fork a process for each subscriber to keep laggy subscribers from holding up the others (if we can't, just work each one sequentially)
         $pid = function_exists('pcntl_fork') ? pcntl_fork() : -1;
+        $success = false;
         if ($pid < 1){
-            $response = sendRequest($payload,$contentType,$subscriber);
+            $response = sendRequest($payload,$contentTypeHeader,$subscriber);
             $responseCode = $response->code;
             if ($responseCode >= 400){
                 $retryCount = 0;
@@ -54,16 +56,23 @@ function WebhookExport(Model|array $models, int $type, array $subscribers, int $
                 //Use exponential backoff for retries
                 while ($retryCount < $retryAttempts){
                     sleep((2 ** $retryCount) * $retryInterval);
-                    $response = sendRequest($payload,$contentType,$subscriber);
+                    $response = sendRequest($payload,$contentTypeHeader,$subscriber);
                     $responseCode = $response->code;
                     if ($responseCode < 400){
+                        $success = true;
                         break;
                     }
                     if (isset($errorHandler)){
-                        $errorHandler($response);
+                        $errorHandler($subscriber, $responseCode, $response);
                     }
                     $retryCount++;
                 }
+            }
+            else {
+                $success = true;
+            }
+            if (isset($callback)){
+                $callback($subscriber, $success, $response);
             }
             if ($pid == 0) break;
         }
