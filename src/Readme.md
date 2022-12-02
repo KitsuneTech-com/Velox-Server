@@ -29,7 +29,7 @@ Each of these sub-namespaces handles a different facet of the server-side compon
 
 The Database sub-namespace controls database communication. The Connection object serves as the interface for this communication, using
 whichever PHP extension is needed to connect to the given database. The following are examples of how a Connection object can be instantiated:
-```
+```php
 $pdoMySQLConnection = new Connection($hostname,$database_name,$user_id,$password,$port,Connection::DB_MYSQL,Connection::CONN_PDO);
 $sqlsrvConnection = new Connection($hostname,$database_name,$user_id,$password,$port,Connection::DB_MSSQL,Connection::CONN_NATIVE);
 $odbcDSNConnection = new Connection($dsn_name,null,null,null,null,null,Connection::CONN_ODBC);
@@ -134,15 +134,21 @@ id | address1       | address2 | city              | state | zip   |
 
 If you wanted to get any rows from Falls City, TX, using SQL, you might write the query as so:
   
-```sql SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX'; ```
+```sql
+SELECT * FROM addresses WHERE city = 'Falls City' AND state = 'TX';
+```
   
 With the Velox API, if the query definition file includes:
   
-```sql $QUERIES['SELECT'] = new StatementSet($conn,"SELECT * FROM addresses WHERE <<criteria>>"); ```
+```sql
+$QUERIES['SELECT'] = new StatementSet($conn,"SELECT * FROM addresses WHERE <<criteria>>");
+```
   
 then the JSON used to perform the same query would be:
   
-```json {"select": [{"where": [{"city": ["=","Falls City"], "state": ["=","TX"]}]}]}```
+```json
+{"select": [{"where": [{"city": ["=","Falls City"], "state": ["=","TX"]}]}]}
+```
   
 Alternatively, if this were to be built programmatically:
   
@@ -173,7 +179,9 @@ $QUERIES['UPDATE'] = new StatementSet($conn,"UPDATE addresses SET <<values>> WHE
   
 The JSON in the request would look like:
   
-```json {"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]} ```
+```json
+{"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]}
+```
   
 Or programmatically:
   
