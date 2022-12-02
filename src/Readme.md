@@ -93,7 +93,7 @@ or one step at a time.
 
 #### Constructor arguments
 
-The first argument for each of these is a reference to the Connection object that is to run them. This is the sole (and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed by a constant describing what type of query it is (QUERY_SELECT, QUERY_INSERT, QUERY_UPDATE, QUERY_DELETE, or QUERY_PROC [for a stored procedure]). If omitted, QUERY_SELECT is assumed.
+The first argument for each of these is a reference to the Connection object that is to run them. This is the sole (and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed by a constant describing what type of query it is (Query::QUERY_SELECT, Query::QUERY_INSERT, Query::QUERY_UPDATE, Query::QUERY_DELETE, or Query::QUERY_PROC [for a stored procedure]). If omitted, Query::QUERY_SELECT is assumed.
 
 ### Structures
 
