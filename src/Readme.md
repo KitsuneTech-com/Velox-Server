@@ -21,13 +21,13 @@ the url to reflect your fork.
 
 ## Classes
 
-The class structure is divided into a set of sub-namespaces underneath the KitsuneTech\Velox base, as reflected in the structure in
+The class structure is divided into a set of sub-namespaces underneath the `KitsuneTech\Velox` base, as reflected in the structure in
 this directory. (There are two exceptions: the API and Support directories, which are not part of the class structure. More on the API later.)
 Each of these sub-namespaces handles a different facet of the server-side component.
 
 ### Database
 
-The Database sub-namespace controls database communication. The Connection object serves as the interface for this communication, using
+The Database sub-namespace controls database communication. The `Connection` object serves as the interface for this communication, using
 whichever PHP extension is needed to connect to the given database. The following are examples of how a Connection object can be instantiated:
 ```php
 $pdoMySQLConnection = new Connection($hostname,$database_name,$user_id,$password,$port,Connection::DB_MYSQL,Connection::CONN_PDO);
@@ -53,7 +53,7 @@ $SQLServerODBCByConnectionString = new Connection(connectionType: Connection::CO
 ```
 That's easier, right? The full list of named parameters are, in order: host, dbName, uid, pwd, port, serverType, connectionType, and options. Any unused parameters can be omitted.
 
-All queries and procedures are handled through these Connection instances, and the specific functions and/or methods necessary for these are abstracted away, using the following classes contained in the Database\Procedures sub-namespace:
+All queries and procedures are handled through these Connection instances, and the specific functions and/or methods necessary for these are abstracted away, using the following classes contained in the `Database\Procedures` sub-namespace:
 
 #### Query
 
@@ -70,7 +70,7 @@ method.
 
 #### StatementSet
 
-StatementSet is the most versatile of these classes. It addresses several shortcomings of the SQL-standard prepared statement by creating its own set
+`StatementSet` is the most versatile of these classes. It addresses several shortcomings of the SQL-standard prepared statement by creating its own set
 of PreparedStatements depending on the values and criteria given to it. Among other things, this behavior allows for operators to be assigned dynamically
 and for column names and values to only be specified as needed. Because of this unique, non-standard behavior, SQL used to define a StatementSet follows an augmented syntax, with placeholders similar to those used by Angular. Three basic placeholders are allowed (`<<values>>`, `<<columns>>`, and `<<condition>>`), and these are added to a base SQL statement where the appropriate clauses would be. Examples:
   ```sql
@@ -88,11 +88,11 @@ set up with consecutive calls to its addQuery method, each of which appends the 
 
 #### Constructor arguments
 
-The first argument for each of these is a reference to the Connection object that is to run them. This is the sole (and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed by a constant describing what type of query it is (`Query::QUERY_SELECT`, `Query::QUERY_INSERT`, `Query::QUERY_UPDATE`, `Query::QUERY_DELETE`, or `Query::QUERY_PROC` [for a stored procedure]). If omitted, `Query::QUERY_SELECT` is assumed.
+The first argument for each of these is a reference to the `Connection` object that is to run them. This is the sole (and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed by a constant describing what type of query it is (`Query::QUERY_SELECT`, `Query::QUERY_INSERT`, `Query::QUERY_UPDATE`, `Query::QUERY_DELETE`, or `Query::QUERY_PROC` [for a stored procedure]). If omitted, `Query::QUERY_SELECT` is assumed.
 
 ### Structures
 
-The Structures sub-namespace contains data structure classes used by the server-side component. Two of these - `Diff` and `ResultSet` - are used to
+The `Structures` sub-namespace contains data structure classes used by the server-side component. Two of these - `Diff` and `ResultSet` - are used to
 structure data passing to and from (respectively) the database through the Database\Procedures classes. The third - `Model` - is the most crucial
 of these, as it mediates the data flow between the API interface and the database. A Model is a memory-resident representation of a dataset as
 defined by the procedures assigned to it, and can be used to abstract away the entire database communication process by way of its various methods.
@@ -101,7 +101,7 @@ methods are automatically forwarded to the database by way of the associated pro
   
 ### Transport
 
-The Transport sub-namespace contains one primary class: `Export`. This is used in combination with one or more instances of Structures\Model as a means
+The `Transport` sub-namespace contains one primary class: `Export`. This is used in combination with one or more instances of Structures\Model as a means
 to send the contents of the given Models to the desired location (the browser, a file, a PHP object, or STDOUT) in the desired format (JSON, CSV,
 XML, or HTML) - set through a sum of flags (see Support/Constants.php). Webhook functionality is also available in this sub-namespace; however, its functionality has not yet been thoroughly tested and is not yet adequately documented. If you choose to use this and encounter problems, feel free to open an issue.
   
@@ -110,13 +110,10 @@ XML, or HTML) - set through a sum of flags (see Support/Constants.php). Webhook 
 The Velox API combines all of the above features into an interface that reduces database interaction to a set of POST calls made to common endpoints,
 which forward requests to "query definition files" as needed based on the nature of the request. Because the structure of this API depends exclusively
 on POST requests, it is inherently non-RESTful; in lieu of using HTTP verbs, the nature of the request is determined by how the body of the POST is structured.
+
 All requests to a Velox API endpoint are done using either form-encoded variables or a raw JSON object, containing one or more of the main SQL query verbs
 (select, update, insert, delete) as keys and having the values thereof in the form of JSON-encoded arrays of objects representing the conditions and/or
-values to be used by the corresponding query. Each object in the array, depending on the type of query being used, will have either or both of the following properties: "where", which defines the filtering criteria (as in a SQL WHERE clause); and "values", which contains name-value pairs to be inserted or
-updated by the query. The "where" property is itself an array of objects, each representing a set of criteria to be ORed together; each element object
-represents specific column criteria, with the properties ANDed together. The values of these properties are arrays of one to three elements, the first of
-which is a string containing a standard SQL operator, and the following element(s) corresponding to the right side of the operation. The "values" property
-is simpler; the object represents a single row to be inserted or updated, with the keys and values being the column names and intended values, respectively.
+values to be used by the corresponding query. Each object in the array, depending on the type of query being used, will have either or both of the following properties: "where", which defines the filtering criteria (as in a SQL WHERE clause); and "values", which contains name-value pairs to be inserted or updated by the query. The "where" property is itself an array of objects, each representing a set of criteria to be ORed together; each element object represents specific column criteria, with the properties ANDed together. The values of these properties are arrays of one to three elements, the first of which is a string containing a standard SQL operator, and the following element(s) corresponding to the right side of the operation. The "values" property is simpler; the object represents a single row to be inserted or updated, with the keys and values being the column names and intended values, respectively.
   
 If all this seems complicated, an illustration may help to clear it up. Let's say you have a table called "addresses", structured as so:
 
@@ -203,11 +200,10 @@ request.push(row);
 ```
   
 Being able to build API requests programmatically through JavaScript objects allows filters and updates of high complexity to be constructed client-side
-with minimal code on the back-end. StatementSet is optimized for specifically these kinds of queries; it only builds as many PreparedStatements as necessary
-to run the request; where possible, similar criteria are grouped together and run as criteria on one PreparedStatement.
+with minimal code on the back-end. StatementSet is optimized for specifically these kinds of queries; it only builds as many PreparedStatements as necessary to run the request; where possible, similar criteria are grouped together and run as criteria on one PreparedStatement.
 
 ### EKIL / EKILR
-In addition to the SQL standard comparison keywords, Velox provides EKIL and EKILR. These are inverted versions of LIKE and RLIKE, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. :value LIKE myColumn). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
+In addition to the SQL standard comparison keywords, Velox provides `EKIL` and `EKILR`. These are inverted versions of `LIKE` and `RLIKE`, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. `:value LIKE myColumn`). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
 
 Thus:
 ```json
