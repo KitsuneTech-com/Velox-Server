@@ -5,17 +5,17 @@ namespace KitsuneTech\Velox\Transport;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
 
-function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
+function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     function isPowerOf2($num){
         return ($num != 0) && (($num & ($num-1)) == 0);
     }
     //unpack flags
-    $destination = $flags & 0x0F;
-    $format = $flags & 0xF0;
+    $destination = $flags & 0x0F;  //First 5 bits
+    $format = $flags & 0xF0;       //Next 4 bits
     if (!isPowerOf2($destination) || !isPowerOf2($format)){
         throw new VeloxException("Invalid flags set",30);
     }
-    if ($destination == TO_FILE && !$fileName){
+    if ($destination == TO_FILE && !$location){
         throw new VeloxException("Filename is missing",31);
     }
     if ($destination == TO_BROWSER && headers_sent()){
@@ -164,24 +164,26 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
             $mostRecent = $details['lastQuery'];
             break;
     }
+    $contentType = "Content-Type: ";
+    switch ($format){
+        case AS_JSON:
+            $contentType .= "application/json";
+            break;
+        case AS_XML:
+            $contentType .= "application/xml";
+            break;
+        case AS_HTML:
+            $contentType .= "text/html";
+            break;
+        case AS_CSV:
+            $contentType .= "text/csv";
+            break;
+    }
     switch ($destination){
         case TO_BROWSER:
-            switch ($format){
-                case AS_JSON:
-                    header('Content-Type: application/json');
-                    break;
-                case AS_XML:
-                    header('Content-Type: application/xml');
-                    break;
-                case AS_HTML:
-                    header('Content-Type: text/html');
-                    break;
-                case AS_CSV:
-                    header('Content-Type: text/csv');
-                    break;
-            }
-            if ($fileName){
-                header('Content-Disposition: attachment; filename="'.$fileName.'"');
+            header($contentType);
+            if ($location){
+                header('Content-Disposition: attachment; filename="'.$location.'"');
             }
             else {
                 header('Content-Disposition: inline');
@@ -191,7 +193,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
             echo $output;
             return true;
         case TO_FILE:
-            $handle = fopen($fileName,"w");
+            $handle = fopen($location,"w");
             fwrite($handle,$output);
             fclose($handle);
             return true;
@@ -200,5 +202,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $f
         case TO_STDOUT:
             fwrite(STDOUT,$output);
             return true;
+        default:
+            return false; //Not a valid destination
     }
 }

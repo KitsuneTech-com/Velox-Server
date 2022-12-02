@@ -5,13 +5,21 @@ namespace KitsuneTech\Velox\Database\Procedures;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\VeloxException;
 
+/**
+ * `PreparedStatement` is a subclass of `Query` that allows for parameterized prepared statements. The SQL syntax for these
+ * statements follows the MySQL syntax for prepared statements, which is the same as the syntax used by PDO. Either
+ * named or positional parameters may be used. The values for the parameters are passed in as an associative array
+ * to the `addParameterSet()` method; several calls to this method may be made to add multiple sets of parameters, each
+ * of which will be bound and executed in sequence when the `execute()` method is called.
+ */
+
 class PreparedStatement extends Query {
     private array $_namedParams = [];
     private int $_paramCount = 0;
     private array $_paramArray = [];
     private ?string $setId = null;
     
-    public function __construct(Connection &$conn, string $sql, int $queryType = QUERY_SELECT, int $resultType = VELOX_RESULT_UNION, ?string $setId = null) {
+    public function __construct(Connection &$conn, string $sql, int $queryType = Query::QUERY_SELECT, int $resultType = Query::RESULT_DISTINCT, ?string $setId = null) {
         parent::__construct($conn,$sql,$queryType,$resultType);
         $paramMatch = [];
         if (preg_match_all("/:[A-Za-z0-9_]+/",$sql,$paramMatch) > 0){

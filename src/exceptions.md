@@ -30,6 +30,11 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | ***   | ODBC error:                                                                             | odbc_connect returned an error when connecting to database (error code is ODBC state)                                                                      |
 | ***   | MySQLi error:                                                                           | MySQLi returned an error when connecting to database (error code is SQLSTATE)                                                                              |
 
+### Database\oneShot
+| Code  | Text                                                                                    | Explanation                                                                                                                                                |
+|-------|-----------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 60    | Input is not supported for Query objects.                                               | Query objects do not support parameters; therefore no input can be specified.                                                                                    |
+
 ### Database\Procedures\Query
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -49,20 +54,22 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 36   | Unsupported operator                                          | The operator specified is invalid or not supported                                  |
 | 44   | IN operand must be in the form of an array                    | When using IN, the operand must be an array of values to check for.                 |
 | 47   | Element at index xxxx does not contain the correct keys.      | The given element in the array passed to addCriteria() does not contain the appropriate properties for this type of query. |  
-
+| 63   | Criteria format is invalid                                    | The structure of the array passed to addCriteria() isn't in the form expected. Check to see if the proper nesting is used. |
 ### Database\Procedures\Transaction
 | Code | Text                                                          | Explanation                                                                                     |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | 26   | Transaction has no active connection                          | A query string was passed to Transaction::addQuery() without first setting a connection to use. |
 | 27   | Query in transaction failed                                   | The transaction was rolled back after a failed query. See the chained exception for details.    |
 | 39   | User-defined function failed                                  | A custom function added to the Transaction failed. See the chained exception for details.    |
+ | 61   | Attempted to add parameter set to Transaction without a leading PreparedStatement | Transaction::addParameterSet() requires the first assigned procedure to be a PreparedStatement. |
+ | 62   | Attempted to add criteria to Transaction without a leading StatementSet | Transaction::addCriteria() requires the first assigned procedure to be a StatementSet. |
 
-### Database\Structures\ResultSet
+### Structures\ResultSet
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 28   | Specified key column does not exist                           | The column name specified for the key column doesn't exist in the results           |
 
-### Database\Structures\Model
+### Structures\Model
 | Code | Text                                                          | Explanation                                                                         |
 | ---- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | 29   | The PreparedStatement returned multiple result sets. Make sure that $resultType is set to VELOX_RESULT_UNION or VELOX_RESULT_UNION_ALL. | Model uses only one result set at a time. |
