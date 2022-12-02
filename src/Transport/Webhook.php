@@ -62,7 +62,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
                         break;
                     }
                     if (isset($errorHandler)){
-                        $errorHandler($subscriber, $responseCode, $response);
+                        $errorHandler($subscriber, $responseCode, $response->text);
                     }
                     $retryCount++;
                 }
@@ -71,7 +71,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
                 $success = true;
             }
             if (isset($callback)){
-                $callback($subscriber, $success, $response);
+                $callback($subscriber, $success, $response->text);
             }
             if ($pid == 0) break;
         }
