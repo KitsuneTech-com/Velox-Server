@@ -50,7 +50,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
             if ($responseCode >= 400){
                 $retryCount = 0;
                 if (isset($errorHandler)){
-                    $errorHandler($response);
+                    $errorHandler($subscriber, $responseCode, $response->text);
                 }
                 //Use exponential backoff for retries
                 while ($retryCount < $retryAttempts){
