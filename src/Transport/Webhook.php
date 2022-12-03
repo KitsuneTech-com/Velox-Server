@@ -49,6 +49,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
             $responseCode = $response->code;
             if ($responseCode >= 400){
                 $retryCount = 0;
+                $attemptCount = 1;
                 if (isset($errorHandler)){
                     $errorHandler($subscriber, $responseCode, 1, $response->text);
                 }
@@ -62,9 +63,10 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
                         break;
                     }
                     if (isset($errorHandler)){
-                        $errorHandler($subscriber, $responseCode, $retryCount+1, $response->text);
+                        $errorHandler($subscriber, $responseCode, $attemptCount, $response->text);
                     }
                     $retryCount++;
+                    $attemptCount++;
                 }
             }
             else {
