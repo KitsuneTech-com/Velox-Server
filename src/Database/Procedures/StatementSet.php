@@ -9,13 +9,71 @@ use KitsuneTech\Velox\Database\Procedures\{Query, Transaction};
 use KitsuneTech\Velox\Structures\{Diff, ResultSet};
 use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
+/** `StatementSet` is a class that dynamically generates a collection of related PreparedStatements. This is best used for
+ * queries that may have an unknown number of parameters, such as a search query. The standard SQL syntax is augmented
+ * with AngularJS-style placeholders for the contents of typical clauses; these placeholders are substituted at execution
+ * time with the appropriate prepared statement syntax based on the content of the criteria set assigned to it. This also
+ * supports the use of all standard SQL comparisons, including IN, NOT IN, BETWEEN, NOT BETWEEN, and LIKE, and also provides
+ * a reverse-pattern lookup for LIKE and RLIKE ("EKIL" and "ELIKR" respectively).
+ *
+ * StatementSet placeholders are as follows:
+ *  - <<columns>>: The columns to be inserted
+ *  - <<values>>: The values to be inserted or updated
+ *  - <<condition>>: The condition to be used in a WHERE clause
+ *
+ * These should be used where the appropriate clause(s) would normally be used in a standard SQL statement:
+ * - SELECT <<columns>> FROM myTable WHERE <<condition>>
+ * - INSERT INTO myTable (<<columns>>) VALUES (<<values>>)
+ * - UPDATE myTable SET <<values>> WHERE <<condition>>
+ * - DELETE FROM myTable WHERE <<condition>>
+ *
+ * Criteria are passed in as an associative array. This array should contain either or both of two keys, as appropriate
+ * for the query type:
+ * - "values": An array of associative arrays, with the keys being the column names and the values being the values to be
+ *  inserted or updated.
+ * - "where": An array of associative arrays, the construction of which determines how the corresponding <<condition>> is
+ * constructed. Every array in the "where" array represents a set of conditions that will be joined by AND; each set of
+ * conditions is joined by OR. The keys of each set of conditions are the column names, and the values are arrays having
+ * an operator as the first element, followed by zero, one, or two values as appropriate for the operator.
+ *
+ * In JSON, a sample criteria set for an UPDATE might look like this:
+ * ```json
+ * {
+ *  "values": [
+ *      {"col1": "val1", "col2": "val2"}
+ *  ],
+ *  "where": [
+ *      {col1: ["=", "val1"], col2: ["BETWEEN", 3, 4]},
+ *      {col2: ["IN", ["val2", "val3"]]},
+ *      {col1: ["IS NULL"]}
+ *  ]
+ *}
+ * ```
+ *
+ * If the above criteria were used in a StatementSet defined with this SQL:
+ *
+ * `UPDATE myTable SET <<values>> WHERE <<condition>>`
+ *
+ * the resulting query would be:
+ * ```sql
+ * UPDATE myTable SET col1 = "val1", col2 = "val2" WHERE (col1 = "val1" AND col2 BETWEEN 3 AND 4) OR (col2 IN ("val2", "val3")) OR (col1 IS NULL)
+ * ```
+ */
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
     private array $_keys = [];
 
+    /** @var ResultSet|array|bool|null The results returned from the last execution */
     public ResultSet|array|bool|null $results;
 
+    /** @param Connection   $conn       The Connection instance to use for this instance
+     *  @param string       $_baseSql   The SQL template by which to generate the prepared statements
+     *  @param int|null     $queryType  The type of query to be run ({@see Query::QUERY_SELECT QUERY_SELECT, etc.})
+     *  @param array|Diff   $criteria   Initial criteria to be applied; this can be used to avoid having to call setCriteria() later
+     *  @param string|null  $name       The name of this StatementSet; can be used to distinguish between multiple StatementSets in a single Transaction
+     *  @throws VeloxException          If criteria are incorrectly formatted (see exception text for description)
+     */
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
@@ -68,12 +126,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
 
     //ArrayAccess implementation
-    public function offsetSet(mixed $offset, mixed $stmt) : void {
+    public function offsetSet(mixed $offset, mixed $value) : void {
         if (is_null($offset)){
-            $this->_statements[] = $stmt;
+            $this->_statements[] = $value;
         }
         else {
-            $this->_statements[$offset] = $stmt;
+            $this->_statements[$offset] = $value;
         }
     }
     public function offsetExists(mixed $offset) : bool {
@@ -106,8 +164,15 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         recur_ksort($criterion);
         return (string)crc32(serialize($criterion));
     }
-
-    public function addCriteria (array|Diff $criteria) : void {
+    /**
+     * Adds criteria to the StatementSet. These criteria are the values and/or conditions that will be used to create and
+     * execute the prepared statements based on the base SQL template and its <<placeholders>>.
+     *
+     * @param array|Diff $criteria  The criteria to be added
+     * @return void
+     * @throws VeloxException       If criteria are incorrectly formatted (see exception text for description)
+     */
+    public function addCriteria(array|Diff $criteria) : void {
         if ($criteria instanceof Diff){
             switch ($this->queryType){
                 case Query::QUERY_SELECT:
@@ -154,6 +219,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             }
         }
     }
+
+    /** Generates the PreparedStatements to be run based on the assigned criteria. This needs to be run before the StatementSet is executed. */
     public function setStatements() : void {
         $statements = [];
         $criteria = $this->criteria;
@@ -301,6 +368,11 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         $this->_statements = $statements;
     }
+    /** Executes the PreparedStatements generated by ({@see StatementSet::setStatements()}). If the connection type supports
+     * it, these statements will be executed as a single transaction.
+     * @return bool True if the transaction was successful.
+     * @throws VeloxException If no criteria have yet been set for this StatementSet.
+     */
     public function execute() : bool {
         if (count($this->_statements) == 0){
             //if no statements are set, try setting them and recheck
@@ -335,16 +407,21 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         if ($newTransaction){
             $this->conn->commit();
         }
-
         return true;
     }
     public function __invoke() : bool {
         return $this->execute();
     }
+
+    /** Clears all assigned criteria and PreparedStatements so this instance can be reused. */
     public function clear() : void {
         $this->rewind();
         $this->_statements = [];
     }
+
+    /**
+     * @return array An array of index values affected by the last execution of this StatementSet
+     */
     public function getLastAffected() : array {
         $affected = [];
         foreach ($this->_statements as $stmt){
@@ -352,9 +429,14 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         return $affected;
     }
+    /** @return ResultSet|array|null The results of the last execution of this StatementSet */
     public function getResults() : ResultSet|array|null {
         return $this->results;
     }
+    /**
+     * @return array An array containing the execution contexts for each PreparedStatement generated by the last run of
+     * this StatementSet. This may be useful for debugging.
+     */
     public function dumpQueries() : array {
         $queries = [];
         foreach ($this->_statements as $stmt){
