@@ -82,7 +82,10 @@ class PreparedStatement extends Query {
     public function clear() : void {
         $this->_paramArray = [];
     }
-
+    /**
+     * @return array An array containing the execution context for this query, including the base SQL and connection parameters.
+     * This may be useful for debugging.
+     */
     public function dumpQuery(): array {
         $dump = parent::dumpQuery();
         $dump["type"] = "PreparedStatement";

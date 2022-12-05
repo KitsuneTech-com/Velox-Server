@@ -370,18 +370,18 @@ class Query {
             return $this->results;
         }
     }
-    /** Returns an array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
+    /**
+     * @return array An array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
      * are returned by different database engines for different queries, it's best not to use this for queries that could
      * affect several rows per execution.
-     * @return array An array of the last affected indices from this query.
      */
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
     }
 
-    /** Returns an array containing the execution context for this query, including the base SQL and connection parameters.
+    /**
+     * @return array An array containing the execution context for this query, including the base SQL and connection parameters.
      * This may be useful for debugging.
-     * @return array An array containing the execution context for this query.
      */
     public function dumpQuery() : array {
         return [
