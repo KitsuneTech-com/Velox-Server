@@ -49,7 +49,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function count() : int {
         return count($this->_data);
     }
-    
+
+    public function countDistinct(string $column) : int {
+        if (!in_array($column,$this->_columns)){
+            throw new VeloxException("Column $column does not exist in result set.",38);
+        }
+        return count(array_unique(array_column($this->_data,$column)));
+    }
+
     // Iterator implementation
     public function current() : array {
         return $this->_data[$this->_currentIndex];
