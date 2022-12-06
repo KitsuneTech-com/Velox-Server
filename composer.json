@@ -30,7 +30,6 @@
             "src/Support/ErrorHandling.php",
             "src/Support/Utility.php",
             "src/Transport/Export.php",
-            "src/Transport/Webhook.php",
             "config/config.php"
         ]
     }
