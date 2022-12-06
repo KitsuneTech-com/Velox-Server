@@ -367,7 +367,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function diff() : Diff {
         return $this->_diff;
     }
-    public function setFilter(Diff|array|null $filter) : void {
+    public function setFilter(Diff|array|null $filter = null) : void {
         $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
         if (!$this->_filter){
