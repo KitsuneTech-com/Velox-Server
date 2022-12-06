@@ -7,7 +7,7 @@ use function KitsuneTech\Velox\Transport\Export;
 class WebhookResponse {
     public function __construct(public string $text, public int $code){}
 }
-function WebhookExport(Model|array $models, int $contentType, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $callback = null, callable $errorHandler = null) : void {
+function WebhookExport(Model|array $models, int $contentType, array $subscribers, int $retryInterval = 30, int $retryAttempts = 10, callable $callback = null, callable $errorHandler = null, $identifier = null) : void {
     function sendRequest($payload, $contentType, $url) : WebhookResponse {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -50,7 +50,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
             if ($responseCode >= 400){
                 $retryCount = 0;
                 if (isset($errorHandler)){
-                    $errorHandler($subscriber, $responseCode, 1, $response->text);
+                    $errorHandler($subscriber, $responseCode, 1, $response->text, $identifier);
                 }
                 //Use exponential backoff for retries
                 while ($retryCount < $retryAttempts){
@@ -62,7 +62,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
                         break;
                     }
                     if (isset($errorHandler)){
-                        $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text);
+                        $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $identifier);
                     }
                     $retryCount++;
                 }
@@ -71,7 +71,7 @@ function WebhookExport(Model|array $models, int $contentType, array $subscribers
                 $success = true;
             }
             if (isset($callback)){
-                $callback($subscriber, $success, $response->text);
+                $callback($subscriber, $success, $response->text, $identifier);
             }
             if ($pid == 0) break;
         }
