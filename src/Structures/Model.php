@@ -51,6 +51,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     public function countDistinct(string $column) : int {
+        if (count($this->_data) == 0){
+            return 0;
+        }
         if (!in_array($column,$this->_columns)){
             throw new VeloxException("Column $column does not exist in result set.",38);
         }
