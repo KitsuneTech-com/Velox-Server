@@ -35,7 +35,7 @@ class Request {
         return new Response($result,$code);
     }
     public function dispatch() : void {
-        $payload = Export($this->models, TO_STRING+$this->contentType);
+        $payload = Export($this->models, TO_STRING+$this->contentType, noHeader: true);
         $contentTypeHeader = "Content-Type: ";
         switch ($this->contentType){
             case AS_JSON:
