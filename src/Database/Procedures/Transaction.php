@@ -7,6 +7,26 @@ use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
+/**
+ * `Transaction` - a class for managing database transactions
+ *
+ * This class expands on the basic concept of database transactions by both allowing transactions to be coordinated between
+ * data sources (including commit and rollback) and by allowing interstitial application code to be run between database procedure
+ * calls. This can be used, for example, to manage import/export of data between disparate databases. Velox Transactions are
+ * built by first instantiating a new Transaction object, then using one or more sequential calls to {@see Transaction::addQuery()}
+ * or {@see Transaction::addFunction()} to add the desired procedures. Once this is done, the transaction is initiated by
+ * calling {@see Transaction::begin()} to start the transaction on each data source. Initial parameters for each Transaction iteration
+ * can be defined by calling {@see Transaction::addTransactionParameters()} using an array appropriate for the first procedure defined
+ * in the Transaction; each additional call to this method will add an iteration to the Transaction. These iterations can be run
+ * individually or all at once as desired, using the following methods:
+ *
+ *{@see Transaction::executeNextProcedure()}    Executes the next defined query or function.
+ *
+ *{@see Transaction::executeIteration()}        Runs a single iteration of the Transaction using the current set of parameters.
+ *
+ *{@see Transaction::executeAll()}             Runs the Transaction for each defined set of parameters.
+ */
+
 class Transaction {
     private Connection $_baseConn;
     private array $_connections = [];
@@ -14,9 +34,9 @@ class Transaction {
     private int $_currentProcedureIndex = 0;
     private int $_currentIterationIndex = 0;
     private array $_lastAffected = [];
-    public array $procedures = [];
     private array $_iterations = [];
     private array $_currentIteration = [];
+    public array $procedures = [];
 
     public function __construct(?Connection &$conn = null, ?string $name = null) {
         if (isset($conn)){
@@ -72,8 +92,10 @@ class Transaction {
         $scopedFunction = function() use (&$function,$procedureIndex){
             $previousProcedure = $this->procedures[$procedureIndex - 1] ?? null;
             $nextProcedure = $this->procedures[$procedureIndex + 1] ?? null;
-            $previousArguments =& $this->_iterations[$this->_currentIterationIndex][$previousProcedure["name"]] ?? null;
-            $nextArguments =& $this->_iterations[$this->_currentIterationIndex][$nextProcedure["name"]] ?? null;
+            $previousArgsRef = $this->_iterations[$this->_currentIterationIndex][$previousProcedure["name"]] ?? null;
+            $previousArguments =& $previousArgsRef;
+            $nextArgsRef = $this->_iterations[$this->_currentIterationIndex][$nextProcedure["name"]] ?? null;
+            $nextArguments =& $nextArgsRef;
             $previous = ["procedure" => $previousProcedure, "arguments" => &$previousArguments];
             $next = ["procedure" => $nextProcedure, "arguments" => &$nextArguments];
             $boundFunction = $function->bindTo($this);
@@ -135,7 +157,7 @@ class Transaction {
             $this->_currentProcedureIndex++;
             return true;
         }
-        catch (Exception $ex){
+        catch (\Exception $ex){
             if ($procedure instanceof Query || $procedure instanceof StatementSet){
                 $procedure->conn->rollBack(true);
                 throw new VeloxException("Query in transaction failed",27,$ex);
