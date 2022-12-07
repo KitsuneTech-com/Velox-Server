@@ -181,10 +181,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 $currentProcedure->setStatements();
                 break;
         }
-        $transaction = new Transaction;
-        $transaction->addQuery($currentProcedure);
-        $transaction->begin();
-        $transaction->executeAll();
+        $currentProcedure();
 
         if (!$this->_delaySelect){
             $this->select();
