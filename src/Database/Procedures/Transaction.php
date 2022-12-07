@@ -36,6 +36,8 @@ class Transaction {
     private array $_lastAffected = [];
     private array $_iterations = [];
     private array $_currentIteration = [];
+    private string|int $_lastDefinedProcedure;
+
     public array $procedures = [];
 
     public function __construct(?Connection &$conn = null, ?string $name = null) {
@@ -69,6 +71,7 @@ class Transaction {
         if (!$name){
             $name = $instance->name ?? count($this->procedures); //Default name is the index of the procedure in $this->procedures
         }
+        $this->_lastDefinedProcedure = $name;
         $this->procedures[] = ["instance" => $instance, "name" => $name];
     }
     public function addFunction(callable $function, ?string $name = null) : void {
@@ -111,7 +114,8 @@ class Transaction {
                 $boundFunction($previous,$next);
             }
         };
-        $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $name ?? $procedureIndex];
+        $this->_lastDefinedProcedure = $name ?? $procedureIndex;
+        $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $this->_lastDefinedProcedure];
     }
     public function addTransactionParameters(array $procedureParams) : void {
         $this->_iterations[] = $procedureParams;
@@ -239,6 +243,9 @@ class Transaction {
     }
     public function getLastAffected() : array {
         return $this->_lastAffected;
+    }
+    public function getLastDefinedProcedureName() : int|string {
+        return $this->_lastDefinedProcedure;
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
