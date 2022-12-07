@@ -269,8 +269,8 @@ class Connection {
                             throw new VeloxException("PDO error: " . $ex->getMessage(), (int)$ex->getCode(), $ex);
                         }
                     }
-                    throw new VeloxException("PDO error: " . $ex->getMessage(), (int)$ex->getCode(), $ex);
                 }
+                return $returnVal;
                 break;
             case self::CONN_ODBC:
                 return odbc_autocommit($this->_conn,false);
