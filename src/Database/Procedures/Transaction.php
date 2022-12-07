@@ -155,10 +155,10 @@ class Transaction {
 
             if ($procedure instanceof Query || $procedure instanceof StatementSet){
                 if (!isset($this->_results[$this->_currentIterationIndex])){
-                    $this->_results[$this->_currentIterationIndex] = [$procedure->results];
+                    $this->_results[$this->_currentIterationIndex] = [$currentProcedure['name'] => $procedure->results];
                 }
                 else {
-                    $this->_results[$this->_currentIterationIndex][] = $procedure->results;
+                    $this->_results[$this->_currentIterationIndex][$currentProcedure['name']] = $procedure->results;
                 }
                 $this->_lastAffected = $procedure->getLastAffected();
             }
