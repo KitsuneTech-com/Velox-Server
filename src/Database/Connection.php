@@ -66,7 +66,7 @@ class Connection {
         private string|null $pwd = null,
         private int|null $port = null,
         private int $serverType = self::DB_MYSQL,
-        private int|null $connectionType = null,
+        private int|null $connectionType = self::CONN_PDO,
         private array $options = []
     )
     {
