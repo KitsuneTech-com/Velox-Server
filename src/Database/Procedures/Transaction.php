@@ -177,11 +177,28 @@ class Transaction {
         }
     }
 
-    public function getQueryResults(?int $iterationIndex = null) : ResultSet|array|bool {
-        if (is_null($iterationIndex)){
-            $iterationIndex = count($this->_iterations)-1;
+    public function getQueryResults(?int $iterationIndex = null, ?int|string $name = null) : ResultSet|array|bool {
+        if (count($this->_results) == 0){
+            return false;
         }
-        return $this->_results[$iterationIndex] ?? false;
+        elseif (is_null($iterationIndex)){
+            if (isset($name)){
+                //Name is set, iteration is not
+                return array_column($this->_results,$name);
+            }
+            else {
+                //Neither is set
+                return $this->_results;
+            }
+        }
+        elseif (is_null($name)){
+            //Iteration is set, name is not
+            return $this->_results[$iterationIndex];
+        }
+        else {
+            //Both are set
+            return $this->_results[$iterationIndex][$name];
+        }
     }
 
     public function executeIteration(bool $commit = false) : bool {
