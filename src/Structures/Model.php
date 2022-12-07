@@ -195,7 +195,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function update(array $rows) : bool {
         return $this->executeDML("update", $rows);
     }
-    public function insert(array $rows, bool $diff = false, bool $defer = false) : bool {
+    public function insert(array $rows) : bool {
         return $this->executeDML("insert", $rows);
     }
     public function delete(array $rows) : bool {
