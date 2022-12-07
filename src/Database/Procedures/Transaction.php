@@ -150,7 +150,12 @@ class Transaction {
             $procedure();
 
             if ($procedure instanceof Query || $procedure instanceof StatementSet){
-                $this->_results[] = $procedure->results;
+                if (!isset($this->results[$this->_currentIterationIndex])){
+                    $this->results[$this->_currentIterationIndex] = [$procedure->results];
+                }
+                else {
+                    $this->results[$this->_currentIterationIndex][] = $procedure->results;
+                }
                 $this->_lastAffected = $procedure->getLastAffected();
             }
 
@@ -168,11 +173,11 @@ class Transaction {
         }
     }
 
-    public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
+    public function getQueryResults(?int $iterationIndex = null) : ResultSet|array|bool {
         if (is_null($queryIndex)){
-            $queryIndex = count($this->procedures)-1;
+            $queryIndex = count($this->_iterations)-1;
         }
-        return $this->_results[$queryIndex] ?? false;
+        return $this->_results[$iterationIndex] ?? false;
     }
 
     public function executeIteration(bool $commit = false) : bool {
