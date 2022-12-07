@@ -244,7 +244,7 @@ class Transaction {
     public function getLastAffected() : array {
         return $this->_lastAffected;
     }
-    public function getLastDefinedProcedureName() : int|string {
+    public function finalProcedure() : int|string {
         return $this->_lastDefinedProcedure;
     }
     public function getTransactionPlan() : array {
