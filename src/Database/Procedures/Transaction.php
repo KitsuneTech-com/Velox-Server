@@ -55,7 +55,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->procedures[] = ["instance" => new Query($this->_baseConn,$query,$resultType), "name" => $name];
+            $instance = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -64,8 +64,12 @@ class Transaction {
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
 
             }
-            $this->procedures[] = ["instance" => &$query, "name" => $name ?? $query->name];
+            $instance =& $query;
         }
+        if (!$name){
+            $name = $instance->name ?? count($this->procedures); //Default name is the index of the procedure in $this->procedures
+        }
+        $this->procedures[] = ["instance" => $instance, "name" => $name];
     }
     public function addFunction(callable $function, ?string $name = null) : void {
         // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
