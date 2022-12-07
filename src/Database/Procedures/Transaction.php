@@ -110,7 +110,7 @@ class Transaction {
         $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $name ?? $procedureIndex];
     }
     public function addTransactionParameters(array $procedureParams) : void {
-        $this->_iterations = array_merge($this->_iterations,$procedureParams);
+        $this->_iterations[] = $procedureParams;
     }
 
     //Execution
