@@ -37,9 +37,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         $this->$prop->resultType = Query::RESULT_NONE;
                     }
                 }
-                else {
-                    $this->$prop = $prop == "_select" ? new Transaction($conn) : null;
-                }
             }
             $this->_diff = new Diff('{}');
             $this->select();
