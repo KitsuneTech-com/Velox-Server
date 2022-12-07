@@ -256,7 +256,21 @@ class Connection {
         $this->_inTransaction = true;
         switch ($this->connectionType){
             case self::CONN_PDO:
-                return $this->_conn->beginTransaction();
+                try {
+                    $returnVal = $this->_conn->beginTransaction();
+                }
+                catch (\PDOException $ex){
+                    if ($ex->getCode() == "HY000" && str_contains($ex->getMessage(),"gone away")){
+                        try {
+                            $this->establish();
+                            $returnVal = $this->_conn->beginTransaction();
+                        }
+                        catch (\PDOException $ex){
+                            throw new VeloxException("PDO error: " . $ex->getMessage(), (int)$ex->getCode(), $ex);
+                        }
+                    }
+                    throw new VeloxException("PDO error: " . $ex->getMessage(), (int)$ex->getCode(), $ex);
+                }
             case self::CONN_ODBC:
                 return odbc_autocommit($this->_conn,false);
             case self::CONN_NATIVE:
