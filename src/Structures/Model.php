@@ -92,6 +92,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_data[$offset]);
     }
+
+
     
     // Class-specific methods
     public function select(bool $diff = false) : Diff|bool {
@@ -150,18 +152,22 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             return false;
         }
     }
-    
-    public function update(array $rows) : bool {
+
+    private function executeDML(string $verb, array $rows) : bool {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
         // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
         // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
-        if (!$this->_update){
-            throw new VeloxException('The associated procedure for update has not been defined.',37);
+
+        //This method is not called directly. Rather, each of the three DML methods (insert, update, delete) calls it with the appropriate verb.
+
+        $procedure = $this->{'_'.$verb};
+        if (!$procedure){
+            throw new VeloxException("The associated procedure for $verb has not been defined.",37);
         }
-        $currentProcedure = clone $this->_update;
+        $currentProcedure = clone $procedure;
         $reflection = new \ReflectionClass($currentProcedure);
         $statementType = $reflection->getShortName();
-        
+
         switch ($statementType){
             case "PreparedStatement":
                 foreach($rows as $row){
@@ -174,81 +180,25 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 $currentProcedure->addCriteria($rows);
                 break;
         }
-        
+
         $transaction = new Transaction;
         $transaction->addQuery($currentProcedure);
         $transaction->begin();
         $transaction->executeAll();
-      
+
         if (!$this->_delaySelect){
             $this->select();
         }
         return true;
     }
-    
+    public function update(array $rows) : bool {
+        return $this->executeDML("update", $rows);
+    }
     public function insert(array $rows, bool $diff = false, bool $defer = false) : bool {
-        if (!$this->_insert){
-            throw new VeloxException('The associated procedure for insert has not been defined.',37);
-        }
-        $transaction = new Transaction;
-        $currentProcedure = clone $this->_insert;
-        $reflection = new \ReflectionClass($currentProcedure);
-        
-        switch ($reflection->getShortName()){
-            case "PreparedStatement":
-                $namedParams = $this->_insert->getNamedParams();
-                foreach($rows as $row){
-                    foreach($namedParams as $param){
-                        //set nulls for missing parameters of prepared statement
-                        $row[$param] = $row[$param] ?? null;
-                        
-                        //make sure the data passed into named parameters is valid
-                        if (is_iterable($row[$param])){
-                            throw new VeloxException("Model->insert: Invalid value passed for PreparedStatement parameter.",47);
-                        }
-                    }
-                    //Add the adjusted row to the current procedure
-                    $currentProcedure->addParameterSet($row);
-                }
-                break;
-            case "StatementSet":
-                $currentProcedure->addCriteria($rows);
-                $transaction->addQuery($currentProcedure);
-                break;
-        }
-        $transaction->begin();
-        $transaction->executeAll();
-        
-        if (!$this->_delaySelect){
-            $this->select();
-        }
-        return true;
+        return $this->executeDML("insert", $rows);
     }
-    
     public function delete(array $rows) : bool {
-        if (!$this->_delete){
-            throw new VeloxException('The associated procedure for delete has not been defined.',37);
-        }
-        elseif ($this->_delete instanceof PreparedStatement){
-            $this->_delete->clear();
-        }
-        $reflection = new \ReflectionClass($this->_delete);
-        switch ($reflection->getShortName()){
-            case "PreparedStatement":
-                foreach ($rows as $row){
-                    $this->_delete->addParameterSet($row);
-                }
-                break;
-            case "StatementSet":
-                $this->_delete->addCriteria($rows);
-                break;
-        }
-        
-        $this->_delete->execute();
-        if (!$this->_delaySelect){
-            $this->select();
-        }
-        return true;
+        return $this->executeDML("delete", $rows);
     }
     
     public function sort(...$args) : void {
