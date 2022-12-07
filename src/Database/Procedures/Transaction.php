@@ -177,7 +177,7 @@ class Transaction {
         }
     }
 
-    public function getQueryResults(?int $iterationIndex = null, ?int|string $name = null) : ResultSet|array|bool {
+    public function getQueryResults(?int $iterationIndex = null, int|string|null $name = null) : ResultSet|array|bool {
         if (count($this->_results) == 0){
             return false;
         }
