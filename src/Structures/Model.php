@@ -178,9 +178,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 break;
             case "StatementSet":
                 $currentProcedure->addCriteria($rows);
+                $currentProcedure->setStatements();
                 break;
         }
-
         $transaction = new Transaction;
         $transaction->addQuery($currentProcedure);
         $transaction->begin();
