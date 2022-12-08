@@ -91,6 +91,7 @@ class Request {
                 go(function() use ($payload, $subscriber, $contentTypeHeader){
                     $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
                 });
+                sleep(1);
             }
             else {
                 $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
