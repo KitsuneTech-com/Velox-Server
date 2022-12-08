@@ -48,7 +48,7 @@ class Request {
         $callback = $this->callback ?? null;
         if ($responseCode >= 400){
             $retryCount = 0;
-            if (isset($errorHandler)){
+            if (isset($this->errorHandler)){
                 $errorHandler($subscriber, $responseCode, 1, $response->text, $this->identifier);
             }
             //Use exponential backoff for retries
@@ -61,7 +61,7 @@ class Request {
                     break;
                 }
                 if (isset($this->errorHandler)){
-                    $this->errorHandler->call($this, $subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                    $this->errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -70,7 +70,7 @@ class Request {
             $success = true;
         }
         if (isset($this->callback)){
-            $this->callback->call($this, $subscriber, $responseCode, $success, $response->text, $this->identifier);
+            $this->callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
         }
     }
 
