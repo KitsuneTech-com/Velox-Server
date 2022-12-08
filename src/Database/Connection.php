@@ -80,6 +80,7 @@ class Connection {
         $this->establish();
     }
     public function establish() : void {
+        if ($this->_conn) $this->close();
         $connected = false;
         switch ($this->connectionType) {
             case self::CONN_AUTO:
@@ -439,29 +440,29 @@ class Connection {
         return $lastAffected;
     }
 
-    /** Closes the active connection. Note: once the connection is closed, it cannot be reopened. PDO connections remain
-     * open until the object is destroyed, so this method cannot be used to close these; therefore, the preferred means
-     * to close a database connection is to destroy the object.
-     * @return bool True if the connection was successfully closed.
-     * @throws VeloxException If this method is attempted on a PDO connection.
+    /** Closes the active connection. Note: if you need to reset the connection, call `Connection::establish()` instead; any
+     * existing connection will be closed and a new one will be established.
      */
-    public function close() : bool {
+    public function close() : void {
         switch ($this->connectionType){
-            case self::CONN_PDO:
-                throw new VeloxException("PDO connection cannot be closed with the close() method",52);
             case self::CONN_ODBC:
                 odbc_close($this->_conn);
-                return true;
+                break;
             case self::CONN_NATIVE:
                 switch ($this->serverType){
                     case self::DB_MYSQL:
-                        return $this->_conn->close();
+                        $this->_conn->close();
+                        break;
                     case self::DB_MSSQL:
-                        return sqlsrv_close($this->_conn);
+                        sqlsrv_close($this->_conn);
+                        break;
                 }
+                break;
+            case self::CONN_PDO:
             default:
-                throw new VeloxException("Unknown connection type",55);
+                // PDO connections are closed automatically when the PDO object is destroyed, so skip to the end
         }
+        unset ($this->_conn);
     }
     /** Executes a given query. This can either be an instance of the Query class or a standalone SQL query string. If the
      * latter is passed, a new `Query` instance will be created from it.
