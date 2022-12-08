@@ -59,8 +59,8 @@ class Request {
                     $success = true;
                     break;
                 }
-                if (isset($errorHandler)){
-                    $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                if (isset($this->errorHandler)){
+                    $this->errorHandler->call($this, $subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -68,8 +68,8 @@ class Request {
         else {
             $success = true;
         }
-        if (isset($callback)){
-            $callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+        if (isset($this->callback)){
+            $this->callback->call($this, $subscriber, $success, $response->text, $this->identifier);
         }
     }
 
