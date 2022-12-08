@@ -14,11 +14,11 @@ class Request {
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){}
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
-        $this->callback = $callback->bindTo($this, $this);
+        $this->callback = $callback->bindTo($this);
     }
     public function setErrorHandler(callable $errorHandler) : void {
         $errorHandler = \Closure::fromCallable($errorHandler);
-        $this->errorHandler = $errorHandler->bindTo($this, $this);
+        $this->errorHandler = $errorHandler->bindTo($this);
     }
     public function setSubscribers(array $subscribers) : void {
         $this->subscribers = $subscribers;
@@ -43,9 +43,11 @@ class Request {
         $success = false;
         $response = $this->webhookRequest($payload,$subscriber,$contentTypeHeader);
         $responseCode = $response->code;
+        $errorHandler = $this->errorHandler ?? null;
+        $callback = $this->callback ?? null;
         if ($responseCode >= 400){
             $retryCount = 0;
-            if (isset($this->errorHandler)){
+            if (isset($errorHandler)){
                 $errorHandler($subscriber, $responseCode, 1, $response->text, $this->identifier);
             }
             //Use exponential backoff for retries
@@ -57,8 +59,8 @@ class Request {
                     $success = true;
                     break;
                 }
-                if (isset($this->errorHandler)){
-                    $this->errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                if (isset($errorHandler)){
+                    $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -66,8 +68,8 @@ class Request {
         else {
             $success = true;
         }
-        if (isset($this->callback)){
-            $this->callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+        if (isset($callback)){
+            $callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
         }
     }
 
