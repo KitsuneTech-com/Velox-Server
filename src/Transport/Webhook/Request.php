@@ -5,20 +5,25 @@ use KitsuneTech\Velox\Structures\Model as Model;
 use KitsuneTech\Velox\Transport\Webhook\Response as Response;
 use function KitsuneTech\Velox\Transport\Export;
 
+if (extension_loaded('openswoole')){
+    \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
+}
 class Request {
     public ?\Closure $callback = null;
     public ?\Closure $errorHandler = null;
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){}
     public function setCallback(callable $callback) : void {
-        $this->callback = \Closure::fromCallable($callback);
+        $callback = \Closure::fromCallable($callback);
+        $this->callback = $callback->bindTo($this);
     }
     public function setErrorHandler(callable $errorHandler) : void {
-        $this->errorHandler = \Closure::fromCallable($errorHandler);
+        $errorHandler = \Closure::fromCallable($errorHandler);
+        $this->errorHandler = $errorHandler->bindTo($this);
     }
     public function setSubscribers(array $subscribers) : void {
         $this->subscribers = $subscribers;
     }
-    private function sendRequest(string $payload, string $url, string $contentTypeHeader) : Response {
+    private function webhookRequest(string $payload, string $url, string $contentTypeHeader) : Response {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
@@ -34,6 +39,40 @@ class Request {
         curl_close($ch);
         return new Response($result,$code);
     }
+    private function toSubscriber($payload, $subscriber, $contentTypeHeader) : void {
+        $success = false;
+        $response = $this->webhookRequest($payload,$subscriber,$contentTypeHeader);
+        $responseCode = $response->code;
+        $errorHandler = $this->errorHandler ?? null;
+        $callback = $this->callback ?? null;
+        if ($responseCode >= 400){
+            $retryCount = 0;
+            if (isset($errorHandler)){
+                $errorHandler($subscriber, $responseCode, 1, $response->text, $this->identifier);
+            }
+            //Use exponential backoff for retries
+            while ($retryCount < $this->retryAttempts){
+                sleep((2 ** $retryCount) * $this->retryInterval);
+                $response = $this->webhookRequest($payload,$subscriber,$contentTypeHeader);
+                $responseCode = $response->code;
+                if ($responseCode < 400){
+                    $success = true;
+                    break;
+                }
+                if (isset($errorHandler)){
+                    $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                }
+                $retryCount++;
+            }
+        }
+        else {
+            $success = true;
+        }
+        if (isset($callback)){
+            $callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+        }
+    }
+
     public function dispatch() : void {
         $payload = Export($this->models, TO_STRING+$this->contentType, noHeader: true);
         $contentTypeHeader = "Content-Type: ";
@@ -51,40 +90,21 @@ class Request {
                 $contentTypeHeader .= "text/csv";
                 break;
         }
-        foreach ($this->subscribers as $subscriber){
-            //If we can, fork a process for each subscriber to keep laggy subscribers from holding up the others (if we can't, just work each one sequentially)
-            $pid = function_exists('pcntl_fork') ? pcntl_fork() : -1;
-            $success = false;
-            if ($pid < 1){
-                $response = $this->sendRequest($payload,$subscriber,$contentTypeHeader);
-                $responseCode = $response->code;
-                if ($responseCode >= 400){
-                    $retryCount = 0;
-                    if (isset($errorHandler)){
-                        $errorHandler($subscriber, $responseCode, 1, $response->text, $this->identifier);
-                    }
-                    //Use exponential backoff for retries
-                    while ($retryCount < $this->retryAttempts){
-                        sleep((2 ** $retryCount) * $this->retryInterval);
-                        $response = $this->sendRequest($payload,$subscriber,$contentTypeHeader);
-                        $responseCode = $response->code;
-                        if ($responseCode < 400){
-                            $success = true;
-                            break;
-                        }
-                        if (isset($this->errorHandler)){
-                            $this->errorHandler->call($this, $subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
-                        }
-                        $retryCount++;
-                    }
-                }
-                else {
-                    $success = true;
-                }
-                if (isset($this->callback)){
-                    $this->callback->call($this, $subscriber, $success, $response->text, $this->identifier);
-                }
-                if ($pid == 0) break;
+        if (extension_loaded('openswoole')){
+            $run = new \Swoole\Coroutine\Scheduler;
+            foreach ($this->subscribers as $subscriber){
+                $run->add(function() use ($payload, $subscriber, $contentTypeHeader){
+                    $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
+                });
+            }
+            $process = new \Swoole\Process(function() use ($run){
+                $run->start();
+            },true);
+            $process->start();
+        }
+        else {
+            foreach ($this->subscribers as $subscriber){
+                $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
             }
         }
     }
