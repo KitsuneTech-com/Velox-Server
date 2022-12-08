@@ -113,7 +113,7 @@ class Query {
                         try {
                             if (!$stmt->execute()){
                                 throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
-                            };
+                            }
                         }
                         catch (\Exception $e) {
                             throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
