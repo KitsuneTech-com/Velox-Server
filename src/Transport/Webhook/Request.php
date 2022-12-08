@@ -91,7 +91,7 @@ class Request {
                 break;
         }
         if (extension_loaded('openswoole')){
-            $run = new Swoole\Coroutine\Scheduler;
+            $run = new \Swoole\Coroutine\Scheduler;
             foreach ($this->subscribers as $subscriber){
                 $run->add(function() use ($payload, $subscriber, $contentTypeHeader){
                     $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
@@ -104,6 +104,5 @@ class Request {
                 $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
             }
         }
-
     }
 }
