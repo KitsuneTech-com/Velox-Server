@@ -97,7 +97,10 @@ class Request {
                     $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
                 });
             }
-            $run->start();
+            $process = new \Swoole\Process(function() use ($run){
+                $run->start();
+            },true);
+            $process->start();
         }
         else {
             foreach ($this->subscribers as $subscriber){
