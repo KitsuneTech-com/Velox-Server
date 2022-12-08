@@ -18,7 +18,7 @@
         "ext-mysqli": "MySQL/MariaDB support through mysqli",
         "ext-odbc": "Needed for standalone ODBC support",
         "ext-xmlwriter": "Needed for XML data export",
-        "ext-openswoole": "Needed for parallel webhook processing"
+        "ext-openswoole": "Needed for parallel webhook processing - must be installed with curl support"
     },
     "autoload": {
         "psr-4": {

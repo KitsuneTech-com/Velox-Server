@@ -6,7 +6,7 @@ use KitsuneTech\Velox\Transport\Webhook\Response as Response;
 use function KitsuneTech\Velox\Transport\Export;
 
 if (extension_loaded('openswoole')){
-    Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
+    \Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
 }
 class Request {
     public ?\Closure $callback = null;
