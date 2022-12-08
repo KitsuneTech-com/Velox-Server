@@ -96,7 +96,6 @@ class Request {
                 $run->add(function() use ($payload, $subscriber, $contentTypeHeader){
                     $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
                 });
-                sleep(1);
             }
             $process = new \Swoole\Process(function() use ($run){
                 $run->start();
