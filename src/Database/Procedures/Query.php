@@ -101,8 +101,27 @@ class Query {
         $resultSet = new ResultSet();
         switch ($connObj->connectionType()) {
             case Connection::CONN_PDO:
-                if (!$stmt->execute()) {
-                    throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorCode());
+                try {
+                    if (!$stmt->execute()){
+                        throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                    };
+                }
+                catch (\Exception $e) {
+                    if ($stmt->errorCode == "HY000" && $stmt->errorInfo[1] == 2006) {
+                        //Connection has gone away. Attempt to reconnect and retry.
+                        $connObj->establish();
+                        try {
+                            if (!$stmt->execute()){
+                                throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                            }
+                        }
+                        catch (\Exception $e) {
+                            throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                        }
+                    }
+                    else {
+                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo[1]);
+                    }
                 }
                 break;
             case Connection::CONN_ODBC:
@@ -370,18 +389,18 @@ class Query {
             return $this->results;
         }
     }
-    /** Returns an array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
+    /**
+     * @return array An array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
      * are returned by different database engines for different queries, it's best not to use this for queries that could
      * affect several rows per execution.
-     * @return array An array of the last affected indices from this query.
      */
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
     }
 
-    /** Returns an array containing the execution context for this query, including the base SQL and connection parameters.
+    /**
+     * @return array An array containing the execution context for this query, including the base SQL and connection parameters.
      * This may be useful for debugging.
-     * @return array An array containing the execution context for this query.
      */
     public function dumpQuery() : array {
         return [

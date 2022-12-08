@@ -7,6 +7,26 @@ use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
+/**
+ * `Transaction` - a class for managing database transactions
+ *
+ * This class expands on the basic concept of database transactions by both allowing transactions to be coordinated between
+ * data sources (including commit and rollback) and by allowing interstitial application code to be run between database procedure
+ * calls. This can be used, for example, to manage import/export of data between disparate databases. Velox Transactions are
+ * built by first instantiating a new Transaction object, then using one or more sequential calls to {@see Transaction::addQuery()}
+ * or {@see Transaction::addFunction()} to add the desired procedures. Once this is done, the transaction is initiated by
+ * calling {@see Transaction::begin()} to start the transaction on each data source. Initial parameters for each Transaction iteration
+ * can be defined by calling {@see Transaction::addTransactionParameters()} using an array appropriate for the first procedure defined
+ * in the Transaction; each additional call to this method will add an iteration to the Transaction. These iterations can be run
+ * individually or all at once as desired, using the following methods:
+ *
+ *{@see Transaction::executeNextProcedure()}    Executes the next defined query or function.
+ *
+ *{@see Transaction::executeIteration()}        Runs a single iteration of the Transaction using the current set of parameters.
+ *
+ *{@see Transaction::executeAll()}             Runs the Transaction for each defined set of parameters.
+ */
+
 class Transaction {
     private Connection $_baseConn;
     private array $_connections = [];
@@ -14,9 +34,11 @@ class Transaction {
     private int $_currentProcedureIndex = 0;
     private int $_currentIterationIndex = 0;
     private array $_lastAffected = [];
-    public array $procedures = [];
     private array $_iterations = [];
     private array $_currentIteration = [];
+    private string|int $_lastDefinedProcedure;
+
+    public array $procedures = [];
 
     public function __construct(?Connection &$conn = null, ?string $name = null) {
         if (isset($conn)){
@@ -35,7 +57,7 @@ class Transaction {
                 throw new VeloxException("Transaction has no active connection",26);
             }
             //Build it and add it to the $this->queries array
-            $this->procedures[] = ["instance" => new Query($this->_baseConn,$query,$resultType), "name" => $name];
+            $instance = new Query($this->_baseConn,$query,$resultType);
         }
         else {
             //Add the query connection to $this->_connections if it doesn't already exist
@@ -44,8 +66,13 @@ class Transaction {
                 $this->_baseConn = $this->_baseConn ?? $query->conn;
 
             }
-            $this->procedures[] = ["instance" => &$query, "name" => $name ?? $query->name];
+            $instance =& $query;
         }
+        if (!$name){
+            $name = $instance->name ?? count($this->procedures); //Default name is the index of the procedure in $this->procedures
+        }
+        $this->_lastDefinedProcedure = $name;
+        $this->procedures[] = ["instance" => $instance, "name" => $name];
     }
     public function addFunction(callable $function, ?string $name = null) : void {
         // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
@@ -72,8 +99,10 @@ class Transaction {
         $scopedFunction = function() use (&$function,$procedureIndex){
             $previousProcedure = $this->procedures[$procedureIndex - 1] ?? null;
             $nextProcedure = $this->procedures[$procedureIndex + 1] ?? null;
-            $previousArguments =& $this->_iterations[$this->_currentIterationIndex][$previousProcedure["name"]] ?? null;
-            $nextArguments =& $this->_iterations[$this->_currentIterationIndex][$nextProcedure["name"]] ?? null;
+            $previousArgsRef = $this->_iterations[$this->_currentIterationIndex][$previousProcedure["name"]] ?? null;
+            $previousArguments =& $previousArgsRef;
+            $nextArgsRef = $this->_iterations[$this->_currentIterationIndex][$nextProcedure["name"]] ?? null;
+            $nextArguments =& $nextArgsRef;
             $previous = ["procedure" => $previousProcedure, "arguments" => &$previousArguments];
             $next = ["procedure" => $nextProcedure, "arguments" => &$nextArguments];
             $boundFunction = $function->bindTo($this);
@@ -85,10 +114,11 @@ class Transaction {
                 $boundFunction($previous,$next);
             }
         };
-        $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $name ?? $procedureIndex];
+        $this->_lastDefinedProcedure = $name ?? $procedureIndex;
+        $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $this->_lastDefinedProcedure];
     }
     public function addTransactionParameters(array $procedureParams) : void {
-        $this->_iterations = array_merge($this->_iterations,$procedureParams);
+        $this->_iterations[] = $procedureParams;
     }
 
     //Execution
@@ -128,14 +158,19 @@ class Transaction {
             $procedure();
 
             if ($procedure instanceof Query || $procedure instanceof StatementSet){
-                $this->_results[] = $procedure->results;
+                if (!isset($this->_results[$this->_currentIterationIndex])){
+                    $this->_results[$this->_currentIterationIndex] = [$currentProcedure['name'] => $procedure->results];
+                }
+                else {
+                    $this->_results[$this->_currentIterationIndex][$currentProcedure['name']] = $procedure->results;
+                }
                 $this->_lastAffected = $procedure->getLastAffected();
             }
 
             $this->_currentProcedureIndex++;
             return true;
         }
-        catch (Exception $ex){
+        catch (\Exception $ex){
             if ($procedure instanceof Query || $procedure instanceof StatementSet){
                 $procedure->conn->rollBack(true);
                 throw new VeloxException("Query in transaction failed",27,$ex);
@@ -146,11 +181,28 @@ class Transaction {
         }
     }
 
-    public function getQueryResults(?int $queryIndex = null) : ResultSet|array|bool {
-        if (is_null($queryIndex)){
-            $queryIndex = count($this->procedures)-1;
+    public function getQueryResults(?int $iterationIndex = null, int|string|null $name = null) : ResultSet|array|bool {
+        if (count($this->_results) == 0){
+            return false;
         }
-        return $this->_results[$queryIndex] ?? false;
+        elseif (is_null($iterationIndex)){
+            if (isset($name)){
+                //Name is set, iteration is not
+                return array_column($this->_results,$name);
+            }
+            else {
+                //Neither is set
+                return $this->_results;
+            }
+        }
+        elseif (is_null($name)){
+            //Iteration is set, name is not
+            return $this->_results[$iterationIndex];
+        }
+        else {
+            //Both are set
+            return $this->_results[$iterationIndex][$name];
+        }
     }
 
     public function executeIteration(bool $commit = false) : bool {
@@ -191,6 +243,9 @@ class Transaction {
     }
     public function getLastAffected() : array {
         return $this->_lastAffected;
+    }
+    public function finalProcedure() : int|string {
+        return $this->_lastDefinedProcedure;
     }
     public function getTransactionPlan() : array {
         $queryDumpArray = [];
