@@ -19,7 +19,6 @@ class Request {
     public function setErrorHandler(callable $errorHandler) : void {
         $errorHandler = \Closure::fromCallable($errorHandler);
         $this->errorHandler = $errorHandler->bindTo($this);
-
     }
     public function setSubscribers(array $subscribers) : void {
         $this->subscribers = $subscribers;
@@ -48,7 +47,7 @@ class Request {
         $callback = $this->callback ?? null;
         if ($responseCode >= 400){
             $retryCount = 0;
-            if (isset($this->errorHandler)){
+            if (isset($errorHandler)){
                 $errorHandler($subscriber, $responseCode, 1, $response->text, $this->identifier);
             }
             //Use exponential backoff for retries
@@ -60,8 +59,8 @@ class Request {
                     $success = true;
                     break;
                 }
-                if (isset($this->errorHandler)){
-                    $this->errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                if (isset($errorHandler)){
+                    $errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -69,8 +68,8 @@ class Request {
         else {
             $success = true;
         }
-        if (isset($this->callback)){
-            $this->callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+        if (isset($callback)){
+            $callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
         }
     }
 
