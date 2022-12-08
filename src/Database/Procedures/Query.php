@@ -104,23 +104,30 @@ class Query {
                 try {
                     if (!$stmt->execute()){
                         throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
-                    };
+                    }
                 }
                 catch (\Exception $e) {
-                    if ($stmt->errorCode == "HY000" && $stmt->errorInfo[1] == 2006) {
+                    if ($stmt->errorCode() == "HY000" && $stmt->errorInfo()[1] == 2006) {
                         //Connection has gone away. Attempt to reconnect and retry.
                         $connObj->establish();
                         try {
                             if (!$stmt->execute()){
-                                throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                                throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo()[1]);
                             }
                         }
                         catch (\Exception $e) {
-                            throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                            if ($stmt->errorCode() == "HY000" && $stmt->errorInfo()[1] == 2006) {
+                                //Connection has gone away again. Give up.
+                                throw new VeloxException("Database connection lost and could not be re-established.", 65);
+                            }
+                            else {
+                                //Unrelated error.
+                                throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo()[1]);
+                            }
                         }
                     }
                     else {
-                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo[1]);
+                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo()[1]);
                     }
                 }
                 break;

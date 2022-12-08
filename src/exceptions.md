@@ -37,9 +37,10 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 60   | Input is not supported for Query objects. | Query objects do not support parameters; therefore no input can be specified. |
 
 ### Database\Procedures\Query
-| Code | Text                            | Explanation                                                     |
-|------|---------------------------------|-----------------------------------------------------------------|
-| 22   | Query results not yet available | Query::getResults() was called before query execution finished. |
+| Code | Text                                                      | Explanation                                                                            |
+|------|-----------------------------------------------------------|----------------------------------------------------------------------------------------|
+| 22   | Query results not yet available                           | Query::getResults() was called before query execution finished.                        |
+| 65   | Database connection lost and could not be re-established. | The connection died with MySQL error 2006 (Gone Away) and could not be re-established. |
 
 ### Database\Procedures\PreparedStatement
 | Code | Text                                          | Explanation                                                                                                                                                         |
