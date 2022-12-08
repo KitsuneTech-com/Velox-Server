@@ -107,5 +107,6 @@ class Request {
                 $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
             }
         }
+
     }
 }
