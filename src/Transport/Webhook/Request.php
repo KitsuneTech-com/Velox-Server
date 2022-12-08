@@ -90,15 +90,20 @@ class Request {
                 $contentTypeHeader .= "text/csv";
                 break;
         }
-        foreach ($this->subscribers as $subscriber){
-            if (extension_loaded('openswoole')){
-                go(function() use ($payload, $subscriber, $contentTypeHeader){
+        if (extension_loaded('openswoole')){
+            $run = new Swoole\Coroutine\Scheduler;
+            foreach ($this->subscribers as $subscriber){
+                $run->add(function() use ($payload, $subscriber, $contentTypeHeader){
                     $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
                 });
             }
-            else {
+            $run->start();
+        }
+        else {
+            foreach ($this->subscribers as $subscriber){
                 $this->toSubscriber($payload, $subscriber, $contentTypeHeader);
             }
         }
+
     }
 }
