@@ -55,7 +55,8 @@ class Connection {
      * @param int|null $port                The port to use for the connection (defaults to the default port for the database type)
      * @param int $serverType               The type of database server to connect to (see the DB_ constants above)
      * @param int|null $connectionType      The type of connection to use (see the CONN_ constants above)
-     * @param array $options                An array of options to use for the connection (as would be defined in a DSN connection string)
+     * @param array $dsnOptions             An array of options to use for the connection (as would be defined in a DSN connection string)
+     * @param array|null $pdoOptions        An array of options to use for a PDO connection (as would be defined in the PDO constructor)
      *
      * @throws VeloxException if the connection cannot be established (exception specifies the reason)
      */
@@ -67,7 +68,8 @@ class Connection {
         private int|null $port = null,
         private int $serverType = self::DB_MYSQL,
         private int|null $connectionType = self::CONN_PDO,
-        private array $options = []
+        private array $dsnOptions = [],
+        private array|null $pdoOptions = null
     )
     {
 
@@ -122,14 +124,15 @@ class Connection {
                             }
                             if ($this->host) {
                                 $dsnArray['dsn'] = $this->host;
-                            } else {
-                                $dsnArray = $this->options;
+                            }
+                            else {
+                                $dsnArray = $this->dsnOptions;
                             }
                             break;
                     }
                     try {
-                        $connStr = urldecode(http_build_query($dsnArray + $this->options, '', ";"));
-                        $this->_conn = new \PDO("$connPrefix$connStr", $this->uid, $this->pwd);
+                        $connStr = urldecode(http_build_query($dsnArray + $this->dsnOptions, '', ";"));
+                        $this->_conn = new \PDO("$connPrefix$connStr", $this->uid, $this->pwd, $this->pdoOptions);
                         $this->_conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
                         $connected = true;
                     }
@@ -173,7 +176,7 @@ class Connection {
                             if ($this->port) {
                                 $mssqlHost .= ",$this->port";
                             }
-                            $this->_conn = sqlsrv_connect($mssqlHost,["Database"=>$this->db, "UID"=>$this->uid, "PWD"=>$this->pwd] + $this->options);
+                            $this->_conn = sqlsrv_connect($mssqlHost,["Database"=>$this->db, "UID"=>$this->uid, "PWD"=>$this->pwd] + $this->dsnOptions);
                             if (($errors = sqlsrv_errors(SQLSRV_ERR_ALL))){
                                 if (!$this->serverType){
                                     throw new VeloxException("Unidentified database engine or incorrect parameters",16);
@@ -212,12 +215,12 @@ class Connection {
                         $dsn = $this->host;
                     }
                     else {
-                        $dsn = urldecode(http_build_query($this->options, '', ";"));
-                        if (!$this->uid && isset($this->options['uid'])){
-                            $this->uid = $this->options['uid'];
+                        $dsn = urldecode(http_build_query($this->dsnOptions, '', ";"));
+                        if (!$this->uid && isset($this->dsnOptions['uid'])){
+                            $this->uid = $this->dsnOptions['uid'];
                         }
-                        if (!$this->pwd && isset($this->options['Pwd'])){
-                            $this->pwd = $this->options['Pwd'];
+                        if (!$this->pwd && isset($this->dsnOptions['Pwd'])){
+                            $this->pwd = $this->dsnOptions['Pwd'];
                         }
                     }
                     $this->_conn = odbc_connect($dsn,$this->uid,$this->pwd);
