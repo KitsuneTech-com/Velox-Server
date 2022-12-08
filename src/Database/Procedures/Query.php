@@ -101,12 +101,22 @@ class Query {
         $resultSet = new ResultSet();
         switch ($connObj->connectionType()) {
             case Connection::CONN_PDO:
-                if (!$stmt->execute()) {
+                try {
+                    if (!$stmt->execute()){
+                        throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                    };
+                }
+                catch (\Exception $e) {
                     if ($stmt->errorCode == "HY000" && $stmt->errorInfo[1] == 2006) {
                         //Connection has gone away. Attempt to reconnect and retry.
                         $connObj->establish();
-                        if (!$stmt->execute()) {
-                            throw new VeloxException("Query failed: " . $stmt->errorInfo[2]);
+                        try {
+                            if (!$stmt->execute()){
+                                throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
+                            };
+                        }
+                        catch (\Exception $e) {
+                            throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
                         }
                     }
                     else {
