@@ -19,6 +19,7 @@ class Request {
     public function setErrorHandler(callable $errorHandler) : void {
         $errorHandler = \Closure::fromCallable($errorHandler);
         $this->errorHandler = $errorHandler->bindTo($this);
+
     }
     public function setSubscribers(array $subscribers) : void {
         $this->subscribers = $subscribers;
@@ -60,7 +61,7 @@ class Request {
                     break;
                 }
                 if (isset($this->errorHandler)){
-                    $this->errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                    $this->errorHandler->call($this, $subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -69,7 +70,7 @@ class Request {
             $success = true;
         }
         if (isset($this->callback)){
-            $this->callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+            $this->callback->call($this, $subscriber, $responseCode, $success, $response->text, $this->identifier);
         }
     }
 
