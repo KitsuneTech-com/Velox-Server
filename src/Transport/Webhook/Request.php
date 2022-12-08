@@ -13,12 +13,12 @@ class Request {
     public ?\Closure $errorHandler = null;
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){}
     public function setCallback(callable $callback) : void {
-        $this->callback = \Closure::fromCallable($callback);
-        $this->callback = $this->callback->bindTo($this);
+        $callback = \Closure::fromCallable($callback);
+        $this->callback = $callback->bindTo($this, $this);
     }
     public function setErrorHandler(callable $errorHandler) : void {
-        $this->errorHandler = \Closure::fromCallable($errorHandler);
-        $this->errorHandler->bindTo($this);
+        $errorHandler = \Closure::fromCallable($errorHandler);
+        $this->errorHandler = $errorHandler->bindTo($this, $this);
     }
     public function setSubscribers(array $subscribers) : void {
         $this->subscribers = $subscribers;
@@ -58,7 +58,7 @@ class Request {
                     break;
                 }
                 if (isset($this->errorHandler)){
-                    $this->errorHandler($subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
+                    $this->errorHandler->call($this, $subscriber, $responseCode, $retryCount+2, $response->text, $this->identifier);
                 }
                 $retryCount++;
             }
@@ -67,7 +67,7 @@ class Request {
             $success = true;
         }
         if (isset($this->callback)){
-            $this->callback($subscriber, $responseCode, $success, $response->text, $this->identifier);
+            $this->callback->call($this, $subscriber, $responseCode, $success, $response->text, $this->identifier);
         }
     }
 
