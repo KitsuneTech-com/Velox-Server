@@ -391,7 +391,6 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         $this->results = null;
         foreach ($this->_statements as $stmt){
             $stmt->execute();
-            $results = $stmt->getResults();
             if (!$this->results){
                 $this->results = $stmt->getResults();
             }
