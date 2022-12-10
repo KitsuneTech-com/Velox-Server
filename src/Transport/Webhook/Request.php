@@ -11,7 +11,11 @@ class RequestController {
     private $process = null;
     private array $pipes = [];
     private ?string $payloadFile = null;
-    function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){}
+    private EventBase $base;
+    private Event $event;
+    function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){
+        $this->base = new EventBase();
+    }
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
         $this->callback = $callback->bindTo($this);
@@ -63,6 +67,16 @@ class RequestController {
             3 => ["pipe","w"],
             4 => ["pipe","w"],
         ],$this->pipes);
+        $successEvent = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
+            $data = json_decode(stream_get_contents($fd));
+            $this->callback->call($this,$data);
+        });
+        $errorEvent = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
+            $data = json_decode(stream_get_contents($fd));
+            $this->callback->call($this,$data);
+        });
+        $successEvent->add();
+        $errorEvent->add();
     }
     public function close() : void {
         while (count($this->pipes) > 0){
