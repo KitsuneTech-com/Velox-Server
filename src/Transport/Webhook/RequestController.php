@@ -56,7 +56,7 @@ class RequestController {
         // -p: Payload
         // Subscriber URLs are appended after options above
         $dispatchScript = __DIR__ . "/../../Support/AsyncWebhookDispatch.php";
-        $command = "php $dispatchScript -c $contentTypeHeader -a ".$this->retryAttempts . " -r " . $this->retryInterval . " -i " . $this->identifier . " -p " . escapeshellarg($payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
+        $command = "php $dispatchScript -c $contentTypeHeader -a ".$this->retryAttempts . " -r " . $this->retryInterval . " -i " . $this->identifier . " -p " . escapeshellarg($this->payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
         // php://fd/3 is the success pipe
         // php://fd/4 is the error pipe
         $this->process = proc_open($command,[
