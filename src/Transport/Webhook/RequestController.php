@@ -87,7 +87,7 @@ class RequestController {
     }
     public function close() : void {
         foreach ($this->events as $event){
-            $event->del();
+            $event->free();
         }
         while (count($this->pipes) > 0){
             $pipe = array_shift($this->pipes);
