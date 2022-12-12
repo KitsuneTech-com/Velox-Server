@@ -70,7 +70,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 // -i: Request identifier
 // -p: Payload file
 // Subscriber urls are passed as arguments after the options above
-$opts = "c:a:r:i:p";
+$opts = "c:a:r::i:p:";
 $optind = 0;
 $options = getopt($opts, rest_index: $optind);
 $contentTypeHeader = $options['c'] ?? null;
