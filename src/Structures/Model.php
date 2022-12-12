@@ -177,7 +177,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 break;
             case "StatementSet":
-                $currentProcedure->addCriteria($rows);
+                $currentProcedure->addCriteria([$verb => $rows]);
                 $currentProcedure->setStatements();
                 break;
         }
