@@ -10,8 +10,8 @@ class RequestController {
     private $process = null;
     private array $pipes = [];
     private ?string $payloadFile = null;
-    private EventBase $base;
-    private Event $event;
+    private \EventBase $base;
+    private \Event $event;
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null){
         $this->base = new \EventBase();
     }
