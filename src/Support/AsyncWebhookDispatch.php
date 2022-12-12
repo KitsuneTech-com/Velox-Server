@@ -71,7 +71,8 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 // -p: Payload file
 // Subscriber urls are passed as arguments after the options above
 $opts = "c:a:r:i:p";
-$options = getopt($opts, null, $optind);
+$optind = 0;
+$options = getopt($opts, rest_index: $optind);
 $contentTypeHeader = $options['c'] ?? null;
 $retryAttempts = $options['a'] ?? 5;
 $retryInterval = $options['r'] ?? 2;
