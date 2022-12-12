@@ -35,7 +35,7 @@ function singleRequest(string $payload, string $url, string $contentTypeHeader) 
 }
 function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier) : void {
     global $successPipe, $errorPipe;
-    echo "Opening request for event $identifier to $url...";
+    echo "Opening request for event $identifier to $url...\n";
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
     $attemptCount = 1;
@@ -78,7 +78,7 @@ $processName = "Velox Webhook Dispatcher (event $identifier)";
 $parentPid = getmypid();
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
-echo "Opened dispatcher for event $identifier.";
+echo "Opened dispatcher for event $identifier.\n";
 // Open fd/3 and fd/4 for writing
 $successPipe = fopen('php://fd/3', 'w');
 $errorPipe = fopen('php://fd/4', 'w');
