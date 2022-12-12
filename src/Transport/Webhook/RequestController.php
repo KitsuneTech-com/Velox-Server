@@ -80,6 +80,7 @@ class RequestController {
             $data = json_decode(stream_get_contents($fd));
             $this->errorHandler->call($this,$data);
         });
+        $informationEvent->add();
         $successEvent->add();
         $errorEvent->add();
     }
