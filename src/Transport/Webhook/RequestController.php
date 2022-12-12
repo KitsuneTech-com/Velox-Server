@@ -75,7 +75,7 @@ class RequestController {
         });
         $errorEvent = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
-            $this->callback->call($this,$data);
+            $this->errorHandler->call($this,$data);
         });
         $successEvent->add();
         $errorEvent->add();

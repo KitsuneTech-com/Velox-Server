@@ -78,6 +78,7 @@ $processName = "Velox Webhook Dispatcher (event $identifier)";
 $parentPid = getmypid();
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
+
 echo "Opened dispatcher for event $identifier.\n";
 // Open fd/3 and fd/4 for writing
 $successPipe = fopen('php://fd/3', 'w');
