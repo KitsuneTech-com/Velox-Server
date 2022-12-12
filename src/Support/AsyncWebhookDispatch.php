@@ -59,10 +59,11 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 // -c: Content type header
 // -a: Retry attempts
 // -r: Retry interval
-// -i: Identifier
+// -n: Process name
+// -i: Request identifier
 // -p: Payload file
 // Subscriber urls are passed as arguments after the options above
-$opts = "c:a:r:i:p";
+$opts = "c:a:r:n:i:p";
 $options = getopt($opts, null, $optind);
 $contentTypeHeader = $options['c'] ?? null;
 $retryAttempts = $options['a'] ?? 5;
@@ -70,6 +71,12 @@ $retryInterval = $options['r'] ?? 2;
 $identifier = $options['i'] ?? null;
 $payloadFile = $options['p'] ?? null;
 $urls = array_slice($argv, $optind);
+
+// Set process name
+$processName = "Velox Webhook Dispatcher (event $identifier)";
+$parentPid = getmypid();
+cli_set_process_title($processName);
+file_put_contents("/proc/$parentPid/comm", $processName);
 
 // Open fd/3 and fd/4 for writing
 $successPipe = fopen('php://fd/3', 'w');
@@ -89,6 +96,10 @@ foreach ($urls as $url){
     }
     else {
         // Child process, one for each subscriber
+        $thisPid = getmypid();
+        // Set process name
+        cli_set_process_title("Velox Webhook Request - $url");
+        file_put_contents("/proc/$thisPid/comm", "Velox Webhook Request (event $identifier to $url)");
         requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier);
         exit(0);
     }
