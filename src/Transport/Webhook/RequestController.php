@@ -93,7 +93,7 @@ class RequestController {
         if ($this->process){
             proc_close($this->process);
         }
-        if ($this->payloadFile){
+        if (file_exists($this->payloadFile)){
             unlink($this->payloadFile);
         }
     }
