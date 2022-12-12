@@ -11,7 +11,7 @@ class RequestController {
     private array $pipes = [];
     private ?string $payloadFile = null;
     private \EventBase $base;
-    private \Event $event;
+    private array $events = [];
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
         $this->base = new \EventBase();
     }
@@ -70,22 +70,25 @@ class RequestController {
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
-        $informationEvent = new \Event($this->base, $this->pipes[1], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ | \Event::PERSIST, function($fd){
             echo stream_get_contents($fd);
         });
-        $successEvent = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
             $this->callback->call($this,$data);
         });
-        $errorEvent = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['error'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
             $this->errorHandler->call($this,$data);
         });
-        $informationEvent->add();
-        $successEvent->add();
-        $errorEvent->add();
+        foreach ($this->events as $event){
+            $event->add(1);
+        }
     }
     public function close() : void {
+        foreach ($this->events as $event){
+            $event->del();
+        }
         while (count($this->pipes) > 0){
             $pipe = array_shift($this->pipes);
             fclose($pipe);
