@@ -17,6 +17,12 @@ class asyncResponse {
     ){}
 }
 
+set_error_handler(function($code, $message, $errfile, $line){
+    $stderr = fopen("php://stderr");
+    fwrite($stderr,"Dispatcher error $code ($line): $message");
+    fclose($stderr);
+});
+
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -64,7 +70,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 // -i: Request identifier
 // -p: Payload file
 // Subscriber urls are passed as arguments after the options above
-$opts = "c:a:r:n:i:p";
+$opts = "c:a:r:i:p";
 $options = getopt($opts, null, $optind);
 $contentTypeHeader = $options['c'] ?? null;
 $retryAttempts = $options['a'] ?? 5;
