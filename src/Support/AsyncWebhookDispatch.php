@@ -18,7 +18,7 @@ class asyncResponse {
 }
 
 set_error_handler(function($code, $message, $errfile, $line){
-    $stderr = fopen("php://stderr");
+    $stderr = fopen("php://stderr","w");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
 });
