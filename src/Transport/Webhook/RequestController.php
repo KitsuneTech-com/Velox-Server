@@ -1,6 +1,5 @@
 <?php
 namespace KitsuneTech\Velox\Transport\Webhook;
-
 use KitsuneTech\Velox\Structures\Model as Model;
 use KitsuneTech\Velox\VeloxException;
 use function KitsuneTech\Velox\Transport\Export;
