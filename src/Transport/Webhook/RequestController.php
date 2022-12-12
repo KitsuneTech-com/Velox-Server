@@ -28,7 +28,7 @@ class RequestController {
     }
     public function dispatch() : void {
         //Write the exported Model data to a file
-        $this->payloadFile = @tempnam(sys_get_temp_dir(), "vxwebhook"); //Normally using @ is a bad idea, but we don't care if tempnam falls back to the system default, so we're suppressing that warning
+        $this->payloadFile = @tempnam(sys_get_temp_dir(), "vx-webhook-"); //Normally using @ is a bad idea, but we don't care if tempnam falls back to the system default, so we're suppressing that warning
         if (!$this->payloadFile){
             throw new VeloxException("Unable to create temporary file for webhook payload", 66);
         }
