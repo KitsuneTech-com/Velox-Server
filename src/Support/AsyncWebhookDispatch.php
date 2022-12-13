@@ -24,6 +24,11 @@ set_error_handler(function($code, $message, $errfile, $line){
     fclose($stderr);
 });
 
+set_exception_handler(function($ex){
+    $stderr = fopen("php://stderr","w");
+    fwrite($stderr, "Dispatcher exception: ".$ex);
+});
+
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
