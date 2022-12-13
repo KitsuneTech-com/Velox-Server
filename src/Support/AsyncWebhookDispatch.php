@@ -65,8 +65,14 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
     $attemptCount = 1;
-    while ($response->code >= 400 && $attemptCount-1 < $retryAttempts){
-        fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
+    while (($response->code == 0 || $response->code >= 400) && $attemptCount-1 < $retryAttempts){
+        if ($response->code == 0){
+            $text = "Could not reach server at ".parse_url($url,PHP_URL_HOST)."; retrying in $retryInterval seconds...";
+        }
+        else {
+            $text = $response->text;
+        }
+        fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $text, $response->code, $identifier, $attemptCount)));
         posix_kill($callerPID, SIGUSR1);
         sleep((2 ** $attemptCount) * $retryInterval);
         $response = singleRequest($payload,$url,$contentTypeHeader);
