@@ -23,6 +23,7 @@ set_error_handler(function($code, $message, $errfile, $line){
     $stderr = fopen("php://fd/2","w");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
+    posix_kill($callerPID, SIGUSR1);
     posix_kill($callerPID, SIGUSR2);
 });
 
@@ -30,6 +31,7 @@ set_exception_handler(function($ex){
     global $callerPID;
     $stderr = fopen("php://fd/3","w");
     fwrite($stderr, "Dispatcher exception: ".$ex);
+    posix_kill($callerPID, SIGUSR1);
     posix_kill($callerPID, SIGUSR2);
 });
 
