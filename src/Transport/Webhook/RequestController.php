@@ -83,7 +83,7 @@ class RequestController {
         $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ | \Event::PERSIST, function($fd){
             echo stream_get_contents($fd);
         });
-        $this->events['error'] = new \Event($this->base, $this->pipes[2], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['scripterror'] = new \Event($this->base, $this->pipes[2], \Event::READ | \Event::PERSIST, function($fd){
             echo stream_get_contents($fd);
         });
         $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
@@ -92,7 +92,7 @@ class RequestController {
                 ($this->callback)($data);
             }
         });
-        $this->events['error'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['dispatcherror'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
             if ($data && $this->errorHandler){
                 ($this->errorHandler)($data);
