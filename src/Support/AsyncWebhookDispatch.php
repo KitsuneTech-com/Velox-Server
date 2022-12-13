@@ -59,6 +59,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
     $attemptCount = 1;
     while ($response->code >= 400 && $attemptCount-1 < $retryAttempts){
         fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
+        posix_kill($callerPID, SIGUSR1);
         sleep((2 ** $attemptCount) * $retryInterval);
         $response = singleRequest($payload,$url,$contentTypeHeader);
         $attemptCount++;
