@@ -79,10 +79,10 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 function shutdown() : void {
     global $completionPipe, $successPipe, $errorPipe, $payloadFile, $callerPID;
     // Once we're done, write to the completion pipe to signal that we're done, then close the pipes, delete the payload file, and exit
-    fclose($completionPipe);
-    fclose($successPipe);
-    fclose($errorPipe);
-    unlink($payloadFile);
+    if ($completionPipe) fclose($completionPipe);
+    if ($successPipe) fclose($successPipe);
+    if ($errorPipe) fclose($errorPipe);
+    if (file_exists($payloadFile)) unlink($payloadFile);
     // Finally, send SIGUSR2 to the calling process to signal that we're done
     posix_kill($callerPID, SIGUSR2);
 }
