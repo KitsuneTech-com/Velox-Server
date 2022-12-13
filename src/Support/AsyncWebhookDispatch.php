@@ -35,11 +35,9 @@ set_exception_handler(function($ex){
     posix_kill($callerPID, SIGUSR2);
 });
 
-function writeToInfoPipe($message) : void {
+function writeToPipe($pipe, $message) : void {
     global $callerPID;
-    $infoPipe = fopen("php://fd/3","w");
-    fwrite($infoPipe, $message);
-    fclose($infoPipe);
+    fwrite($pipe, $message);
     posix_kill($callerPID, SIGUSR1);
 }
 
@@ -60,8 +58,8 @@ function singleRequest(string $payload, string $url, string $contentTypeHeader) 
     return new Response($result,$code);
 }
 function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier) : void {
-    global $callerPID, $successPipe, $errorPipe;
-    writeToInfoPipe("Opening request for event $identifier to $url...\n");
+    global $callerPID, $stdout, $successPipe, $errorPipe;
+    writeToPipe($stdout, "Opening request for event $identifier to $url...\n");
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
     $attemptCount = 1;
@@ -72,8 +70,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
         else {
             $text = $response->text;
         }
-        fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $text, $response->code, $identifier, $attemptCount)));
-        posix_kill($callerPID, SIGUSR1);
+        writeToPipe($errorPipe, json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
         sleep((2 ** $attemptCount) * $retryInterval);
         $response = singleRequest($payload,$url,$contentTypeHeader);
         $attemptCount++;
@@ -82,8 +79,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
         }
     }
     $writePipe = $response->code >= 400 ? $errorPipe : $successPipe;
-    fwrite($writePipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
-    posix_kill($callerPID, SIGUSR1);
+    writeToPipe($writePipe, json_encode(new asyncResponse($url,$payload,$response->text,$response->code,$identifier,$attemptCount)));
 }
 
 function shutdown() : void {
@@ -131,23 +127,25 @@ file_put_contents("/proc/$parentPid/comm", $processName);
 
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
+$stdout = fopen("php://fd/1","w");
+$stderr = fopen("php://fd/2","w");
 $successPipe = @fopen('php://fd/3', 'w');
 if (!$successPipe){
-    echo "Could not open success pipe. Defaulting to stdout...\n";
+    writeToPipe($stderr, "Could not open success pipe; defaulting to stdout\n");
     $successPipe = fopen('php://stdout', 'w');
 }
 $errorPipe = @fopen('php://fd/4', 'w');
 if (!$errorPipe){
-    echo "Could not open error pipe. Defaulting to stderr...\n";
+    writeToPipe($stderr, "Could not open error pipe; defaulting to stderr\n");
     $errorPipe = fopen('php://stderr', 'w');
 }
 $completionPipe = @fopen('php://fd/5', 'w');
 if (!$completionPipe){
-    echo "Could not open completion pipe. Defaulting to stdout...\n";
+    writeToPipe($stderr, "Could not open completion pipe; defaulting to stderr\n");
     $completionPipe = fopen('php://stdout', 'w');
 }
 
-echo "Opened dispatcher for event $identifier...\n";
+writeToPipe($stdout, "Opened dispatcher for event $identifier...\n");
 // Spawn a new process for each url
 $pids = [];
 foreach ($urls as $url){
