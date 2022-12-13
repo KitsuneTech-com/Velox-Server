@@ -66,12 +66,14 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 }
 
 function shutdown() : void {
-    global $completionPipe, $successPipe, $errorPipe, $payloadFile;
+    global $completionPipe, $successPipe, $errorPipe, $payloadFile, $callerPID;
     // Once we're done, write to the completion pipe to signal that we're done, then close the pipes, delete the payload file, and exit
     fclose($completionPipe);
     fclose($successPipe);
     fclose($errorPipe);
     unlink($payloadFile);
+    // Finally, send SIGUSR2 to the calling process to signal that we're done
+    posix_kill($callerPID, SIGUSR2);
 }
 register_shutdown_function("shutdown"); //Define as shutdown function so that it will be called no matter what, so the controller doesn't hang
 
@@ -136,5 +138,3 @@ while (count($pids) > 0){
         $pids = array_diff($pids, [$child]);
     }
 }
-// Finally, send SIGUSR2 to the calling process to signal that we're done
-posix_kill($callerPID, SIGUSR2);
