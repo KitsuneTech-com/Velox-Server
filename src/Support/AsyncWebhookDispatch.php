@@ -41,7 +41,7 @@ function singleRequest(string $payload, string $url, string $contentTypeHeader) 
     return new Response($result,$code);
 }
 function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier) : void {
-    global $successPipe, $errorPipe;
+    global $callerPID, $successPipe, $errorPipe;
     echo "Opening request for event $identifier to $url...\n";
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
@@ -57,9 +57,11 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
     }
     if ($response->code >= 400){
         fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
+        posix_kill($callerPID, SIGUSR1);
     }
     else {
         fwrite($successPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
+        posix_kill($callerPID, SIGUSR1);
     }
 }
 

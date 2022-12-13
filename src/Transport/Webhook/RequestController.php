@@ -14,14 +14,14 @@ class RequestController {
     private array $events = [];
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
         pcntl_async_signals(true);
-        pcntl_signal(SIGPOLL,[$this,"pollHandler"]);
+        pcntl_signal(SIGUSR1,[$this,"pipeReceived"]);
         pcntl_signal(SIGUSR2,[$this,"close"]);
         $baseConfig = new \EventConfig();
         $baseConfig->requireFeatures(\EventConfig::FEATURE_FDS);
         $this->base = new \EventBase();
     }
-    private function pollHandler(int $signo, mixed $siginfo) : void {
-        print_r($siginfo);
+    private function pipeReceived(int $signo, mixed $siginfo) : void {
+        $this->base->loop(EVENTBASE::LOOP_NONBLOCK);
     }
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
@@ -102,7 +102,6 @@ class RequestController {
         foreach ($this->events as $event){
             $event->add(1);
         }
-        $this->base->loop();
     }
     public function close() : void {
         foreach ($this->events as $event){
