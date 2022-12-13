@@ -109,10 +109,10 @@ file_put_contents("/proc/$parentPid/comm", $processName);
 
 $stdout = fopen("php://stdout", "w");
 fwrite($stdout, "Opened dispatcher for event $identifier...\n");
-// Open fd/3 and fd/4 for writing
-$successPipe = fopen('php://fd/3', 'w');
-$errorPipe = fopen('php://fd/4', 'w');
-$completionPipe = fopen('php://fd/5', 'w');
+// Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
+$successPipe = fopen('php://fd/3', 'w') || fopen('php://stdout', 'w');
+$errorPipe = fopen('php://fd/4', 'w') || fopen('php://stderr', 'w');
+$completionPipe = fopen('php://fd/5', 'w' || fopen('php://stdout', 'w'));
 
 // Spawn a new process for each url
 $pids = [];
