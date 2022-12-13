@@ -77,7 +77,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
         sleep((2 ** $attemptCount) * $retryInterval);
         $response = singleRequest($payload,$url,$contentTypeHeader);
         $attemptCount++;
-        if ($response->code < 400){
+        if ($response->code > 0 && $response->code < 400){
             break;
         }
     }
