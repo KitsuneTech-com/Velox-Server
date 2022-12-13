@@ -84,11 +84,15 @@ class RequestController {
         });
         $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
-            $this->callback->call($this,$data);
+            if ($this->callback){
+                ($this->callback)($data);
+            }
         });
         $this->events['error'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
-            $this->errorHandler->call($this,$data);
+            if ($this->errorHandler){
+                ($this->errorHandler)($data);
+            }
         });
         $this->events['dispatchend'] = new \Event($this->base, $this->pipes[5], \Event::READ | \Event::PERSIST, function($fd){
             //This pipe only gets written to when the dispatcher process exits. This means we're done.
