@@ -21,7 +21,7 @@ class RequestController {
         $this->base = new \EventBase();
     }
     public function pipeReceived(int $signo, mixed $siginfo) : void {
-        $this->base->loop(EVENTBASE::LOOP_NONBLOCK);
+        $this->base->loop(\EventBase::LOOP_NONBLOCK);
     }
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
