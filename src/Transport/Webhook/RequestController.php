@@ -20,7 +20,7 @@ class RequestController {
         $baseConfig->requireFeatures(\EventConfig::FEATURE_FDS);
         $this->base = new \EventBase();
     }
-    private function pipeReceived(int $signo, mixed $siginfo) : void {
+    public function pipeReceived(int $signo, mixed $siginfo) : void {
         $this->base->loop(EVENTBASE::LOOP_NONBLOCK);
     }
     public function setCallback(callable $callback) : void {
