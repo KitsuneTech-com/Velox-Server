@@ -20,7 +20,7 @@ class asyncResponse {
 
 set_error_handler(function($code, $message, $errfile, $line){
     global $callerPID;
-    $stderr = fopen("php://stderr","w");
+    $stderr = fopen("php://fd/2","w");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
     posix_kill($callerPID, SIGUSR2);
@@ -28,7 +28,7 @@ set_error_handler(function($code, $message, $errfile, $line){
 
 set_exception_handler(function($ex){
     global $callerPID;
-    $stderr = fopen("php://stderr","w");
+    $stderr = fopen("php://fd/3","w");
     fwrite($stderr, "Dispatcher exception: ".$ex);
     posix_kill($callerPID, SIGUSR2);
 });
