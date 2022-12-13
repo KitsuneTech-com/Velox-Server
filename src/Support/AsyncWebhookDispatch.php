@@ -20,7 +20,7 @@ class asyncResponse {
 
 set_error_handler(function($code, $message, $errfile, $line){
     global $callerPID;
-    $stderr = fopen("php://fd/2","w");
+    $stderr = fopen("php://fd/1","w");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
     posix_kill($callerPID, SIGUSR1);
@@ -29,11 +29,19 @@ set_error_handler(function($code, $message, $errfile, $line){
 
 set_exception_handler(function($ex){
     global $callerPID;
-    $stderr = fopen("php://fd/3","w");
+    $stderr = fopen("php://fd/2","w");
     fwrite($stderr, "Dispatcher exception: ".$ex);
     posix_kill($callerPID, SIGUSR1);
     posix_kill($callerPID, SIGUSR2);
 });
+
+function writeToInfoPipe($message) : void {
+    global $callerPID;
+    $infoPipe = fopen("php://fd/3","w");
+    fwrite($infoPipe, $message);
+    fclose($infoPipe);
+    posix_kill($callerPID, SIGUSR1);
+}
 
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
     $ch = curl_init($url);
@@ -53,7 +61,7 @@ function singleRequest(string $payload, string $url, string $contentTypeHeader) 
 }
 function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier) : void {
     global $callerPID, $successPipe, $errorPipe;
-    echo "Opening request for event $identifier to $url...\n";
+    writeToInfoPipe("Opening request for event $identifier to $url...\n");
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
     $attemptCount = 1;
@@ -115,8 +123,7 @@ $parentPid = getmypid();
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
 
-$stdout = fopen("php://stdout", "w");
-fwrite($stdout, "Opened dispatcher for event $identifier...\n");
+
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $successPipe = @fopen('php://fd/3', 'w');
 if (!$successPipe){
@@ -134,6 +141,7 @@ if (!$completionPipe){
     $completionPipe = fopen('php://stdout', 'w');
 }
 
+echo "Opened dispatcher for event $identifier...\n";
 // Spawn a new process for each url
 $pids = [];
 foreach ($urls as $url){

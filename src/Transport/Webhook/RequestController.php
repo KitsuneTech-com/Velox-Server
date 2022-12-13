@@ -80,7 +80,10 @@ class RequestController {
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
-        $this->events['information'] = new \Event($this->base, $this->pipes[2], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ | \Event::PERSIST, function($fd){
+            echo stream_get_contents($fd);
+        });
+        $this->events['error'] = new \Event($this->base, $this->pipes[2], \Event::READ | \Event::PERSIST, function($fd){
             echo stream_get_contents($fd);
         });
         $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
