@@ -66,14 +66,9 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
             break;
         }
     }
-    if ($response->code >= 400){
-        fwrite($errorPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
-        posix_kill($callerPID, SIGUSR1);
-    }
-    else {
-        fwrite($successPipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
-        posix_kill($callerPID, SIGUSR1);
-    }
+    $writePipe = $response->code >= 400 ? $errorPipe : $successPipe;
+    fwrite($writePipe, json_encode(new asyncResponse($url, $payload, $response->text, $response->code, $identifier, $attemptCount)));
+    posix_kill($callerPID, SIGUSR1);
 }
 
 function shutdown() : void {
