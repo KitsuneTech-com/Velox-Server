@@ -20,7 +20,7 @@ class asyncResponse {
 
 set_error_handler(function($code, $message, $errfile, $line){
     global $callerPID;
-    $stderr = fopen("php://fd/1","w");
+    $stderr = fopen("php://fd/1","a");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
     posix_kill($callerPID, SIGUSR1);
@@ -29,7 +29,7 @@ set_error_handler(function($code, $message, $errfile, $line){
 
 set_exception_handler(function($ex){
     global $callerPID;
-    $stderr = fopen("php://fd/2","w");
+    $stderr = fopen("php://fd/2","a");
     fwrite($stderr, "Dispatcher exception: ".$ex);
     posix_kill($callerPID, SIGUSR1);
     posix_kill($callerPID, SIGUSR2);
@@ -127,22 +127,22 @@ file_put_contents("/proc/$parentPid/comm", $processName);
 
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
-$stdout = fopen("php://fd/1","w");
-$stderr = fopen("php://fd/2","w");
-$successPipe = @fopen('php://fd/3', 'w');
+$stdout = fopen("php://fd/1","a");
+$stderr = fopen("php://fd/2","a");
+$successPipe = @fopen('php://fd/3', 'a');
 if (!$successPipe){
     writeToPipe($stderr, "Could not open success pipe; defaulting to stdout\n");
-    $successPipe = fopen('php://stdout', 'w');
+    $successPipe = fopen('php://stdout', 'a');
 }
-$errorPipe = @fopen('php://fd/4', 'w');
+$errorPipe = @fopen('php://fd/4', 'a');
 if (!$errorPipe){
     writeToPipe($stderr, "Could not open error pipe; defaulting to stderr\n");
-    $errorPipe = fopen('php://stderr', 'w');
+    $errorPipe = fopen('php://stderr', 'a');
 }
-$completionPipe = @fopen('php://fd/5', 'w');
+$completionPipe = @fopen('php://fd/5', 'a');
 if (!$completionPipe){
     writeToPipe($stderr, "Could not open completion pipe; defaulting to stderr\n");
-    $completionPipe = fopen('php://stdout', 'w');
+    $completionPipe = fopen('php://stdout', 'a');
 }
 
 writeToPipe($stdout, "Opened dispatcher for event $identifier...\n");
