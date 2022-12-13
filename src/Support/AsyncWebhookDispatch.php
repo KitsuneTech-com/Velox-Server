@@ -112,7 +112,7 @@ fwrite($stdout, "Opened dispatcher for event $identifier...\n");
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $successPipe = fopen('php://fd/3', 'w') || fopen('php://stdout', 'w');
 $errorPipe = fopen('php://fd/4', 'w') || fopen('php://stderr', 'w');
-$completionPipe = fopen('php://fd/5', 'w' || fopen('php://stdout', 'w'));
+$completionPipe = fopen('php://fd/5', 'w') || fopen('php://stdout', 'w');
 
 // Spawn a new process for each url
 $pids = [];
