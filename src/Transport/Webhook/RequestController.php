@@ -85,13 +85,13 @@ class RequestController {
         });
         $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
-            if ($this->callback){
+            if ($data && $this->callback){
                 ($this->callback)($data);
             }
         });
         $this->events['error'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
             $data = json_decode(stream_get_contents($fd));
-            if ($this->errorHandler){
+            if ($data && $this->errorHandler){
                 ($this->errorHandler)($data);
             }
         });
