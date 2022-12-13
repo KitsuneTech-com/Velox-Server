@@ -4,7 +4,8 @@ use KitsuneTech\Velox\Transport\Webhook\Response as Response;
 // This script is intended to be run via exec() from the \Transport\Webhook\Request class, to enable independent asynchronous execution of webhooks.
 // Forking is not used, as the database connection would be retained by the child process and would be killed when the first child exits.
 
-// This script will write all results to STDOUT, which will be read and relayed by \Transport\Webhook\Request.
+// Dispatch responses are sent through either of two custom pipes (php://fd/3 is the success pipe, while php://fd/4 is the error pipe); these are
+// monitored by RequestController, which calls the appropriate callback when data is received on either.
 
 class asyncResponse {
     function __construct(
@@ -62,6 +63,16 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
     }
 }
 
+function shutdown() : void {
+    global $completionPipe, $successPipe, $errorPipe, $payloadFile;
+    // Once we're done, write to the completion pipe to signal that we're done, then close the pipes, delete the payload file, and exit
+    fclose($completionPipe);
+    fclose($successPipe);
+    fclose($errorPipe);
+    unlink($payloadFile);
+}
+register_shutdown_function("shutdown"); //Define as shutdown function so that it will be called no matter what, so the controller doesn't hang
+
 // Get CLI arguments
 // -c: Content type header
 // -a: Retry attempts
@@ -70,14 +81,15 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 // -i: Request identifier
 // -p: Payload file
 // Subscriber urls are passed as arguments after the options above
-$opts = "c:a:r::i:p:";
+$opts = "c:a:r::i:p:f:";
 $optind = 0;
 $options = getopt($opts, rest_index: $optind);
 $contentTypeHeader = $options['c'] ?? null;
 $retryAttempts = $options['a'] ?? 5;
 $retryInterval = $options['r'] ?? 2;
 $identifier = $options['i'] ?? null;
-$payloadFile = $options['p'] ?? null;
+$callerPID = $options['p'] ?? null;
+$payloadFile = $options['f'] ?? null;
 $urls = array_slice($argv, $optind);
 
 // Set process name
@@ -91,6 +103,7 @@ fwrite($stdout, "Opened dispatcher for event $identifier...\n");
 // Open fd/3 and fd/4 for writing
 $successPipe = fopen('php://fd/3', 'w');
 $errorPipe = fopen('php://fd/4', 'w');
+$completionPipe = fopen('php://fd/5', 'w');
 
 // Spawn a new process for each url
 $pids = [];
@@ -121,7 +134,5 @@ while (count($pids) > 0){
         $pids = array_diff($pids, [$child]);
     }
 }
-//Once all are done, we can close the pipes, delete the payload file and leave.
-fclose($successPipe);
-fclose($errorPipe);
-unlink($payloadFile);
+// Finally, send SIGUSR2 to the calling process to signal that we're done
+posix_kill($callerPID, SIGUSR2);

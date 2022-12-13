@@ -15,6 +15,7 @@ class RequestController {
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
         pcntl_async_signals(true);
         pcntl_signal(SIGPOLL,[$this,"pollHandler"]);
+        pcntl_signal(SIGUSR2,[$this,"close"]);
         $baseConfig = new \EventConfig();
         $baseConfig->requireFeatures(\EventConfig::FEATURE_FDS);
         $this->base = new \EventBase();
@@ -64,7 +65,7 @@ class RequestController {
         // Subscriber URLs are appended after options above
         $dispatchScript = __DIR__ . "/../../Support/AsyncWebhookDispatch.php";
         $identifierOption = $this->identifier ? " -i" . escapeshellarg($this->identifier) : "";
-        $command = "php $dispatchScript -c'$contentTypeHeader' -a".$this->retryAttempts . " -r" . $this->retryInterval . $identifierOption. " -p" . escapeshellarg($this->payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
+        $command = "php $dispatchScript -p".getmypid()." -c'$contentTypeHeader' -a".$this->retryAttempts . " -r" . $this->retryInterval . $identifierOption. " -f" . escapeshellarg($this->payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
         // php://fd/3 is the success pipe
         // php://fd/4 is the error pipe
         // php://fd/5 is the process exit pipe
