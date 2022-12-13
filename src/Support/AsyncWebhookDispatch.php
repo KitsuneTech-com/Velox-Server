@@ -19,14 +19,18 @@ class asyncResponse {
 }
 
 set_error_handler(function($code, $message, $errfile, $line){
+    global $callerPID;
     $stderr = fopen("php://stderr","w");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
+    posix_kill($callerPID, SIGUSR2);
 });
 
 set_exception_handler(function($ex){
+    global $callerPID;
     $stderr = fopen("php://stderr","w");
     fwrite($stderr, "Dispatcher exception: ".$ex);
+    posix_kill($callerPID, SIGUSR2);
 });
 
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
