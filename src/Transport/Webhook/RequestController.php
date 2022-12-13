@@ -13,7 +13,14 @@ class RequestController {
     private \EventBase $base;
     private array $events = [];
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
+        pcntl_async_signals(true);
+        pcntl_signal(SIGPOLL,[$this,"pollHandler"]);
+        $baseConfig = new \EventConfig();
+        $baseConfig->requireFeatures(\EventConfig::FEATURE_FDS);
         $this->base = new \EventBase();
+    }
+    private function pollHandler(int $signo, mixed $siginfo) : void {
+        print_r($siginfo);
     }
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
@@ -60,12 +67,14 @@ class RequestController {
         $command = "php $dispatchScript -c'$contentTypeHeader' -a".$this->retryAttempts . " -r" . $this->retryInterval . $identifierOption. " -p" . escapeshellarg($this->payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
         // php://fd/3 is the success pipe
         // php://fd/4 is the error pipe
+        // php://fd/5 is the process exit pipe
         $this->process = proc_open($command,[
             0 => ["pipe","r"],
             1 => ["pipe","w"],
             2 => ["pipe","w"],
             3 => ["pipe","w"],
             4 => ["pipe","w"],
+            5 => ["pipe","w"]
         ],$this->pipes);
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
@@ -81,9 +90,14 @@ class RequestController {
             $data = json_decode(stream_get_contents($fd));
             $this->errorHandler->call($this,$data);
         });
+        $this->events['dispatchend'] = new \Event($this->base, $this->pipes[5], \Event::READ | \Event::PERSIST, function($fd){
+            //This pipe only gets written to when the dispatcher process exits. This means we're done.
+            $this->base->exit();
+        });
         foreach ($this->events as $event){
             $event->add(1);
         }
+        $this->base->loop();
     }
     public function close() : void {
         foreach ($this->events as $event){
