@@ -107,11 +107,7 @@ class RequestController {
         foreach ($this->events as $event){
             $event->free();
         }
-        while (count($this->pipes) > 0){
-            $pipe = array_shift($this->pipes);
-            fclose($pipe);
-        }
-        if ($this->process && posix_kill($this->process, 0)){
+        if (is_resource($this->process)){
             proc_close($this->process);
         }
         if (file_exists($this->payloadFile)){
