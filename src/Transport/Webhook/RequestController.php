@@ -111,7 +111,7 @@ class RequestController {
             $pipe = array_shift($this->pipes);
             fclose($pipe);
         }
-        if ($this->process){
+        if ($this->process && posix_kill($this->process, 0)){
             proc_close($this->process);
         }
         if (file_exists($this->payloadFile)){
