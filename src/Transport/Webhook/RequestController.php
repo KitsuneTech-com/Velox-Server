@@ -61,20 +61,24 @@ class RequestController {
             //stream_select() can't be used on proc_open() pipes in Windows. TODO: implement a workaround for Windows.
         }
         elseif ($readyCount > 0) {
+            $content = "";
             foreach ($pipesArray as $key => $pipe) {
+                while (!feof($pipe)){
+                    $content .= fread($pipe, 1024);
+                }
                 switch ($key) {
                     case 1: //STDOUT
                     case 2: //STDERR
-                        echo stream_get_contents($pipe);
+                        echo $content;
                         break;
                     case 3: // Success pipe
-                        $data = json_decode(stream_get_contents($pipe));
+                        $data = json_decode($content);
                         if ($data && $this->callback) {
                             ($this->callback)($data);
                         }
                         break;
                     case 4: // Error pipe
-                        $data = json_decode(stream_get_contents($pipe));
+                        $data = json_decode($content);
                         if ($data && $this->errorHandler) {
                             ($this->errorHandler)($data);
                         }
