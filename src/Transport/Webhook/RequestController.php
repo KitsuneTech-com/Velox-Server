@@ -10,18 +10,47 @@ class RequestController {
     private $process = null;
     private array $pipes = [];
     private ?string $payloadFile = null;
-    private \EventBase $base;
     private array $events = [];
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
         pcntl_async_signals(true);
         pcntl_signal(SIGUSR1,[$this,"pipeReceived"]);
         pcntl_signal(SIGUSR2,[$this,"close"]);
-        $baseConfig = new \EventConfig();
-        $baseConfig->requireFeatures(\EventConfig::FEATURE_FDS);
-        $this->base = new \EventBase();
     }
     public function pipeReceived(int $signo, mixed $siginfo) : void {
-        $this->base->loop(\EventBase::LOOP_NONBLOCK);
+        $pipesArray = $this->pipes;
+        $empty = null;
+        $readyCount = stream_select($pipesArray, $empty, $empty, 0);
+        if ($readyCount === false){
+            //stream_select() can't be used on proc_open() pipes in Windows. TODO: implement a workaround for Windows.
+        }
+        elseif ($readyCount > 0){
+            foreach($pipesArray as $key => $pipe){
+                switch ($key){
+                    case 1: //STDOUT
+                    case 2: //STDERR
+                        echo stream_get_contents($pipe);
+                        break;
+                    case 3: // Success pipe
+                        $data = json_decode(stream_get_contents($pipe));
+                        if ($data && $this->callback){
+                            ($this->callback)($data);
+                        }
+                        break;
+                    case 4: // Error pipe
+                        $data = json_decode(stream_get_contents($pipe));
+                        if ($data && $this->errorHandler){
+                            ($this->errorHandler)($data);
+                        }
+                        break;
+                    case 5:
+                        $data = stream_get_contents($pipe);
+                        if ($data){
+                            $this->close();
+                        }
+                        break;
+                }
+            }
+        }
     }
     public function setCallback(callable $callback) : void {
         $callback = \Closure::fromCallable($callback);
@@ -80,44 +109,11 @@ class RequestController {
         foreach ($this->pipes as $pipe){
             stream_set_blocking($pipe,false);
         }
-
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
-        $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ, function($fd){
-            echo stream_get_contents($fd);
-            $this->events['information']->add();
-        });
-        $this->events['scripterror'] = new \Event($this->base, $this->pipes[2], \Event::READ, function($fd){
-            echo stream_get_contents($fd);
-            $this->events['scripterror']->add();
-        });
-        $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ, function($fd){
-            $data = json_decode(stream_get_contents($fd));
-            if ($data && $this->callback){
-                ($this->callback)($data);
-            }
-            $this->events['success']->add();
-        });
-        $this->events['dispatcherror'] = new \Event($this->base, $this->pipes[4], \Event::READ, function($fd){
-            $data = json_decode(stream_get_contents($fd));
-            if ($data && $this->errorHandler){
-                ($this->errorHandler)($data);
-            }
-            $this->events['dispatcherror']->add();
-        });
-        $this->events['dispatchend'] = new \Event($this->base, $this->pipes[5], \Event::READ, function($fd){
-            //This pipe only gets written to when the dispatcher process exits. This means we're done.
-            $this->base->exit();
-        });
-        foreach ($this->events as $event){
-            $event->add();
-        }
     }
     public function close() : void {
-        foreach ($this->events as $event){
-            $event->free();
-        }
         if (is_resource($this->process)){
             proc_close($this->process);
         }
