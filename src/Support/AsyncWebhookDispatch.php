@@ -122,12 +122,11 @@ file_put_contents("/proc/$parentPid/comm", $processName);
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $pipes = [
-    'stdout' => fopen("php://fd/2","a"),
-    'stderr' => fopen("php://fd/3","a"),
-    'requesterror' => fopen("php://fd/4","a"),
-    'success' => fopen("php://fd/5","a")
+    'stdout' => fopen("php://fd/1","a"),
+    'stderr' => fopen("php://fd/2","a"),
+    'requesterror' => fopen("php://fd/3","a"),
+    'success' => fopen("php://fd/4","a")
 ];
-
 writeToPipe($pipes['stdout'], "Opened dispatcher for event $identifier...\n");
 // Spawn a new process for each url
 $pids = [];
