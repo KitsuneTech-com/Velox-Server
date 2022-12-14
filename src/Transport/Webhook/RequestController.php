@@ -63,6 +63,7 @@ class RequestController {
         elseif ($readyCount > 0) {
             $content = "";
             foreach ($pipesArray as $key => $pipe) {
+                stream_set_blocking($pipe,false);
                 while (!feof($pipe)){
                     $content .= fread($pipe, 1024);
                 }
