@@ -38,7 +38,7 @@ set_exception_handler(function($ex){
 function writeToPipe($pipe, $message) : void {
     global $parentPid, $callerPid;
     $pid = $parentPid ?? $callerPid;
-    file_put_contents($pipe, $message, FILE_APPEND);
+    file_put_contents($pipe, $message, FILE_APPEND|LOCK_EX);
     posix_kill($pid, SIGUSR1);
 }
 

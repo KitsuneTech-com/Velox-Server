@@ -19,13 +19,12 @@ class RequestController {
             //Initialize the signal handlers
             pcntl_async_signals(true);
             pcntl_signal(SIGUSR1, [$this, "signalReceived"]);
-            pcntl_signal(SIGUSR2,[$this,"signalReceived"]);
+            pcntl_signal(SIGUSR2, [$this, "signalReceived"]);
         }
         $this->instanceKey = spl_object_id($this);
         self::$instances[$this->instanceKey] = $this;
     }
-    public static function signalReceived(int $signo, mixed $siginfo) : void
-    {
+    public static function signalReceived(int $signo, mixed $siginfo) : void{
         //Find the instance having the dispatchPID that matches the PID of the process that sent the signal
         $targetInstance = null;
         foreach (self::$instances as $inst) {
