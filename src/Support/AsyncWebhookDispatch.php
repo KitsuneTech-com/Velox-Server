@@ -19,25 +19,25 @@ class asyncResponse {
 }
 
 set_error_handler(function($code, $message, $errfile, $line){
-    global $parentPID;
+    global $parentPid;
     $stderr = fopen("php://fd/1","a");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
-    posix_kill($parentPID, SIGUSR1);
-    posix_kill($parentPID, SIGUSR2);
+    posix_kill($parentPid, SIGUSR1);
+    posix_kill($parentPid, SIGUSR2);
 });
 
 set_exception_handler(function($ex){
-    global $parentPID;
+    global $parentPid;
     $stderr = fopen("php://fd/2","a");
     fwrite($stderr, "Dispatcher exception: ".$ex);
-    posix_kill($parentPID, SIGUSR1);
-    posix_kill($parentPID, SIGUSR2);
+    posix_kill($parentPid, SIGUSR1);
+    posix_kill($parentPid, SIGUSR2);
 });
 
 function writeToPipe($pipe, $message) : void {
-    global $callerPID, $parentPID;
-    $pid = $parentPID ?? $callerPID;
+    global $parentPid, $callerPid;
+    $pid = $parentPid ?? $callerPid;
     fwrite($pipe, $message);
     posix_kill($pid, SIGUSR1);
 }
@@ -84,15 +84,19 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 }
 
 function shutdown() : void {
-    global $pipes, $payloadFile, $parentPID;
-    foreach ($pipes as $pipe){
-        if (is_resource($pipe)){
+    global $childPid, $parentPid, $callerPid, $pipes, $payloadFile;
+    //Close any open pipes
+    foreach ($pipes as $pipe) {
+        if (is_resource($pipe)) {
             fclose($pipe);
         }
     }
-    if (file_exists($payloadFile)) unlink($payloadFile);
-    // Finally, send SIGUSR2 to the parent process
-    posix_kill($parentPID, SIGUSR2);
+    if (!$childPid) {
+        //Parent process - remove payload file and signal termination to caller
+        if (file_exists($payloadFile)) unlink($payloadFile);
+        // Finally, send SIGUSR2 to the parent process
+        posix_kill($callerPid, SIGUSR2);
+    }
 }
 register_shutdown_function("shutdown"); //Define as shutdown function so that it will be called no matter what, so the controller doesn't hang
 
@@ -111,22 +115,23 @@ $contentTypeHeader = $options['c'] ?? null;
 $retryAttempts = $options['a'] ?? 5;
 $retryInterval = $options['r'] ?? 2;
 $identifier = $options['i'] ?? null;
-$callerPID = $options['p'] ?? null;
+$callerPid = $options['p'] ?? null;
 $payloadFile = $options['f'] ?? null;
 $urls = array_slice($argv, $optind);
 
 // Set process name
 $processName = "Velox Webhook Dispatcher (event $identifier)";
 $parentPid = getmypid();
+$childPid = null;
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
 
 // Add signal handlers to relay SIGUSR1 and SIGUSR2 to the caller PID
-pcntl_signal(SIGUSR1, function($signo) use ($callerPID){
-    posix_kill($callerPID, $signo);
+pcntl_signal(SIGUSR1, function($signo) use ($callerPid){
+    posix_kill($callerPid, $signo);
 });
-pcntl_signal(SIGUSR2, function($signo) use ($callerPID){
-    posix_kill($callerPID, $signo);
+pcntl_signal(SIGUSR2, function($signo) use ($callerPid){
+    //Child has finished, so remove it from the queue and shut down if this was the last
 });
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
@@ -151,10 +156,10 @@ foreach ($urls as $url){
     }
     else {
         // Child process, one for each subscriber
-        $thisPid = getmypid();
+        $childPid = getmypid();
         // Set process name
         cli_set_process_title("Velox Webhook Request - $url");
-        file_put_contents("/proc/$thisPid/comm", "Velox Webhook Request (event $identifier to $url)");
+        file_put_contents("/proc/$childPid/comm", "Velox Webhook Request (event $identifier to $url)");
         requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier);
         exit(0);
     }
