@@ -64,9 +64,7 @@ class RequestController {
             $content = "";
             foreach ($pipesArray as $key => $pipe) {
                 stream_set_blocking($pipe,false);
-                while (!feof($pipe)){
-                    $content .= fread($pipe, 1024);
-                }
+                $content = stream_get_contents($pipe);
                 switch ($key) {
                     case 1: //STDOUT
                     case 2: //STDERR
