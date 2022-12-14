@@ -125,7 +125,6 @@ $parentPid = getmypid();
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
 
-
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $stdout = fopen("php://fd/1","a");
 $stderr = fopen("php://fd/2","a");

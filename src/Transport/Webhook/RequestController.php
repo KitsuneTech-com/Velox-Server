@@ -77,6 +77,10 @@ class RequestController {
             4 => ["pipe","w"],
             5 => ["pipe","w"]
         ],$this->pipes);
+        foreach ($this->pipes as $pipe){
+            stream_set_blocking($pipe,false);
+        }
+
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
