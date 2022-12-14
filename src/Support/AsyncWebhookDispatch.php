@@ -139,8 +139,8 @@ pcntl_signal(SIGUSR2, function($signo) use ($callerPid){
 $pipes = [
     'stdout' => fopen("php://fd/1","a"),
     'stderr' => fopen("php://fd/2","a"),
-    'requesterror' => fopen("php://fd/3","a"),
-    'success' => fopen("php://fd/4","a")
+    'success' => fopen("php://fd/3","a"),
+    'requesterror' => fopen("php://fd/4","a")
 ];
 writeToPipe($pipes['stdout'], "Opened dispatcher for event $identifier...\n");
 // Spawn a new process for each url
