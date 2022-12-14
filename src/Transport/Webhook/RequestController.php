@@ -134,15 +134,13 @@ class RequestController {
         $identifierOption = $this->identifier ? " -i" . escapeshellarg($this->identifier) : "";
         $command = "php $dispatchScript -p".getmypid()." -c'$contentTypeHeader' -a".$this->retryAttempts . " -r" . $this->retryInterval . $identifierOption. " -f" . escapeshellarg($this->payloadFile) . " " . implode(" ",array_map("escapeshellarg",$this->subscribers));
         // php://fd/3 is the success pipe
-        // php://fd/4 is the error pipe
-        // php://fd/5 is the process exit pipe
+        // php://fd/4 is the request error pipe
         $this->process = proc_open($command,[
             0 => ["pipe","r"],
             1 => ["pipe","w"],
             2 => ["pipe","w"],
             3 => ["pipe","w"],
             4 => ["pipe","w"],
-            5 => ["pipe","w"]
         ],$this->pipes);
         $this->dispatchPID = proc_get_status($this->process)["pid"];
         foreach ($this->pipes as $pipe){
