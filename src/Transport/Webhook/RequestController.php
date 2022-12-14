@@ -80,12 +80,6 @@ class RequestController {
                             ($this->errorHandler)($data);
                         }
                         break;
-                    case 5:
-                        $data = stream_get_contents($pipe);
-                        if ($data) {
-                            $this->close();
-                        }
-                        break;
                 }
             }
         }
