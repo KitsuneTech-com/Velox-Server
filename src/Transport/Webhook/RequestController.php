@@ -5,46 +5,84 @@ use KitsuneTech\Velox\VeloxException;
 use function KitsuneTech\Velox\Transport\Export;
 
 class RequestController {
+    private static array $instances = [];
+    private int $instanceKey = 0;
     public ?\Closure $callback = null;
     public ?\Closure $errorHandler = null;
     private $process = null;
+    private $dispatchPID = null;
     private array $pipes = [];
     private ?string $payloadFile = null;
-    private array $events = [];
+
     function __construct(private Model|array &$models, public array $subscribers = [], public int $contentType = AS_JSON, public int $retryInterval = 5, public int $retryAttempts = 10, public $identifier = null, public $processName = null){
-        pcntl_async_signals(true);
-        pcntl_signal(SIGUSR1,[$this,"pipeReceived"]);
-        pcntl_signal(SIGUSR2,[$this,"close"]);
+        if (count(self::$instances) == 0){
+            //Initialize the signal handlers
+            pcntl_async_signals(true);
+            pcntl_signal(SIGUSR1,["RequestController","signalReceived"]);
+            pcntl_signal(SIGUSR2,["RequestController","signalReceived"]);
+        }
+        $this->instanceKey = spl_object_id($this);
+        self::$instances[$this->instanceKey] = $this;
     }
-    public function pipeReceived(int $signo, mixed $siginfo) : void {
+    public static function signalReceived(int $signo, mixed $siginfo) : void
+    {
+        //Find the instance having the dispatchPID that matches the PID of the process that sent the signal
+        $targetInstance = null;
+        foreach (self::$instances as $inst) {
+            if ($inst->dispatchPID == $siginfo["pid"]) {
+                $targetInstance = $inst;
+                break;
+            }
+        }
+        if (!$targetInstance) {
+            //Could not find the matching instance, so leave
+            return;
+        }
+        switch ($signo) {
+            case SIGUSR1:
+                //Pipe data received
+                $targetInstance->pipeReceived();
+                break;
+            case SIGUSR2:
+                //Process closed
+                $targetInstance->close();
+                break;
+        }
+    }
+    public function pipeReceived() : void {
         $pipesArray = $this->pipes;
+        if (count($pipesArray) == 0) {
+            //Pipes are closed, so there's nothing to do here
+            return;
+        }
+
         $empty = null;
         $readyCount = stream_select($pipesArray, $empty, $empty, 0);
-        if ($readyCount === false){
+        if ($readyCount === false) {
             //stream_select() can't be used on proc_open() pipes in Windows. TODO: implement a workaround for Windows.
         }
-        elseif ($readyCount > 0){
-            foreach($pipesArray as $key => $pipe){
-                switch ($key){
+        elseif ($readyCount > 0) {
+            foreach ($pipesArray as $key => $pipe) {
+                switch ($key) {
                     case 1: //STDOUT
                     case 2: //STDERR
                         echo stream_get_contents($pipe);
                         break;
                     case 3: // Success pipe
                         $data = json_decode(stream_get_contents($pipe));
-                        if ($data && $this->callback){
+                        if ($data && $this->callback) {
                             ($this->callback)($data);
                         }
                         break;
                     case 4: // Error pipe
                         $data = json_decode(stream_get_contents($pipe));
-                        if ($data && $this->errorHandler){
+                        if ($data && $this->errorHandler) {
                             ($this->errorHandler)($data);
                         }
                         break;
                     case 5:
                         $data = stream_get_contents($pipe);
-                        if ($data){
+                        if ($data) {
                             $this->close();
                         }
                         break;
@@ -106,6 +144,7 @@ class RequestController {
             4 => ["pipe","w"],
             5 => ["pipe","w"]
         ],$this->pipes);
+        $this->dispatchPID = proc_get_status($this->process)["pid"];
         foreach ($this->pipes as $pipe){
             stream_set_blocking($pipe,false);
         }
@@ -113,7 +152,11 @@ class RequestController {
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
     }
-    public function close() : void {
+    public static function close() : void {
+        foreach ($this->pipes as $pipe){
+            fclose($pipe);
+        }
+        $this->pipes = [];
         if (is_resource($this->process)){
             proc_close($this->process);
         }
