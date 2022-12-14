@@ -58,8 +58,8 @@ function singleRequest(string $payload, string $url, string $contentTypeHeader) 
     return new Response($result,$code);
 }
 function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, $retryInterval, $identifier) : void {
-    global $callerPID, $stdout, $successPipe, $errorPipe;
-    writeToPipe($stdout, "Opening request for event $identifier to $url...\n");
+    global $pipes;
+    writeToPipe($pipes['stdout'], "Opening request for event $identifier to $url...\n");
     $payload = file_get_contents($payloadFile);
     $response = singleRequest($payload,$url,$contentTypeHeader);
     $attemptCount = 1;
@@ -70,7 +70,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
         else {
             $text = $response->text;
         }
-        writeToPipe($errorPipe, json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
+        writeToPipe($pipes['requesterror'], json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
         sleep((2 ** $attemptCount) * $retryInterval);
         $response = singleRequest($payload,$url,$contentTypeHeader);
         $attemptCount++;
@@ -78,21 +78,16 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
             break;
         }
     }
-    $writePipe = $response->code >= 400 ? $errorPipe : $successPipe;
+    $writePipe = $response->code >= 400 ? $pipes['requesterror'] : $pipes['success'];
     writeToPipe($writePipe, json_encode(new asyncResponse($url,$payload,$response->text,$response->code,$identifier,$attemptCount)));
 }
 
 function shutdown() : void {
-    global $completionPipe, $successPipe, $errorPipe, $payloadFile, $callerPID;
-    // Once we're done, write to the completion pipe to signal that we're done, then close the pipes, delete the payload file, and exit
-    if (is_resource($completionPipe)){
-        fclose($completionPipe);
-    }
-    if (is_resource($successPipe)){
-        fclose($successPipe);
-    }
-    if (is_resource($errorPipe)){
-        fclose($errorPipe);
+    global $pipes, $payloadFile, $callerPID;
+    foreach ($pipes as $pipe){
+        if (is_resource($pipe)){
+            fclose($pipe);
+        }
     }
     if (file_exists($payloadFile)) unlink($payloadFile);
     // Finally, send SIGUSR2 to the calling process to signal that we're done
@@ -126,32 +121,21 @@ cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
-$stdout = fopen("php://fd/1","a");
-$stderr = fopen("php://fd/2","a");
-$successPipe = @fopen('php://fd/3', 'a');
-if (!$successPipe){
-    writeToPipe($stderr, "Could not open success pipe; defaulting to stdout\n");
-    $successPipe = fopen('php://stdout', 'a');
-}
-$errorPipe = @fopen('php://fd/4', 'a');
-if (!$errorPipe){
-    writeToPipe($stderr, "Could not open error pipe; defaulting to stderr\n");
-    $errorPipe = fopen('php://stderr', 'a');
-}
-$completionPipe = @fopen('php://fd/5', 'a');
-if (!$completionPipe){
-    writeToPipe($stderr, "Could not open completion pipe; defaulting to stderr\n");
-    $completionPipe = fopen('php://stdout', 'a');
-}
+$pipes = [
+    'stdout' => fopen("php://fd/2","a"),
+    'stderr' => fopen("php://fd/3","a"),
+    'requesterror' => fopen("php://fd/4","a"),
+    'success' => fopen("php://fd/5","a")
+];
 
-writeToPipe($stdout, "Opened dispatcher for event $identifier...\n");
+writeToPipe($pipes['stdout'], "Opened dispatcher for event $identifier...\n");
 // Spawn a new process for each url
 $pids = [];
 foreach ($urls as $url){
     $pid = pcntl_fork();
     if ($pid == -1){
         // Fork failed
-        echo "Fork failed";
+        writeToPipe($pipes['stderr'],"Fork failed");
     }
     else if ($pid){
         // Parent process
