@@ -38,7 +38,7 @@ set_exception_handler(function($ex){
 function writeToPipe($pipe, $message) : void {
     global $parentPid, $callerPid;
     $pid = $parentPid ?? $callerPid;
-    fwrite($pipe, $message);
+    file_put_contents($pipe, $message, FILE_APPEND);
     posix_kill($pid, SIGUSR1);
 }
 
@@ -128,10 +128,10 @@ pcntl_signal(SIGUSR2, function($signo) use ($callerPid){
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $pipes = [
-    'stdout' => fopen("php://fd/1","a"),
-    'stderr' => fopen("php://fd/2","a"),
-    'success' => fopen("php://fd/3","a"),
-    'requesterror' => fopen("php://fd/4","a")
+    'stdout' => "php://fd/1",
+    'stderr' => "php://fd/2",
+    'success' => "php://fd/3",
+    'requesterror' => "php://fd/4"
 ];
 writeToPipe($pipes['stdout'], "Opened dispatcher for event $identifier...\n");
 // Spawn a new process for each url
