@@ -84,30 +84,34 @@ class RequestController {
         if (!is_resource($this->process)){
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
-        $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['information'] = new \Event($this->base, $this->pipes[1], \Event::READ, function($fd){
             echo stream_get_contents($fd);
+            $this->events['information']->add();
         });
-        $this->events['scripterror'] = new \Event($this->base, $this->pipes[2], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['scripterror'] = new \Event($this->base, $this->pipes[2], \Event::READ, function($fd){
             echo stream_get_contents($fd);
+            $this->events['scripterror']->add();
         });
-        $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['success'] = new \Event($this->base, $this->pipes[3], \Event::READ, function($fd){
             $data = json_decode(stream_get_contents($fd));
             if ($data && $this->callback){
                 ($this->callback)($data);
             }
+            $this->events['success']->add();
         });
-        $this->events['dispatcherror'] = new \Event($this->base, $this->pipes[4], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['dispatcherror'] = new \Event($this->base, $this->pipes[4], \Event::READ, function($fd){
             $data = json_decode(stream_get_contents($fd));
             if ($data && $this->errorHandler){
                 ($this->errorHandler)($data);
             }
+            $this->events['dispatcherror']->add();
         });
-        $this->events['dispatchend'] = new \Event($this->base, $this->pipes[5], \Event::READ | \Event::PERSIST, function($fd){
+        $this->events['dispatchend'] = new \Event($this->base, $this->pipes[5], \Event::READ, function($fd){
             //This pipe only gets written to when the dispatcher process exits. This means we're done.
             $this->base->exit();
         });
         foreach ($this->events as $event){
-            $event->add(1);
+            $event->add();
         }
     }
     public function close() : void {
