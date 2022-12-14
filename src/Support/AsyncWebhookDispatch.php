@@ -62,25 +62,16 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
     global $pipes;
     writeToPipe($pipes['stdout'], "Opening request for event $identifier to $url...\n");
     $payload = file_get_contents($payloadFile);
-    $response = singleRequest($payload,$url,$contentTypeHeader);
-    $attemptCount = 1;
-    while (($response->code == 0 || $response->code >= 400) && $attemptCount-1 < $retryAttempts){
-        if ($response->code == 0){
-            $text = "Could not reach server at ".parse_url($url,PHP_URL_HOST)."; retrying in $retryInterval seconds...";
-        }
-        else {
-            $text = $response->text;
-        }
-        writeToPipe($pipes['requesterror'], json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
-        sleep((2 ** $attemptCount) * $retryInterval);
+    $attemptCount = 0;
+    do {
         $response = singleRequest($payload,$url,$contentTypeHeader);
         $attemptCount++;
-        if ($response->code > 0 && $response->code < 400){
-            break;
-        }
+        $success = $response->code >= 200 && $response->code < 300;
+        $text = $response->code == 0 ? "Could not reach server at ".parse_url($url,PHP_URL_HOST)."; retrying in $retryInterval seconds..." : $response->text;
+        writeToPipe($success ? $pipes['success'] : $pipes['requesterror'], json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
+        if (!$success) sleep((2 ** $attemptCount) * $retryInterval);
     }
-    $writePipe = ($response->code == 0 || $response->code >= 400) ? $pipes['requesterror'] : $pipes['success'];
-    writeToPipe($writePipe, json_encode(new asyncResponse($url,$payload,$response->text,$response->code,$identifier,$attemptCount)));
+    while (!$success && $attemptCount < $retryAttempts+1);
 }
 
 function shutdown() : void {
