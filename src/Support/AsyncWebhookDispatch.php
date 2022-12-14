@@ -36,9 +36,10 @@ set_exception_handler(function($ex){
 });
 
 function writeToPipe($pipe, $message) : void {
-    global $parentPID;
+    global $callerPID, $parentPID;
+    $pid = $parentPID ?? $callerPID;
     fwrite($pipe, $message);
-    posix_kill($parentPID, SIGUSR1);
+    posix_kill($pid, SIGUSR1);
 }
 
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
