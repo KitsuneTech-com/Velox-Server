@@ -79,7 +79,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
             break;
         }
     }
-    $writePipe = $response->code >= 400 ? $pipes['requesterror'] : $pipes['success'];
+    $writePipe = ($response->code == 0 || $response->code >= 400) ? $pipes['requesterror'] : $pipes['success'];
     writeToPipe($writePipe, json_encode(new asyncResponse($url,$payload,$response->text,$response->code,$identifier,$attemptCount)));
 }
 
