@@ -69,7 +69,7 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
         $success = $response->code >= 200 && $response->code < 300;
         $text = $response->code == 0 ? "Could not reach server at ".parse_url($url,PHP_URL_HOST)."; retrying in $retryInterval seconds..." : $response->text;
         writeToPipe($success ? $pipes['success'] : $pipes['requesterror'], json_encode(new asyncResponse($url,$payload,$text,$response->code,$identifier,$attemptCount)));
-        if (!$success) sleep((2 ** $attemptCount) * $retryInterval);
+        if (!$success) usleep((2 ** $attemptCount) * $retryInterval * 1000000);
     }
     while (!$success && $attemptCount < $retryAttempts+1);
 }
