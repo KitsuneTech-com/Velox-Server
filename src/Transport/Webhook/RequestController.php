@@ -152,7 +152,7 @@ class RequestController {
             throw new VeloxException("Unable to start webhook dispatcher", 67);
         }
     }
-    public static function close() : void {
+    public function close() : void {
         foreach ($this->pipes as $pipe){
             fclose($pipe);
         }
@@ -163,6 +163,13 @@ class RequestController {
         if (file_exists($this->payloadFile)){
             unlink($this->payloadFile);
         }
+        //If this is the last instance, remove the signal handlers
+        if (count(self::$instances) == 1){
+            pcntl_signal(SIGUSR1, SIG_DFL);
+            pcntl_signal(SIGUSR2, SIG_DFL);
+        }
+        //Remove this instance from the list of instances using $this->instanceKey as the key
+        unset(self::$instances[$this->instanceKey]);
     }
     public function __destruct() {
         $this->close();
