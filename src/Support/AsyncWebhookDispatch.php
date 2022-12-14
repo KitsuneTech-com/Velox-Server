@@ -36,9 +36,9 @@ set_exception_handler(function($ex){
 });
 
 function writeToPipe($pipe, $message) : void {
-    global $callerPID;
+    global $parentPID;
     fwrite($pipe, $message);
-    posix_kill($callerPID, SIGUSR1);
+    posix_kill($parentPID, SIGUSR1);
 }
 
 function singleRequest(string $payload, string $url, string $contentTypeHeader) : Response {
@@ -83,15 +83,15 @@ function requestSession($payloadFile, $url, $contentTypeHeader, $retryAttempts, 
 }
 
 function shutdown() : void {
-    global $pipes, $payloadFile, $callerPID;
+    global $pipes, $payloadFile, $parentPID;
     foreach ($pipes as $pipe){
         if (is_resource($pipe)){
             fclose($pipe);
         }
     }
     if (file_exists($payloadFile)) unlink($payloadFile);
-    // Finally, send SIGUSR2 to the calling process to signal that we're done
-    posix_kill($callerPID, SIGUSR2);
+    // Finally, send SIGUSR2 to the parent process
+    posix_kill($parentPID, SIGUSR2);
 }
 register_shutdown_function("shutdown"); //Define as shutdown function so that it will be called no matter what, so the controller doesn't hang
 
@@ -119,6 +119,14 @@ $processName = "Velox Webhook Dispatcher (event $identifier)";
 $parentPid = getmypid();
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
+
+// Add signal handlers to relay SIGUSR1 and SIGUSR2 to the caller PID
+pcntl_signal(SIGUSR1, function($signo) use ($callerPID){
+    posix_kill($callerPID, $signo);
+});
+pcntl_signal(SIGUSR2, function($signo) use ($callerPID){
+    posix_kill($callerPID, $signo);
+});
 
 // Open pipes (if the file descriptors exist, use them; otherwise default to stdout and stderr)
 $pipes = [
