@@ -126,6 +126,7 @@ $childPid = null;
 cli_set_process_title($processName);
 file_put_contents("/proc/$parentPid/comm", $processName);
 
+pcntl_async_signals(true);
 // Add signal handlers to relay SIGUSR1 and SIGUSR2 to the caller PID
 pcntl_signal(SIGUSR1, function($signo) use ($callerPid){
     posix_kill($callerPid, $signo);
