@@ -18,8 +18,8 @@ class RequestController {
         if (count(self::$instances) == 0){
             //Initialize the signal handlers
             pcntl_async_signals(true);
-            pcntl_signal(SIGUSR1,["RequestController","signalReceived"]);
-            pcntl_signal(SIGUSR2,["RequestController","signalReceived"]);
+            pcntl_signal(SIGUSR1,[self,"signalReceived"]);
+            pcntl_signal(SIGUSR2,[self,"signalReceived"]);
         }
         $this->instanceKey = spl_object_id($this);
         self::$instances[$this->instanceKey] = $this;
