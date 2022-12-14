@@ -19,20 +19,20 @@ class asyncResponse {
 }
 
 set_error_handler(function($code, $message, $errfile, $line){
-    global $callerPID;
+    global $parentPID;
     $stderr = fopen("php://fd/1","a");
     fwrite($stderr,"Dispatcher error $code ($line): $message");
     fclose($stderr);
-    posix_kill($callerPID, SIGUSR1);
-    posix_kill($callerPID, SIGUSR2);
+    posix_kill($parentPID, SIGUSR1);
+    posix_kill($parentPID, SIGUSR2);
 });
 
 set_exception_handler(function($ex){
-    global $callerPID;
+    global $parentPID;
     $stderr = fopen("php://fd/2","a");
     fwrite($stderr, "Dispatcher exception: ".$ex);
-    posix_kill($callerPID, SIGUSR1);
-    posix_kill($callerPID, SIGUSR2);
+    posix_kill($parentPID, SIGUSR1);
+    posix_kill($parentPID, SIGUSR2);
 });
 
 function writeToPipe($pipe, $message) : void {
