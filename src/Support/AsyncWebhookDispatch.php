@@ -165,4 +165,5 @@ while (count($pids) > 0){
     if ($child){
         $pids = array_diff($pids, [$child]);
     }
+    if (count($pids) > 0) usleep(100000);
 }
