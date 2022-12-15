@@ -107,7 +107,7 @@ class Query {
                     };
                 }
                 catch (\Exception $e) {
-                    if ($stmt->errorCode == "HY000" && $stmt->errorInfo[1] == 2006) {
+                    if ($stmt->errorCode() == "HY000" && $stmt->errorInfo()[1] == 2006) {
                         //Connection has gone away. Attempt to reconnect and retry.
                         $connObj->establish();
                         try {
@@ -120,7 +120,7 @@ class Query {
                         }
                     }
                     else {
-                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo[1]);
+                        throw new VeloxException('PDO Error: SQLSTATE '.$stmt->errorCode().': '.$stmt->errorInfo()[2], $stmt->errorInfo()[1]);
                     }
                 }
                 break;
