@@ -31,6 +31,7 @@ set_exception_handler(function($ex){
     global $parentPid;
     $stderr = fopen("php://fd/2","a");
     fwrite($stderr, "Dispatcher exception: ".$ex);
+    fclose($stderr);
     posix_kill($parentPid, SIGUSR1);
     posix_kill($parentPid, SIGUSR2);
 });
@@ -38,7 +39,9 @@ set_exception_handler(function($ex){
 function writeToPipe($pipe, $message) : void {
     global $parentPid, $callerPid;
     $pid = $parentPid ?? $callerPid;
-    file_put_contents($pipe, $message, FILE_APPEND|LOCK_EX);
+    $pipe = fopen($pipe,"a");
+    fwrite($pipe, $message);
+    fclose($pipe);
     posix_kill($pid, SIGUSR1);
 }
 
