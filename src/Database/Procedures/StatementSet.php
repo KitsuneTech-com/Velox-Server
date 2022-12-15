@@ -340,6 +340,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 $parameterSet = [];
                 foreach ($row['where'] as $or){
                     foreach ($or as $column => $data){
+                        if ($data[0] == "IS NULL" || $data[0] == "IS NOT NULL"){
+                            //No parameters to set
+                            continue;
+                        }
                         try {
                             $parameterSet['w_'.$column] = $data[1];
                         }
