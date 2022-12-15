@@ -107,7 +107,7 @@ class Query {
                     };
                 }
                 catch (\Exception $e) {
-                    if ($stmt->errorCode == "HY000" && $stmt->errorInfo[1] == 2006) {
+                    if ($stmt->errorCode() == "HY000" && $stmt->errorInfo()[1] == 2006) {
                         //Connection has gone away. Attempt to reconnect and retry.
                         $connObj->establish();
                         try {
