@@ -120,7 +120,7 @@ class Query {
                         }
                     }
                     else {
-                        throw new VeloxException('PDO Error: ' . $stmt->errorInfo(), $stmt->errorInfo[1]);
+                        throw new VeloxException('PDO Error: SQLSTATE '.$stmt->errorInfo()[0].': '.$stmt->errorInfo()[2], $stmt->errorInfo[1]);
                     }
                 }
                 break;
