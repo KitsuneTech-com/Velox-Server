@@ -161,7 +161,7 @@ foreach ($urls as $url){
 }
 // Wait for all child processes to finish before exiting
 while (count($pids) > 0){
-    $child = pcntl_wait($status, WUNTRACED);
+    $child = pcntl_wait($status, WUNTRACED|WNOHANG);
     if ($child){
         $pids = array_diff($pids, [$child]);
     }
