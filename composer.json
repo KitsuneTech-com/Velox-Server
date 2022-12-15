@@ -18,7 +18,7 @@
         "ext-mysqli": "MySQL/MariaDB support through mysqli",
         "ext-odbc": "Needed for standalone ODBC support",
         "ext-xmlwriter": "Needed for XML data export",
-        "ext-event": "Needed for webhook callbacks"
+        "ext-pcntl": "Needed for webhook implementation"
     },
     "autoload": {
         "psr-4": {
