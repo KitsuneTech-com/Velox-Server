@@ -64,7 +64,13 @@ class RequestController {
             $content = "";
             foreach ($pipesArray as $key => $pipe) {
                 stream_set_blocking($pipe,false);
-                $content = stream_get_contents($pipe);
+                try {
+                    $content = stream_get_contents($pipe);
+                }
+                catch (\Exception $e) {
+                    //Pipe is closed, so move on to the next
+                    continue;
+                }
                 switch ($key) {
                     case 1: //STDOUT
                     case 2: //STDERR
