@@ -157,7 +157,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         if (isset($criterion['where'])){
             foreach ($criterion['where'] as $or){
                 foreach ($or as $column => $condition){
-                    $criterion['where'][$column] = $condition[0];
+                    if ($condition[0] == "IN" || $condition[0] == "NOT IN"){
+                        $criterion['where'][$column] = [$condition[0], count($condition[1])];
+                    }
+                    else {
+                        $criterion['where'][$column] = $condition[0];
+                    }
                 }
             }
         }
@@ -275,6 +280,13 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                 case "NOT BETWEEN":
                                     $andArray[] = $column." ".$details[0]." :w_".$column." AND :wb_".$column;
                                     break;
+                                case "IN":
+                                case "NOT IN":
+                                    if (!is_array($details[1])){
+                                        throw new VeloxException("IN/NOT IN operator requires an array of values",48);
+                                    }
+                                    $andArray[] = implode(",",array_map(function($key) use ($column){ return ":w_".$column."_".$key; },array_keys($details[1])));
+                                    break;
                                 default:
                                     throw new VeloxException("Unsupported operator",36);
                             }
@@ -356,6 +368,11 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                             }
                             catch (\Exception $ex){
                                 throw new VeloxException($data[0].' operator used without second operand',24);
+                            }
+                        }
+                        elseif ($data[0] == "IN" || $data[0] == "NOT IN"){
+                            foreach ($data[1] as $key => $value){
+                                $parameterSet['w_'.$column.'_'.$key] = $value;
                             }
                         }
                         elseif ($this->queryType == Query::QUERY_PROC){
