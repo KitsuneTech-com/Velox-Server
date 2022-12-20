@@ -214,7 +214,7 @@ Most comparison operations in SQL are binary, meaning that a pair of values are 
 
 #### IS NULL / IS NOT NULL
 
-IS NULL and IS NOT NULL are treated as unary, meaning that the column is not checked against an arbitrary value. For these, the comparison array will consist only of the desired operator.
+`IS NULL` and `IS NOT NULL` are treated as unary, meaning that the column is not checked against an arbitrary value. For these, the comparison array will consist only of the desired operator.
 
 ```json
 {"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]}
@@ -222,7 +222,7 @@ IS NULL and IS NOT NULL are treated as unary, meaning that the column is not che
 
 #### BETWEEN / NOT BETWEEN
 
-BETWEEN and NOT BETWEEN are trinary; these compare the column value to two arbitrary values. If one of these is used, the comparison array must consist of three elements: first the operator, then the two values to which the column is compared.
+`BETWEEN` and `NOT BETWEEN` are trinary; these compare the column value to two arbitrary values. If one of these is used, the comparison array must consist of three elements: first the operator, then the two values to which the column is compared.
 
 ```json
 {"select": [{"where": [{"beginDate": ["BETWEEN","2000-01-01","2001-01-01"]}]}]}
@@ -230,7 +230,7 @@ BETWEEN and NOT BETWEEN are trinary; these compare the column value to two arbit
 
 #### IN / NOT IN
 
-IN and NOT IN are also supported. These operators compare the column against an arbitrary number of values, so for these, the comparison array must consist of two elements: the operator, and an array of values to which the column will be compared.
+`IN` and `NOT IN` are also supported. These operators compare the column against an arbitrary number of values, so for these, the comparison array must consist of two elements: the operator, and an array of values to which the column will be compared.
 
 ```json
 {"select": [{"where": [{"myNumber": ["IN",[1,2,4,8]]}]}]}
