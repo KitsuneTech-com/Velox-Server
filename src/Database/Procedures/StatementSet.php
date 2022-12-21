@@ -227,13 +227,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
     /** Generates the PreparedStatements to be run based on the assigned criteria. This needs to be run before the StatementSet is executed. */
     public function setStatements() : void {
-        function scalarCheck(string $key, mixed $value) : mixed {
-            //Passes through the value if it is a scalar or null, otherwise throws an exception
-            if (!is_scalar($value) && !is_null($value)){
-                throw new VeloxException("Value for :".$key." is not a scalar or null.",50);
-            }
-            return $value;
-        }
+
         $statements = [];
         $criteria = $this->criteria;
 
@@ -370,19 +364,19 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                             if (count($data) < 3){
                                 throw new VeloxException($data[0].' operator used without second operand',24);
                             }
-                            $parameterSet["w_".$column] = scalarCheck($column, $data[1]);
-                            $parameterSet['wb_'.$column] = scalarCheck($column, $data[2]);
+                            $parameterSet["w_".$column] = StatementSet::scalarCheck($column, $data[1]);
+                            $parameterSet['wb_'.$column] = StatementSet::scalarCheck($column, $data[2]);
                         }
                         elseif ($data[0] == "IN" || $data[0] == "NOT IN"){
                             if (!is_array($data[1])){
                                 throw new VeloxException("IN/NOT IN operator requires an array of values",48);
                             }
                             foreach ($data[1] as $key => $value){
-                                $parameterSet['w_'.$column.'_'.$key] = scalarCheck($column, $value);
+                                $parameterSet['w_'.$column.'_'.$key] = StatementSet::scalarCheck($column, $value);
                             }
                         }
                         else {
-                            $parameterSet['w_'.$column] = scalarCheck($column, $data[1]);
+                            $parameterSet['w_'.$column] = StatementSet::scalarCheck($column, $data[1]);
                         }
                         if ($this->queryType == Query::QUERY_PROC){
                             $parameterSet['op_'.$column] = $data[0];
@@ -390,7 +384,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                     }
                 }
                 foreach ($row['values'] as $column => $value){
-                    $parameterSet['v_'.$column] = scalarCheck($column, $value);
+                    $parameterSet['v_'.$column] = StatementSet::scalarCheck($column, $value);
                 }
                 $stmt->addParameterSet($parameterSet);
             }
@@ -472,5 +466,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $queries[] = $stmt->dumpQuery();
         }
         return $queries;
+    }
+    private static function scalarCheck(string $key, mixed $value) : mixed {
+        //Passes through the value if it is a scalar or null, otherwise throws an exception
+        if (!is_scalar($value) && !is_null($value)){
+            throw new VeloxException("Value for :".$key." is not a scalar or null.",50);
+        }
+        return $value;
     }
 }
