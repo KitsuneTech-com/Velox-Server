@@ -286,7 +286,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                                     if (!is_array($details[1])){
                                         throw new VeloxException("IN/NOT IN operator requires an array of values",48);
                                     }
-                                    $andArray[] = implode(",",array_map(function($key) use ($column){ return ":w_".$column."_".$key; },array_keys($details[1])));
+                                    $andArray[] = $column." ".$details[0]." (".implode(",",array_map(function($key) use ($column){ return ":w_".$column."_".$key; },array_keys($details[1]))).")";
                                     break;
                                 default:
                                     throw new VeloxException("Unsupported operator",36);
