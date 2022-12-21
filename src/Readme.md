@@ -202,8 +202,42 @@ request.push(row);
 Being able to build API requests programmatically through JavaScript objects allows filters and updates of high complexity to be constructed client-side
 with minimal code on the back-end. StatementSet is optimized for specifically these kinds of queries; it only builds as many PreparedStatements as necessary to run the request; where possible, similar criteria are grouped together and run as criteria on one PreparedStatement.
 
-### EKIL / EKILR
-In addition to the SQL standard comparison keywords, Velox provides `EKIL` and `EKILR`. These are inverted versions of `LIKE` and `RLIKE`, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. `:value LIKE myColumn`). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
+### Conditional operators
+
+#### Binary comparisons
+
+Most comparison operations in SQL are binary, meaning that a pair of values are compared to each other. For these binary comparisons, the corresponding Velox JSON uses the SQL operator as the first element of the comparison array, and the value to be compared as the second.
+
+```json
+{"select": [{"where": [{"state": ["=","TX"], "beginDate": [">","2000-01-01"]}]}]}
+```
+
+#### IS NULL / IS NOT NULL
+
+`IS NULL` and `IS NOT NULL` are treated as unary, meaning that the column is not checked against an arbitrary value. For these, the comparison array will consist only of the desired operator.
+
+```json
+{"update": [{"values": {"address2": "---"}, "where": [{"address2": ["IS NULL"]}]}]}
+```
+
+#### BETWEEN / NOT BETWEEN
+
+`BETWEEN` and `NOT BETWEEN` are trinary; these compare the column value to two arbitrary values. If one of these is used, the comparison array must consist of three elements: first the operator, then the two values to which the column is compared.
+
+```json
+{"select": [{"where": [{"beginDate": ["BETWEEN","2000-01-01","2001-01-01"]}]}]}
+```
+
+#### IN / NOT IN
+
+`IN` and `NOT IN` are also supported. These operators compare the column against an arbitrary number of values, so for these, the comparison array must consist of two elements: the operator, and an array of values to which the column will be compared.
+
+```json
+{"select": [{"where": [{"myNumber": ["IN",[1,2,4,8]]}]}]}
+```
+
+#### EKIL / EKILR
+In addition to the SQL standard comparison operations, Velox provides `EKIL` and `EKILR`. These are inverted versions of `LIKE` and `RLIKE`, respectively (read it backwards), and perform the same comparisons, except that when the statement is assembled, the placeholder is put on the left side of the expression rather than on the right. (e.g. `:value LIKE myColumn`). This inversion allows the value to be compared against a pattern stored in the given column, where normally one would compare a value in the given column to a chosen pattern.
 
 Thus:
 ```json
