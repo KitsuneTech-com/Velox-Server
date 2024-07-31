@@ -350,7 +350,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (count($pivotByColumn) == 0){
             throw new VeloxException("Specified pivot-by column '$pivotBy' does not exist in result set.",68);
         }
-        $pivotByValues = array_unique($pivotByColumn);
+        $pivotByValues = array_values(array_unique($pivotByColumn));
 
         //Check if $indexColumn column exists in data set
         $indexValues = array_unique(array_column($this->_data,$indexColumn));
@@ -412,9 +412,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         //Fill in any gaps with nulls
-        foreach($expanded as $idx=>$value){
+        foreach($expanded as $idx=>$row){
             for ($i=0; $i<count($pivotColumns); $i++){
-                if (!isset($value[$pivotColumns[$i]])){
+                if (!isset($row[$pivotColumns[$i]])){
                     $expanded[$idx][$pivotColumns[$i]] = null;
                 }
             }
