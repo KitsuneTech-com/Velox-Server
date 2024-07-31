@@ -27,7 +27,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         private PreparedStatement|StatementSet|Transaction|null $_delete = null,
         public ?string                                          $instanceName = null){
             $props = ["_select","_update","_insert","_delete"];
-            $conn = $this->_select->conn ?? $this->_update->conn ?? $this->_insert->conn ?? $this->_delete->conn;
             foreach($props as $prop){
                 if (isset($this->$prop)){
                     if ($this->$prop->queryType != Query::QUERY_PROC){
