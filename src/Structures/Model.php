@@ -16,7 +16,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private object $_diff;
     private Diff|array|null $_filter = null;
     private array $_filteredIndices = [];
-    private int|null $_lastQuery;
+    private int|null $_lastQuery = null;
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
     
