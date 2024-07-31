@@ -424,7 +424,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $expanded = array_values($expanded);
 
         $outputModel->_data = $expanded;
-        $outputModel->_columns = $pivotColumns;
+        $outputModel->_columns = [$indexColumn, ...$pivotColumns];
 
         return $outputModel;
     }
