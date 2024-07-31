@@ -159,7 +159,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
                 $rowData = [];
                 foreach ($details['columns'] as $column){
                     //First quote any double-quotes
-                    $value = $row[$column] ? str_replace('"','""',$row[$column]) : '';
+                    $value = $row[$column] ? str_replace('"','""',strval($row[$column])) : '';
                     $rowData[] = '"'.$value.'"';
                 }
                 $output .= implode(",",$rowData);
