@@ -87,7 +87,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
                     xmlwriter_start_element($xml,'row');
                     foreach ($row as $column => $data){
                         xmlwriter_start_element($xml,str_replace(' ','-',$column));
-                        xmlwriter_text($xml,$data ?? '');
+                        xmlwriter_text($xml,strval($data));
                         xmlwriter_end_element($xml);
                     }
                     xmlwriter_end_element($xml);
