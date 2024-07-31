@@ -145,7 +145,8 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
             if (!$noHeader){
                 $headerData = [];
                 foreach ($details['columns'] as $column){
-                    $headerData[] = '"'.$column.'"';
+                    $header = str_replace('"','""',strval($column));
+                    $headerData[] = '"'.$header.'"';
                 }
                 $output = implode(",",$headerData);
             }
