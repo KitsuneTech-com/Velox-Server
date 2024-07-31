@@ -394,7 +394,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             $row = $this->_data[$i];
             $currentIdx = $row[$indexColumn];
             if (!isset($expanded[$currentIdx])){
-                $expanded[$currentIdx] = [];
+                $expanded[$currentIdx] = [$indexColumn => $currentIdx]; //This is redundant for now, but allows us to reindex the array when we're done
             }
             if (isset($flippedColumns[$row[$pivotBy]])){
                 if (isset($expanded[$currentIdx][$row[$pivotBy]])){
@@ -419,6 +419,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
         }
+        //Reindex results sequentially
+        $expanded = array_values($expanded);
 
         $outputModel->_data = $expanded;
         return $outputModel;
