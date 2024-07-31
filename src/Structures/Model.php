@@ -412,13 +412,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         //Fill in any gaps with nulls
-        for ($i=0; $i<count($expanded); $i++){
-            for ($j=0; $j<count($pivotColumns); $j++){
-                if (!isset($expanded[$i][$pivotColumns[$j]])){
-                    $expanded[$i][$pivotColumns[$j]] = null;
+        foreach($expanded as $idx=>$value){
+            for ($i=0; $i<$rowCount; $i++){
+                if (!isset($expanded[$idx][$pivotColumns[$j]])){
+                    $expanded[$idx][$pivotColumns[$j]] = null;
                 }
             }
         }
+
         $outputModel->_data = $expanded;
         return $outputModel;
     }
