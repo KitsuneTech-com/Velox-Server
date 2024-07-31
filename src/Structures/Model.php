@@ -414,7 +414,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //Fill in any gaps with nulls
         foreach($expanded as $idx=>$value){
             for ($i=0; $i<count($pivotColumns); $i++){
-                if (!isset($expanded[$idx][$pivotColumns[$i]])){
+                if (!isset($value[$pivotColumns[$i]])){
                     $expanded[$idx][$pivotColumns[$i]] = null;
                 }
             }
