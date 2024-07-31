@@ -122,7 +122,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
                     $tr = $table->appendChild($doc->createElement('tr'));
                     foreach($details['columns'] as $column){
                         $td = $tr->appendChild($doc->createElement('td'));
-                        $td->textContent = $row[$column] ?? "";
+                        $td->textContent = strval($row[$column]);
                     }
                 }
                 $tfoot = $table->appendChild($doc->createElement('tfoot'));
