@@ -327,6 +327,102 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
     }
+    public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
+        // This method performs a pivot-like operation on the current data and returns the result as a new Model.
+        //
+        // Arguments (in order):
+        //   $pivotBy (required)                 - a string containing the name of the column to be pivoted (containing the intended column names)
+        //   $indexColumn (required)             - a string containing the name of the column to be used as an index (the values by which the pivot results will
+        //                                         be grouped)
+        //   $valueColumn (required)             - a string containing the name of the column in which the pivoted data values are to be found
+        //   $pivotColumns (optional)            - an array of specific values from $pivotBy (i.e., intended columns) to be used; all others will be ignored
+        //                                         (if not provided, all unique values from the $pivotBy column will be used)
+        //   $ignore (optional)                  - if set to true, $pivotColumns is instead treated as a list of columns to be ignored, and all others are included
+        //   $suppressColumnException (optional) - if set to true, no exception will be thrown if one or more of the $pivotColumns do not exist in the original dataset;
+        //                                         instead, the missing columns will be included with their values set to null
+
+        $outputModel = new Model;
+        $rowCount = count($this->_data);
+        if ($rowCount == 0){
+            return $outputModel; //Don't bother trying to pivot an empty Model; just return
+        }
+        //Check if $pivotBy column exists in data set
+        $pivotByColumn = array_column($this->_data,$pivotBy);
+        if (count($pivotByColumn) == 0){
+            throw new VeloxException("Specified pivot-by column '$pivotBy' does not exist in result set.",68);
+        }
+        $pivotByValues = array_unique($pivotByColumn);
+
+        //Check if $indexColumn column exists in data set
+        $indexValues = array_unique(array_column($this->_data,$indexColumn));
+        if (count($indexValues) == 0){
+            throw new VeloxException("Index column '$indexColumn' does not exist in result set.",69);
+        }
+        if (is_null($pivotColumns)){
+            $pivotColumns = $pivotByValues;
+        }
+        if ($ignore){
+            $pivotColumns = array_diff($pivotByValues,$pivotColumns);
+        }
+
+        //Check if $valueColumn column exists in data set
+        $values = array_column($this->_data,$valueColumn);
+        if (count($values) == 0){
+            throw new VeloxException("Value column '$valueColumn' does not exist in result set.",70);
+        }
+
+        //Check whether all given columns exist in the $pivotBy column
+        $diff = array_diff($pivotColumns,$pivotByValues);
+        if (count($diff) > 0 && !$suppressColumnException){
+            throw new VeloxException("Value(s) ".implode(",",$diff)." specified in pivot columns array do not exist in $pivotBy column.",71);
+        }
+
+        $flippedColumns = array_flip($pivotColumns);
+        foreach ($flippedColumns as $name=>$type){
+            $flippedColumns[$name] = false; //Does the column contain any text? Default is false until non-numeric data is found
+        }
+
+        //Iterate once through the rows to determine if any of the above needs to be set to true
+        for ($i=0; $i<$rowCount; $i++){
+            $row = $this->_data[$i];
+            if (!$flippedColumns[$row[$pivotBy]] && !is_numeric($row[$valueColumn])){
+                $flippedColumns[$row[$pivotBy]] = true;
+            }
+        }
+
+        $expanded = [];
+        for ($i=0; $i<$rowCount; $i++){
+            $row = $this->_data[$i];
+            $currentIdx = $row[$indexColumn];
+            if (!isset($expanded[$currentIdx])){
+                $expanded[$currentIdx] = [];
+            }
+            if (isset($flippedColumns[$row[$pivotBy]])){
+                if (isset($expanded[$currentIdx][$row[$pivotBy]])){
+                    //summation depends on column data type - numbers should be added and everything else should be concatenated
+                    if ($flippedColumns[$row[$pivotBy]]){
+                        $expanded[$currentIdx][$row[$pivotBy]] .= ",".$row[$valueColumn];
+                    }
+                    else {
+                        $expanded[$currentIdx][$row[$pivotBy]] += $row[$valueColumn];
+                    }
+                }
+                else {
+                    $expanded[$currentIdx][$row[$pivotBy]] = $row[$valueColumn];
+                }
+            }
+        }
+        //Fill in any gaps with nulls
+        for ($i=0; $i<count($expanded); $i++){
+            for ($j=0; $j<count($pivotColumns); $j++){
+                if (!isset($expanded[$i][$pivotColumns[$j]])){
+                    $expanded[$i][$pivotColumns[$j]] = null;
+                }
+            }
+        }
+        $outputModel->_data = $expanded;
+        return $outputModel;
+    }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
     }
