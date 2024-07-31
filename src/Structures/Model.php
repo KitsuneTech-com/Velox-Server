@@ -38,7 +38,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
             $this->_diff = new Diff('{}');
-            $this->select();
+            if (isset($this->_select)) $this->select();
     }
     
     // Countable implementation
