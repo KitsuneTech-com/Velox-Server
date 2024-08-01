@@ -14,7 +14,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private array $_columns = [];
     private array $_data = [];
     private object $_diff;
-    private Diff|array|null $_filter = null;
+    private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
     private bool $_delaySelect = false;
@@ -37,7 +37,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-            $this->_diff = new Diff('{}');
+            $this->_diff = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
     
@@ -95,7 +95,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
     
     // Class-specific methods
-    public function select(bool $diff = false) : Diff|bool {
+    public function select(bool $diff = false) : VeloxQL|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -126,7 +126,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             
             if ($diff) {
-                $this->_diff = new Diff();
+                $this->_diff = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
@@ -154,8 +154,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
     private function executeDML(string $verb, array $rows) : bool {
         //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
-        // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be Diff-like (each element
-        // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/Diff.php].
+        // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be VeloxQL-like (each element
+        // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/VeloxQL.php].
 
         //This method is not called directly. Rather, each of the three DML methods (insert, update, delete) calls it with the appropriate verb.
 
@@ -251,7 +251,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         array_multisort(...$sortArray);
     }
     
-    public function synchronize(Diff $diff) : void {
+    public function synchronize(VeloxQL $diff) : void {
         $this->_delaySelect = true;
         if ($diff->update) {
             $this->update($diff->update);
@@ -279,11 +279,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             return $this->_data;
         }
     }
-    public function diff() : Diff {
+    public function diff() : VeloxQL {
         return $this->_diff;
     }
-    public function setFilter(Diff|array|null $filter = null) : void {
-        $this->_filter = $filter instanceof Diff ? $filter->select : (!is_null($filter) ? $filter : []);
+    public function setFilter(VeloxQL|array|null $filter = null) : void {
+        $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
         if (!$this->_filter){
             return;
