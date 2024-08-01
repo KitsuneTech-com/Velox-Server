@@ -14,7 +14,7 @@ if ((@include_once $autoloaderPath) === false){
 //*Custom configuration placeholder*//
 
 use KitsuneTech\Velox\VeloxException as VeloxException;
-use KitsuneTech\Velox\Structures\{Model, Diff};
+use KitsuneTech\Velox\Structures\{Model, VeloxQL};
 
 //The endpoint uses the 'q' GET parameter to find the appropriate query definition, so this parameter must be sent on the request.
 if (!isset($_GET['q'])){
@@ -48,14 +48,14 @@ $META = $post_array['meta'] ?? [];
 
 
 if ($SELECT || $UPDATE || $INSERT || $DELETE){
-    $DIFF = new Diff();
-    $DIFF->select = is_array($SELECT) ? $SELECT : json_decode($SELECT);
-    $DIFF->update = is_array($UPDATE) ? $UPDATE : json_decode($UPDATE);
-    $DIFF->insert = is_array($INSERT) ? $INSERT : json_decode($INSERT);
-    $DIFF->delete = is_array($DELETE) ? $DELETE : json_decode($DELETE);
+    $VQL = new VeloxQL();
+    $VQL->select = is_array($SELECT) ? $SELECT : json_decode($SELECT);
+    $VQL->update = is_array($UPDATE) ? $UPDATE : json_decode($UPDATE);
+    $VQL->insert = is_array($INSERT) ? $INSERT : json_decode($INSERT);
+    $VQL->delete = is_array($DELETE) ? $DELETE : json_decode($DELETE);
 }
 else {
-    $DIFF = null;
+    $VQL = null;
 }
 
 $QUERIES = [];
@@ -67,23 +67,23 @@ require_once $queryFileName;
 
 //Allow pre-processing of data prior to query call (such as password hashing, etc.)
 if (function_exists("preProcessing")){
-    preProcessing($DIFF->select,$DIFF->update,$DIFF->insert,$DIFF->delete);
+    preProcessing($VQL->select,$VQL->update,$VQL->insert,$VQL->delete);
 }
 if (isset($QUERIES['SELECT'])){
-    if ($DIFF && isset($DIFF->select[0]['passthru'])){
+    if ($VQL && isset($VQL->select[0]['passthru'])){
         if (!($QUERIES['SELECT'] instanceof KitsuneTech\Velox\Database\Procedures\StatementSet)){
             throw new VeloxException('Passthru is only available for StatementSet query definitions.',5);
         }
-        unset($DIFF->select[0]['passthru']);
-        $QUERIES['SELECT']->addCriteria($DIFF->select);
+        unset($VQL->select[0]['passthru']);
+        $QUERIES['SELECT']->addCriteria($VQL->select);
         $passthru = true;
     }
     else {
         $passthru = false;
     }
     $VELOX_MODEL = new Model($QUERIES['SELECT'] ?? null, $QUERIES['UPDATE'] ?? null, $QUERIES['INSERT'] ?? null, $QUERIES['DELETE'] ?? null);
-    if ($DIFF && !$passthru){
-            $VELOX_MODEL->synchronize($DIFF);
+    if ($VQL && !$passthru){
+            $VELOX_MODEL->synchronize($VQL);
     }
 
     //Set the query version header (if it's set as a positive integer)
