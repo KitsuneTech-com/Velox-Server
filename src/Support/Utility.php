@@ -62,3 +62,11 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
 function isAssoc($array){
     return (array_values($array) !== $array);
 }
+
+function array_change_key_case_recursive($arr, $case = CASE_LOWER) {
+    //from user zhangxuejiang on php.net
+    return array_map(function($item) use($case) {
+        if(is_array($item)) $item = array_change_key_case_recursive($item, $case);
+        return $item;
+    },array_change_key_case($arr, $case));
+}
