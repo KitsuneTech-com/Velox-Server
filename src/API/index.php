@@ -15,6 +15,7 @@ if ((@include_once $autoloaderPath) === false){
 
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\{Model, VeloxQL};
+use function KitsuneTech\Velox\Utility\array_change_key_case_recursive;
 
 //The endpoint uses the 'q' GET parameter to find the appropriate query definition, so this parameter must be sent on the request.
 if (!isset($_GET['q'])){
@@ -38,6 +39,7 @@ try {
 catch(Exception $ex){
     $post_array = $_POST;
 }
+$post_array = array_change_key_case_recursive($post_array, CASE_LOWER);
 
 //Assign variables from array
 $SELECT = $post_array['select'] ?? [];
