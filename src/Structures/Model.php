@@ -349,14 +349,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //Check if $pivotBy column exists in data set
         $pivotByColumn = array_column($this->_data,$pivotBy);
         if (count($pivotByColumn) == 0){
-            throw new VeloxException("Specified pivot-by column '$pivotBy' does not exist in result set.",68);
+            throw new VeloxException("Specified pivot-by column '$pivotBy' does not exist in dataset.",68);
         }
         $pivotByValues = array_values(array_unique($pivotByColumn));
 
         //Check if $indexColumn column exists in data set
         $indexValues = array_unique(array_column($this->_data,$indexColumn));
         if (count($indexValues) == 0){
-            throw new VeloxException("Index column '$indexColumn' does not exist in result set.",69);
+            throw new VeloxException("Index column '$indexColumn' does not exist in dataset.",69);
         }
         if (is_null($pivotColumns)){
             $pivotColumns = $pivotByValues;
@@ -368,7 +368,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //Check if $valueColumn column exists in data set
         $values = array_column($this->_data,$valueColumn);
         if (count($values) == 0){
-            throw new VeloxException("Value column '$valueColumn' does not exist in result set.",70);
+            throw new VeloxException("Value column '$valueColumn' does not exist in dataset.",70);
         }
 
         //Check whether all given columns exist in the $pivotBy column
