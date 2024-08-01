@@ -6,7 +6,7 @@ namespace KitsuneTech\Velox\Database\Procedures;
 use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\Database\Procedures\{Query, Transaction};
-use KitsuneTech\Velox\Structures\{Diff, ResultSet};
+use KitsuneTech\Velox\Structures\{VeloxQL, ResultSet};
 use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
 /** `StatementSet` is a class that dynamically generates a collection of related PreparedStatements. This is best used for
@@ -70,11 +70,11 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     /** @param Connection   $conn       The Connection instance to use for this instance
      *  @param string       $_baseSql   The SQL template by which to generate the prepared statements
      *  @param int|null     $queryType  The type of query to be run ({@see Query::QUERY_SELECT QUERY_SELECT, etc.})
-     *  @param array|Diff   $criteria   Initial criteria to be applied; this can be used to avoid having to call setCriteria() later
+     *  @param array|VeloxQL   $criteria   Initial criteria to be applied; this can be used to avoid having to call setCriteria() later
      *  @param string|null  $name       The name of this StatementSet; can be used to distinguish between multiple StatementSets in a single Transaction
      *  @throws VeloxException          If criteria are incorrectly formatted (see exception text for description)
      */
-    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|Diff $criteria = [], public ?string $name = null){
+    public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
             throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
@@ -98,7 +98,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
                 $this->queryType = Query::QUERY_SELECT;
             }
         }
-        if ($this->criteria instanceof Diff || count($this->criteria) > 0){
+        if ($this->criteria instanceof VeloxQL || count($this->criteria) > 0){
             $this->addCriteria($this->criteria);
         }
     }
@@ -173,12 +173,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * Adds criteria to the StatementSet. These criteria are the values and/or conditions that will be used to create and
      * execute the prepared statements based on the base SQL template and its <<placeholders>>.
      *
-     * @param array|Diff $criteria  The criteria to be added
+     * @param array|VeloxQL $criteria  The criteria to be added
      * @return void
      * @throws VeloxException       If criteria are incorrectly formatted (see exception text for description)
      */
-    public function addCriteria(array|Diff $criteria) : void {
-        if ($criteria instanceof Diff){
+    public function addCriteria(array|VeloxQL $criteria) : void {
+        if ($criteria instanceof VeloxQL){
             switch ($this->queryType){
                 case Query::QUERY_SELECT:
                     $this->addCriteria($criteria->select);

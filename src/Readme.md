@@ -92,7 +92,7 @@ The first argument for each of these is a reference to the `Connection` object t
 
 ### Structures
 
-The `Structures` sub-namespace contains data structure classes used by the server-side component. Two of these - `Diff` and `ResultSet` - are used to
+The `Structures` sub-namespace contains data structure classes used by the server-side component. Two of these - `VeloxQL` and `ResultSet` - are used to
 structure data passing to and from (respectively) the database through the Database\Procedures classes. The third - `Model` - is the most crucial
 of these, as it mediates the data flow between the API interface and the database. A Model is a memory-resident representation of a dataset as
 defined by the procedures assigned to it, and can be used to abstract away the entire database communication process by way of its various methods.
