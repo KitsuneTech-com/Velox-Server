@@ -59,7 +59,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
         $this->_keys = array_values($this->_keys);
     }
     public function offsetGet(mixed $offset) : ?array {
-        return isset($this->_resultArray[$offset]) ? $this->_resultArray[$offset] : null;
+        return $this->_resultArray[$offset] ?? null;
     }
     
     //Class-specific functionality
