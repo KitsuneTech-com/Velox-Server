@@ -21,11 +21,11 @@ class VeloxQL {
         //  update:
         //    [{values: {col2: 'changeThis'}, where: {col2: 'fromThis'}},{values: {col2: 'thisToo'}, where: {col1: 2}}]
         // }
-        $diffObj = $json != "" ? json_decode($json) : (object)[];
-        $this->select = $diffObj->select ?? [];
-        $this->update = $diffObj->update ?? [];
-        $this->insert = $diffObj->insert ?? [];
-        $this->delete = $diffObj->delete ?? [];
+        $vqlObj = $json != "" ? json_decode($json) : (object)[];
+        $this->select = $vqlObj->select ?? [];
+        $this->update = $vqlObj->update ?? [];
+        $this->insert = $vqlObj->insert ?? [];
+        $this->delete = $vqlObj->delete ?? [];
     }
 }
 

@@ -50,7 +50,7 @@ $QUERIES = [
     'DELETE' => new StatementSet($conn, "DELETE FROM myTable WHERE <<condition>>")
 ];
 
-function preProcessing(&$diffSelect, &$diffUpdate, &$diffInsert, &$diffDelete){
+function preProcessing(&$vqlSelect, &$vqlUpdate, &$vqlInsert, &$vqlDelete){
     //If any pre-processing needs to be done before the Model is generated, do it here. The data for each query type is passed by
     //reference here, allowing it to be altered before it's used. This function can also be used to skip Model generation (as might
     //be preferred if a DML query is to be used standalone) by including an exit() or die() call. (Note that if this is to be done,
