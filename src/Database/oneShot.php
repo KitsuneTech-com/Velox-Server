@@ -17,7 +17,9 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
  * @throws VeloxException                        If parameters/criteria are specified for a base Query (this is not supported)
  */
 function oneShot(Query|StatementSet|Transaction $query, array|object|null $input = null) : array|ResultSet|bool|null {
-    $procedureClass = str_replace(__NAMESPACE__.'\\','',get_class($query));
+    $namespaceComponents = explode('\\', get_class($query));
+    $procedureClass = end($namespaceComponents);
+
     $addMethod = match ($procedureClass) {
         'PreparedStatement' => 'addParameterSet',
         'StatementSet' => 'addCriteria',
