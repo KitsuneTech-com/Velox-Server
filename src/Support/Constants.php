@@ -14,6 +14,12 @@ const AS_XML = 32;
 const AS_HTML = 64;
 const AS_CSV = 128;
 
+const LEFT_JOIN = 0;
+const RIGHT_JOIN = 1;
+const INNER_JOIN = 2;
+const FULL_JOIN = 3;
+const CROSS_JOIN = 4;
+
 const VELOX_SUPPORTED_OPERATORS = [
     "=",">","<",">=","<=","<>","BETWEEN","IN","LIKE","NOT BETWEEN","NOT IN","NOT LIKE"
 ];
