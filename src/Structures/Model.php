@@ -19,7 +19,19 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private int|null $_lastQuery = null;
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
-    
+
+    /**
+     * Model is the core data storage class for Velox. Each instance of this class holds an iterable dataset composed of the results of
+     * the procedure passed to the first argument of its constructor; alternatively, the Model can be directly populated
+     *
+     *
+     * @param PreparedStatement|StatementSet|null $_select              The SELECT-equivalent procedure used to populate the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
+     * @param string|null $instanceName                                 An optional identifier
+     * @throws VeloxException                                           if the initial SELECT procedure throws an exception
+     */
     public function __construct(
         private PreparedStatement|StatementSet|null             $_select = null,
         private PreparedStatement|StatementSet|Transaction|null $_update = null,
@@ -95,7 +107,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
     
     // Class-specific methods
-    public function select(bool $diff = false) : VeloxQL|bool {
+    public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -125,7 +137,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 $this->_data = [];
             }
             
-            if ($diff) {
+            if ($vql) {
                 $this->_diff = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
@@ -251,19 +263,16 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         array_multisort(...$sortArray);
     }
     
-    public function synchronize(VeloxQL $diff) : void {
+    public function synchronize(VeloxQL $vql) : void {
         $this->_delaySelect = true;
-        if ($diff->update) {
-            $this->update($diff->update);
-        }
-        if ($diff->delete) {
-            $this->delete($diff->delete);
-        }
-        if ($diff->insert) {
-            $this->insert($diff->insert);
-        }
-        if ($diff->select) {
-            $this->setFilter($diff);
+        $operations = ["update","delete","insert","select"]; //Perform operations in this order
+        for ($i=0; $i<count($operations); $i++){
+            if ($operations[$i] !== "select"){
+                $this->executeDML($operations[$i],$vql->{$operations[$i]});
+            }
+            else {
+                $this->setFilter($vql);
+            }
         }
         $this->select();
         $this->_delaySelect = false;
@@ -372,9 +381,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
 
         //Check whether all given columns exist in the $pivotBy column
-        $diff = array_diff($pivotColumns,$pivotByValues);
-        if (count($diff) > 0 && !$suppressColumnException){
-            throw new VeloxException("Value(s) ".implode(",",$diff)." specified in pivot columns array do not exist in $pivotBy column.",71);
+        $vql = array_diff($pivotColumns,$pivotByValues);
+        if (count($vql) > 0 && !$suppressColumnException){
+            throw new VeloxException("Value(s) ".implode(",",$vql)." specified in pivot columns array do not exist in $pivotBy column.",71);
         }
 
         $flippedColumns = array_flip($pivotColumns);
@@ -427,6 +436,27 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $outputModel->_columns = [$indexColumn, ...$pivotColumns];
 
         return $outputModel;
+    }
+    public function join(int $joinType, Model $joinModel, array $joinConditions) : Model {
+        $returnModel = new Model;
+        switch ($joinType){
+            case LEFT_JOIN:
+                //Everything from $this and only those rows from $joinModel that match $joinConditions
+                break;
+            case RIGHT_JOIN:
+                //Everything from $joinModel and only those rows from $this that match $joinCondition
+                break;
+            case INNER_JOIN:
+                //Only those rows that exactly match $joinCondition
+                break;
+            case FULL_JOIN:
+                //All rows from both $this and $joinModel, matched on $joinCondition where possible
+                break;
+            case CROSS_JOIN:
+                //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
+                break;
+        }
+        return $returnModel;
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
