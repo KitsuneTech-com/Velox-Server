@@ -1,6 +1,7 @@
 <?php
 
 namespace KitsuneTech\Velox\Structures;
+use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
@@ -29,7 +30,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
-     * @param string|null $instanceName                                 An optional identifier
+     * @param string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
      * @throws VeloxException                                           if the initial SELECT procedure throws an exception
      */
     public function __construct(
@@ -437,11 +438,61 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         return $outputModel;
     }
-    public function join(int $joinType, Model $joinModel, array $joinConditions) : Model {
+    public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model {
+        //SQL wildcards to be replaced by PCRE equivalents (for use in LIKE/NOT LIKE)
+
+        //TODO: add the rest of the wildcards
+        $wildcards = [
+            ["%","_"],
+            [".*",".{1}"]
+        ];
+        function wildcardConversion(string $str) : string {
+
+            return $str;
+        }
+        $joinFunctions = [
+            LEFT_JOIN => function(){},
+            RIGHT_JOIN => function(){},
+            INNER_JOIN => function(){},
+            FULL_JOIN => function(){},
+            CROSS_JOIN => function(){}
+        ];
+        $comparisons = [
+            "=": function($a,$b){ return $a == $b; },
+            ">": function($a,$b){ return $a > $b; },
+            "<": function($a,$b){ return $a < $b; },
+            ">=": function($a,$b){ return $a >= $b; },
+            "<=": function($a,$b){ return $a <= $b; },
+            "<>": function($a,$b){ return $a != $b; },
+            "LIKE": function($a,$b) use ($wildcards) {
+                //Convert SQL wildcards in $b to PCRE equivalents
+
+            }
+        ];
         $returnModel = new Model;
+        //$joinConditions can be:
+        //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
+        //      performing an equijoin on columns having that name in each Model and coalescing those columns into one.
+        //  an array; this array must have three elements. The first and third elements must be the names of the columns
+        //      on which the join is to be made - the first being the column existing in the invoked Model, the third being
+        //      the column existing in the Model to be joined. The second element should be a string containing the SQL
+        //      comparison operator to be used; the direction of comparison follows the order of elements.
+        //          e.g. ["parentColumn","<","joinedColumn"]
+        //      All SQL comparison operators are supported.
+        //  null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
+        //      comparison is necessary or used.
+
+        // --- Initial condition checks (is there anything about the current state that will prevent a successful join?) --- //
+        if (!$joinConditions && $joinType !== CROSS_JOIN){
+            throw new VeloxException("Join conditions must be specified",72);
+        }
+
         switch ($joinType){
             case LEFT_JOIN:
                 //Everything from $this and only those rows from $joinModel that match $joinConditions
+                foreach ($this as $row){
+
+                }
                 break;
             case RIGHT_JOIN:
                 //Everything from $joinModel and only those rows from $this that match $joinCondition

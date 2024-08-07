@@ -88,6 +88,7 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 69   | Index column 'xxxx' does not exist in dataset.                                                                                          | The column which is to be used as the index for the pivot results can't be found. |
 | 70   | Value column 'xxxx' does not exist in dataset.                                                                                          | The column which is expected to contain the data to be pivoted can't be found. |
 | 71   | Value(s) 'xxxx' specified in pivot columns array do not exist in 'xxxx' column.                                                         | The specified values can't be found in the pivot-by column. If this is expected due to filtering, this exception can be suppressed by passing true to Model->pivot()'s sixth argument. |
+| 72   | Join conditions must be specified                                                                                                       | Model->join() requires valid join conditions for anything other than a cross join. |
 
 
 ### Transport\Export

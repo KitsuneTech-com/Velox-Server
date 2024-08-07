@@ -23,6 +23,9 @@ const CROSS_JOIN = 4;
 const VELOX_SUPPORTED_OPERATORS = [
     "=",">","<",">=","<=","<>","BETWEEN","IN","LIKE","NOT BETWEEN","NOT IN","NOT LIKE"
 ];
+const VELOX_SUPPORTED_JOIN_OPERATORS = [
+    "=",">","<",">=","<=","<>","LIKE","NOT LIKE"
+];
 
 if(!defined('STDIN'))	{ define('STDIN',  fopen('php://stdin',  'rb')); }
 if(!defined('STDOUT'))	{ define('STDOUT', fopen('php://stdout', 'wb')); }
