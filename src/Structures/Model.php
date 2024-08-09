@@ -104,8 +104,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return isset($this->_data[$offset]);
     }
 
-
-    
     // Class-specific methods
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
@@ -503,16 +501,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 throw new VeloxException("Right side column does not exist in joining Model",77);
             }
         }
-        //If there are matching column names in both Models and they aren't part of the join operation (or if they are,
+        //If there are matching column names in both Models, and they aren't part of the join operation (or if they are,
         //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
         $commonColumnCount = count($commonColumns);
         if ($commonColumnCount > 1 ||
             $commonColumnCount == 1 && is_array($joinConditions) && $this->instanceName == $joinModel->instanceName){
             throw new VeloxException("Identical column names exist in both Models",78);
         }
-
-        //Create a merged column list
-        $mergedColumns = $this->_columns + $joinModel->_columns;
 
         //Define the left and right sides of the join
         $left = $this;
