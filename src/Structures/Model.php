@@ -440,16 +440,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model {
         //SQL wildcards to be replaced by PCRE equivalents (for use in LIKE/NOT LIKE)
-
-        //TODO: add the rest of the wildcards
         $wildcards = [
             ["%","_"],
             [".*",".{1}"]
         ];
-        function wildcardConversion(string $str) : string {
-
-            return $str;
-        }
         $joinFunctions = [
             LEFT_JOIN => function(){},
             RIGHT_JOIN => function(){},
@@ -458,15 +452,20 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             CROSS_JOIN => function(){}
         ];
         $comparisons = [
-            "=": function($a,$b){ return $a == $b; },
-            ">": function($a,$b){ return $a > $b; },
-            "<": function($a,$b){ return $a < $b; },
-            ">=": function($a,$b){ return $a >= $b; },
-            "<=": function($a,$b){ return $a <= $b; },
-            "<>": function($a,$b){ return $a != $b; },
-            "LIKE": function($a,$b) use ($wildcards) {
-                //Convert SQL wildcards in $b to PCRE equivalents
-
+            "=" => function($a,$b){ return $a == $b; },
+            ">" => function($a,$b){ return $a > $b; },
+            "<" => function($a,$b){ return $a < $b; },
+            ">=" => function($a,$b){ return $a >= $b; },
+            "<=" => function($a,$b){ return $a <= $b; },
+            "<>" => function($a,$b){ return $a != $b; },
+            "LIKE" => function($a,$b) use ($wildcards) {
+                //Convert SQL wildcards in $b to PCRE equivalents, add bookends to make it an exact match
+                $b = "^".str_replace($wildcards, "", $b)."$";
+                return preg_match($b,$a);
+            },
+            "NOT LIKE" => function($a,$b) use ($wildcards) {
+                $b = "^".str_replace($wildcards, "", $b)."$";
+                return !preg_match($b,$a);
             }
         ];
         $returnModel = new Model;
@@ -486,25 +485,49 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$joinConditions && $joinType !== CROSS_JOIN){
             throw new VeloxException("Join conditions must be specified",72);
         }
+        $commonColumns = array_intersect($this->columns(),$joinModel->columns());
+        if (is_string($joinConditions) && !in_array($joinConditions, $commonColumns)){
+            throw new VeloxException("Join column specified does not exist in both Models",73);
+        }
+        //If there are matching column names in both Models and they aren't part of the join operation (or if they are,
+        //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
+        //TODO: write the if block that does this
+
+        //Create a merged column list
+        $mergedColumns = $this->_columns + $joinModel->_columns;
+
+        //Define the left and right sides of the join
+        $left = $this;
+        $right = $joinModel;
 
         switch ($joinType){
+            case RIGHT_JOIN:
+                //A right join is simply a left join with the sides flipped, so swap the left and right Models and proceed
+                $right = $this;
+                $left = $joinModel;
             case LEFT_JOIN:
                 //Everything from $this and only those rows from $joinModel that match $joinConditions
-                foreach ($this as $row){
+                foreach ($left as $row){
 
                 }
                 break;
-            case RIGHT_JOIN:
-                //Everything from $joinModel and only those rows from $this that match $joinCondition
-                break;
             case INNER_JOIN:
                 //Only those rows that exactly match $joinCondition
+                foreach ($left as $row){
+
+                }
                 break;
             case FULL_JOIN:
+                foreach ($left as $row){
+
+                }
                 //All rows from both $this and $joinModel, matched on $joinCondition where possible
                 break;
             case CROSS_JOIN:
                 //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
+                foreach ($left as $row){
+
+                }
                 break;
         }
         return $returnModel;
