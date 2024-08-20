@@ -13,7 +13,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
-    private object $_diff;
+    private object $_vql;
     private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
@@ -49,7 +49,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-            $this->_diff = new VeloxQL('{}');
+            $this->_vql = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
     
@@ -136,22 +136,22 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             
             if ($vql) {
-                $this->_diff = new VeloxQL();
+                $this->_vql = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->_diff->delete[] = (object)$row;
+                        $this->_vql->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
                     if (!in_array($row,$this->_data)){
                         $this->_data[] = $row;
-                        $this->_diff->insert[] = (object)$row;
+                        $this->_vql->insert[] = (object)$row;
                     }
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_diff;
+                return $this->_vql;
             }
             else {
                 return true;
@@ -287,7 +287,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     public function diff() : VeloxQL {
-        return $this->_diff;
+        return $this->_vql;
     }
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
