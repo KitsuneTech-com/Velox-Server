@@ -360,7 +360,7 @@ class Query {
             throw new VeloxException("SQL statement failed to execute",21,$ex);
         }
         $finalResult = match ($this->resultType) {
-            Query::RESULT_NONE => null,
+            Query::RESULT_NONE => true,
             Query::RESULT_ARRAY => $results,
             default => $results[0] ?? new ResultSet()
         };
