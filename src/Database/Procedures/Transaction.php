@@ -40,14 +40,31 @@ class Transaction {
 
     public array $procedures = [];
 
-    public function __construct(?Connection &$conn = null, ?string $name = null) {
+    /**
+     * `Transaction` emulates (and augments) the behavior of T-SQL transactions by allowing multiple sequential queries
+     * to be run as one block -- even across several connections, if necessary for ETL operations or something similar.
+     * Interstitial functions can also be added as callables to transform a result set before passing it on to the next
+     * query. If any query fails during the execution of a Transaction, all databases affected are rolled back to their
+     * previous state. Transactions can also be nested for more granular control of the commit/rollback process.
+     *
+     * @param Connection|null $conn     (optional) The Connection instance to begin this Transaction with; this is optional, and if this isn't provided, the Connection associated with the first added procedure will be adopted at that time.
+     */
+    public function __construct(?Connection &$conn = null) {
         if (isset($conn)){
             $this->_baseConn = $conn;
             $this->_connections[] = $conn;
         }
     }
 
-    //Assembly
+    /**
+     * Inserts a query into the Transaction execution order. This can take the form of a string of SQL, or any Velox
+     * procedure object.
+     * @param string|Query|StatementSet|Transaction $query
+     * @param int|null $resultType
+     * @param string|null $name
+     * @return void
+     * @throws VeloxException
+     */
     public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name = null) : void {
         $executionCount = count($this->procedures);
         //If a string is passed, build a Query from it, using the base connection of this instance
@@ -74,27 +91,35 @@ class Transaction {
         $this->_lastDefinedProcedure = $name;
         $this->procedures[] = ["instance" => $instance, "name" => $name];
     }
-    public function addFunction(callable $function, ?string $name = null) : void {
-        // Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
-        // is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
-        // The first array corresponds to the last procedure or function that was added to the transaction, and the second array corresponds to
-        // the next procedure or function that will be added to the transaction. Whatever arguments or parameters were passed to the previous procedure will be
-        // available in the first array, and any arguments already defined for the next procedure will be available in the second array. These can be modified as
-        //
-        // If no previous or next procedure exists, the corresponding argument will be null. If this function expects parameters itself [as might be defined in
-        // Transaction::addTransactionParameters()], these will be chained to the argument list after the second array.
-        //
-        // Thus, the definition should resemble the following (type hinting is, of course, optional):
-        // ------------------
-        // $transactionInstance = new Transaction();
-        // $myFunction = function(array|null $previous, array|null $next, $optionalArgument1, $optionalArgument2...) : void {
-        //     //function code goes here
-        // }
-        // $transactionInstance.addFunction($myFunction);
-        // -------------------
-        // No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
-        // references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
 
+    /**
+     *
+     * Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
+     * is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
+     * The first array corresponds to the last procedure or function that was added to the transaction, and the second array corresponds to
+     * the next procedure or function that will be added to the transaction. Whatever arguments or parameters were passed to the previous procedure will be
+     * available in the first array, and any arguments already defined for the next procedure will be available in the second array. These can be modified as
+     *
+     * If no previous or next procedure exists, the corresponding argument will be null. If this function expects parameters itself [as might be defined in
+     * Transaction::addTransactionParameters()], these will be chained to the argument list after the second array.
+     *
+     * Thus, the definition should resemble the following (type hinting is, of course, optional):
+     *
+     * ```
+     * $transactionInstance = new Transaction();
+     * $myFunction = function(array|null $previous, array|null $next, $optionalArgument1, $optionalArgument2...) : void {
+     *     //function code goes here
+     * }
+     * $transactionInstance.addFunction($myFunction);
+     * ```
+     * No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
+     * references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
+     *
+     * @param callable $function
+     * @param string|null $name
+     * @return void
+     */
+    public function addFunction(callable $function, ?string $name = null) : void {
         $procedureIndex = count($this->procedures);
         $scopedFunction = function() use (&$function,$procedureIndex){
             $previousProcedure = $this->procedures[$procedureIndex - 1] ?? null;
