@@ -8,10 +8,24 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private int $_position = 0;
     private array $_lastAffected = [];
     private array $_keys = [];
+
+    /**
+     * ResultSet is the default data structure returned by Velox database procedures. This can be iterated as
+     * a sparse two-dimensional array using native functions, and the available column names can be retrieved
+     * through the ResultSet::columns() method.
+     *
+     * @param array $_resultArray
+     */
     public function __construct(private array $_resultArray = []) {
-        if (count($this->_resultArray) > 0){
-            $this->_columns = array_keys($this->_resultArray[0]);
+        for ($i=0; $i<count($this->_resultArray); $i++) {
+            $rowColumns = array_keys($this->_resultArray[$i]);
+            for ($j=0; $j<count($rowColumns); $j++) {
+                if (!isset($this->_columns[$rowColumns[$j]])) {
+                    $this->_columns[$rowColumns[$j]] = count($this->_columns);
+                }
+            }
         }
+        $this->_columns = array_flip($this->_columns);
         $this->_keys = array_keys($this->_resultArray) ?? [];
     }
     
