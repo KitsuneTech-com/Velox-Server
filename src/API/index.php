@@ -61,6 +61,7 @@ else {
 }
 
 $QUERIES = [];
+$VELOX_MODEL = null;
 
 //Run the specified query definition file
 require_once $queryFileName;
@@ -109,7 +110,7 @@ else {
 
 //Run any custom post-processing code
 if (function_exists("postProcessing")){
-    postProcessing($VELOX_MODEL ?? null);
+    postProcessing($VELOX_MODEL);
 }
 
 //Export JSON to browser
