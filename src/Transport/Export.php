@@ -6,6 +6,32 @@ use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
 use function KitsuneTech\Velox\Utility\isPowerOf2;
 
+/** The Export function acts on one or more Models, translating the underlying data into one of several formats (JSON,
+ * XML, HTML, and CSV are supported) and then sending the data to the specified destination (the browser, a locally-stored
+ * file, stdout, or a returned string). These options can be specified by passing as the second argument one constant each
+ * from the following categories, added together:
+ *
+ * Destination flags:
+ *  * TO_BROWSER
+ *  * TO_FILE
+ *  * TO_STRING
+ *  * TO_STDOUT
+ *
+ * Format flags:
+ *  * AS_JSON
+ *  * AS_CSV
+ *  * AS_XML
+ *  * AS_HTML
+ *
+ * @param Model|array $models The Model(s) whose data is to be exported
+ * @param int $flags A bitmask indicating the destination type and format of the exported data.
+ * @param string|null $location The path and/or filename to which the data will be exported
+ * @param int|null $ignoreRows The number of data rows (if any) to be skipped at the beginning
+ * @param bool $noHeader If passed as true, no column headers will be included with the exported data
+ * @return string|bool If exported to string, the result will be returned. Otherwise, this will be a boolean indicating success.
+ * @throws VeloxException
+ * @throws \DOMException
+ */
 function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     //unpack flags
     $destination = $flags & 0x0F;  //First 5 bits
