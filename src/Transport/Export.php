@@ -4,10 +4,7 @@ declare(strict_types=1);
 namespace KitsuneTech\Velox\Transport;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
-
-function isPowerOf2($num){
-    return ($num != 0) && (($num & ($num-1)) == 0);
-}
+use function KitsuneTech\Velox\Utility\isPowerOf2;
 
 function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     //unpack flags
