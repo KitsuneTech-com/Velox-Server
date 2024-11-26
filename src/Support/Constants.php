@@ -1,17 +1,30 @@
 <?php
+/** @var int Velox errors suppressed */
 const VELOX_ERR_NONE = 0;
+/** @var int Velox errors sent to stderr */
 const VELOX_ERR_STDERR = 1;
+/** @var int Velox errors formatted as JSON */
 const VELOX_ERR_JSONOUT = 2;
+/** @var int Full stack trace included with error report */
 const VELOX_ERR_STACKTRACE = 4;
 
+
+/** @var int Export to browser (with necessary headers) */
 const TO_BROWSER = 1;
+/** @var int Export to designated file */
 const TO_FILE = 2;
+/** @var int Export to string (as return value) */
 const TO_STRING = 4;
+/** @var int Export to stdout */
 const TO_STDOUT = 8;
 
+/** @var int Format export as JSON object */
 const AS_JSON = 16;
+/** @var int Format export as XML document */
 const AS_XML = 32;
+/** @var int Format export as HTML document */
 const AS_HTML = 64;
+/** @var int Format export as CSV sheet */
 const AS_CSV = 128;
 
 const VELOX_SUPPORTED_OPERATORS = [
