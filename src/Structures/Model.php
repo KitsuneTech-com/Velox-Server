@@ -2,6 +2,7 @@
 
 namespace KitsuneTech\Velox\Structures;
 use KitsuneTech\Velox\VeloxException;
+use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
@@ -13,7 +14,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
-    private object $_vql;
+    private object $_diff;
     private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
@@ -49,7 +50,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-            $this->_vql = new VeloxQL('{}');
+            $this->_diff = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
     
@@ -104,6 +105,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return isset($this->_data[$offset]);
     }
 
+
+    
     // Class-specific methods
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
@@ -136,22 +139,22 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             
             if ($vql) {
-                $this->_vql = new VeloxQL();
+                $this->_diff = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->_vql->delete[] = (object)$row;
+                        $this->_diff->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
                     if (!in_array($row,$this->_data)){
                         $this->_data[] = $row;
-                        $this->_vql->insert[] = (object)$row;
+                        $this->_diff->insert[] = (object)$row;
                     }
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_vql;
+                return $this->_diff;
             }
             else {
                 return true;
@@ -287,7 +290,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     public function diff() : VeloxQL {
-        return $this->_vql;
+        return $this->_diff;
     }
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
@@ -441,7 +444,30 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             ["%","_"],
             [".*",".{1}"]
         ];
-        $comparisons = ["=","<",">","<=",">=","<>","LIKE","NOT LIKE","RLIKE","NOT RLIKE"];
+        $joinFunctions = [
+            LEFT_JOIN => function(){},
+            RIGHT_JOIN => function(){},
+            INNER_JOIN => function(){},
+            FULL_JOIN => function(){},
+            CROSS_JOIN => function(){}
+        ];
+        $comparisons = [
+            "=" => function($a,$b){ return $a == $b; },
+            ">" => function($a,$b){ return $a > $b; },
+            "<" => function($a,$b){ return $a < $b; },
+            ">=" => function($a,$b){ return $a >= $b; },
+            "<=" => function($a,$b){ return $a <= $b; },
+            "<>" => function($a,$b){ return $a != $b; },
+            "LIKE" => function($a,$b) use ($wildcards) {
+                //Convert SQL wildcards in $b to PCRE equivalents, add bookends to make it an exact match
+                $b = "^".str_replace($wildcards, "", $b)."$";
+                return preg_match($b,$a);
+            },
+            "NOT LIKE" => function($a,$b) use ($wildcards) {
+                $b = "^".str_replace($wildcards, "", $b)."$";
+                return !preg_match($b,$a);
+            }
+        ];
         $returnModel = new Model;
         //$joinConditions can be:
         //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
@@ -451,8 +477,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //      the column existing in the Model to be joined. The second element should be a string containing the SQL
         //      comparison operator to be used; the direction of comparison follows the order of elements.
         //          e.g. ["parentColumn","<","joinedColumn"]
-        //      All SQL comparison operators are supported. EKIL, EKILR and their NOT inverses are also available as
-        //      reverse-order LIKE and RLIKE comparisons (the pattern comes first)
+        //      All SQL comparison operators are supported.
         //  null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
         //      comparison is necessary or used.
 
@@ -461,108 +486,50 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             throw new VeloxException("Join conditions must be specified",72);
         }
         $commonColumns = array_intersect($this->columns(),$joinModel->columns());
-        $distinctColumns = array_merge(array_diff($this->columns(),$commonColumns), array_diff($joinModel->columns(),$commonColumns));
-        $usingEquivalent = false;
-        if (is_string($joinConditions)){
-            if (!in_array($joinConditions,$commonColumns)){
-                throw new VeloxException("Join column specified does not exist in both Models",73);
-            }
-            else {
-                $joinConditions = [$joinConditions,"=",$joinConditions];
-                $usingEquivalent = true;
-            }
+        if (is_string($joinConditions) && !in_array($joinConditions, $commonColumns)){
+            throw new VeloxException("Join column specified does not exist in both Models",73);
         }
-        elseif (is_array($joinConditions)){
-            //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
-            if ((function($arr){ return array_sum(array_map('is_string',$arr)) == 3; })($joinConditions)){
-                throw new VeloxException("Join conditions array must contain exactly three strings",74);
-            }
-            if (!in_array($joinConditions[0],$this->columns())){
-                throw new VeloxException("Left side column does not exist in invoking Model",75);
-            }
-            if (!in_array($joinConditions[1],$comparisons)){
-                throw new VeloxException("The provided operator is invalid",76);
-            }
-            if (!in_array($joinConditions[2],$joinModel->columns())){
-                throw new VeloxException("Right side column does not exist in joining Model",77);
-            }
-        }
-        //If there are matching column names in both Models, and they aren't part of the join operation (or if they are,
+        //If there are matching column names in both Models and they aren't part of the join operation (or if they are,
         //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
-        $commonColumnCount = count($commonColumns);
-        if ($commonColumnCount > 1 ||
-            $commonColumnCount == 1 && !$usingEquivalent && $this->instanceName == $joinModel->instanceName){
-            throw new VeloxException("Identical column names exist in both Models",78);
-        }
+        //TODO: write the if block that does this
 
-        // --- Perform comparisons and match indices from each side --- //
+        //Create a merged column list
+        $mergedColumns = $this->_columns + $joinModel->_columns;
 
-        $leftUniqueValues = array_unique(array_column($this,$joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($joinModel,$joinConditions[2]));
-        $joinIndices = [];
+        //Define the left and right sides of the join
+        $left = $this;
+        $right = $joinModel;
 
-        if ($joinType == RIGHT_JOIN){
-            foreach ($rightUniqueValues as $rightIndex => $rightValue){
-                $joinIndices[$rightIndex] = [];
-                foreach ($leftUniqueValues as $leftIndex => $leftValue){
-                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)){
-                        $joinIndices[$rightIndex][] = $leftValue;
-                    }
+        switch ($joinType){
+            case RIGHT_JOIN:
+                //A right join is simply a left join with the sides flipped, so swap the left and right Models and proceed
+                $right = $this;
+                $left = $joinModel;
+            case LEFT_JOIN:
+                //Everything from $this and only those rows from $joinModel that match $joinConditions
+                foreach ($left as $row){
+
                 }
-            }
-        }
-        else {
-            foreach ($leftUniqueValues as $leftIndex => $leftValue) {
-                $joinIndices[$leftIndex] = [];
-                foreach ($rightUniqueValues as $rightIndex => $rightValue) {
-                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
-                        $joinIndices[$leftIndex][] = $rightIndex;
-                    }
+                break;
+            case INNER_JOIN:
+                //Only those rows that exactly match $joinCondition
+                foreach ($left as $row){
+
                 }
-            }
+                break;
+            case FULL_JOIN:
+                foreach ($left as $row){
+
+                }
+                //All rows from both $this and $joinModel, matched on $joinCondition where possible
+                break;
+            case CROSS_JOIN:
+                //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
+                foreach ($left as $row){
+
+                }
+                break;
         }
-
-        // --- Assemble joined data set based on matched indices --- //
-
-        //Define sides based on type of join
-        $left = $joinType == RIGHT_JOIN ? $joinModel : $this;
-        $right = $joinType == RIGHT_JOIN ? $this : $joinModel;
-
-        //These refer to the indexes of the elements in $joinConditions, swapped for a right join
-        $leftJoinConditionIndex = $joinType == RIGHT_JOIN ? 2 : 0;
-        $rightJoinConditionIndex = $joinType == RIGHT_JOIN ? 0 : 2;
-
-        $joinRows = [];
-        $emptyLeftRow = array_map(function($elem){ return null; },array_flip($left->_columns));
-        $emptyRightRow = array_map(function($elem){ return null; },array_flip($right->_columns));
-
-        $leftRowCount = count($left);
-        for ($i=0; $i<$leftRowCount; $i++){
-            $currentLeftRow = $left[$i];
-            switch ($joinType){
-                case RIGHT_JOIN:
-                case LEFT_JOIN:
-                case INNER_JOIN:
-                    //Everything from left and only those values from the right that match on the join
-                    if (isset($joinIndices[$i])){
-                        $rightJoinCount = count($joinIndices[$i]);
-                        for ($j=0; $j<$rightJoinCount; $j++){
-                            $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
-                        }
-                    }
-                    elseif ($joinType != INNER_JOIN){
-                        $joinRows[] = array_merge($currentLeftRow,$emptyLeftRow);
-                    }
-                    break;
-                case FULL_JOIN:
-                    //All rows from both $this and $joinModel, matched on $joinCondition where possible
-                    break;
-                case CROSS_JOIN:
-                    //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
-                    break;
-            }
-        }
-
         return $returnModel;
     }
     public function lastQuery() : ?int {
