@@ -461,7 +461,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             throw new VeloxException("Join conditions must be specified",72);
         }
         $commonColumns = array_intersect($this->columns(),$joinModel->columns());
-        $distinctColumns = array_merge(array_diff($this->columns(),$commonColumns), array_diff($joinModel->columns(),$commonColumns));
         $usingEquivalent = false;
         if (is_string($joinConditions)){
             if (!in_array($joinConditions,$commonColumns)){
@@ -537,32 +536,25 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $emptyRightRow = array_map(function($elem){ return null; },array_flip($right->_columns));
 
         $leftRowCount = count($left);
-        for ($i=0; $i<$leftRowCount; $i++){
+        $rightRowCount = count($right);
+
+        for ($i=0; $i<$leftRowCount; $i++) {
             $currentLeftRow = $left[$i];
-            switch ($joinType){
-                case RIGHT_JOIN:
-                case LEFT_JOIN:
-                case INNER_JOIN:
-                    //Everything from left and only those values from the right that match on the join
-                    if (isset($joinIndices[$i])){
-                        $rightJoinCount = count($joinIndices[$i]);
-                        for ($j=0; $j<$rightJoinCount; $j++){
-                            $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
-                        }
-                    }
-                    elseif ($joinType != INNER_JOIN){
-                        $joinRows[] = array_merge($currentLeftRow,$emptyLeftRow);
-                    }
-                    break;
-                case FULL_JOIN:
-                    //All rows from both $this and $joinModel, matched on $joinCondition where possible
-                    break;
-                case CROSS_JOIN:
-                    //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
-                    break;
+            //Inner join
+            if (isset($joinIndices[$i])) {
+                $rightJoinCount = count($joinIndices[$i]);
+                for ($j = 0; $j < $rightJoinCount; $j++) {
+                    $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
+                }
+            }
+            //Left/right outer join
+            elseif ($joinType != INNER_JOIN) {
+                $joinRows[] = array_merge($currentLeftRow, $emptyLeftRow);
             }
         }
-
+        for ($i=0; $i<$rightRowCount; $i++) {
+            $currentRightRow = $right[$i];
+        }
         return $returnModel;
     }
     public function lastQuery() : ?int {
