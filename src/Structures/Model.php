@@ -441,6 +441,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             ["%","_"],
             [".*",".{1}"]
         ];
+        $comparisons = ["=","<",">","<=",">=","<>","LIKE","NOT LIKE","RLIKE","NOT RLIKE"];
         $returnModel = new Model;
         //$joinConditions can be:
         //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
@@ -479,7 +480,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             if (!in_array($joinConditions[0],$this->columns())){
                 throw new VeloxException("Left side column does not exist in invoking Model",75);
             }
-            if (!in_array($joinConditions[1],array_keys($comparisons))){
+            if (!in_array($joinConditions[1],$comparisons)){
                 throw new VeloxException("The provided operator is invalid",76);
             }
             if (!in_array($joinConditions[2],$joinModel->columns())){
@@ -527,31 +528,31 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $left = $joinType == RIGHT_JOIN ? $joinModel : $this;
         $right = $joinType == RIGHT_JOIN ? $this : $joinModel;
 
-        foreach ($left as $row){
-            $joinRows = [];
-            //These refer to the indexes of the elements in $joinConditions
-            $leftJoinConditionIndex = 0;
-            $rightJoinConditionIndex = 2;
+        //These refer to the indexes of the elements in $joinConditions, swapped for a right join
+        $leftJoinConditionIndex = $joinType == RIGHT_JOIN ? 2 : 0;
+        $rightJoinConditionIndex = $joinType == RIGHT_JOIN ? 0 : 2;
+
+        $joinRows = [];
+        $emptyLeftRow = array_map(function($elem){ return null; },array_flip($left->_columns));
+        $emptyRightRow = array_map(function($elem){ return null; },array_flip($right->_columns));
+
+        $leftRowCount = count($left);
+        for ($i=0; $i<$leftRowCount; $i++){
+            $currentLeftRow = $left[$i];
             switch ($joinType){
                 case RIGHT_JOIN:
-                    //Swap the referenced indexes if this is a right join, then fall through and continue as a left join
-                    $leftJoinConditionIndex = 2;
-                    $rightJoinConditionIndex = 0;
                 case LEFT_JOIN:
+                case INNER_JOIN:
                     //Everything from left and only those values from the right that match on the join
-                    $currentLeftRow = $row;
-
-                    /* TODO: for each row on the right side that fits the join, create a copy of the left and append the right.
-                             The left row must appear at least once, regardless of how many (if any) matches the right has. */
-
-                    if (isset($joinIndices[$leftJoinConditionIndex])){
-                        foreach ($joinIndices[$leftJoinConditionIndex] as $rightIndex){
-
+                    if (isset($joinIndices[$i])){
+                        $rightJoinCount = count($joinIndices[$i]);
+                        for ($j=0; $j<$rightJoinCount; $j++){
+                            $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
                         }
                     }
-                    break;
-                case INNER_JOIN:
-                    //Only those rows that exactly match $joinCondition
+                    elseif ($joinType != INNER_JOIN){
+                        $joinRows[] = array_merge($currentLeftRow,$emptyLeftRow);
+                    }
                     break;
                 case FULL_JOIN:
                     //All rows from both $this and $joinModel, matched on $joinCondition where possible
@@ -559,9 +560,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 case CROSS_JOIN:
                     //Every row from $this matched with every row from $joinModel, irrespective of $joinCondition
                     break;
-            }
-            if ($joinRow){
-                $joinData[] = $joinRow;
             }
         }
 
