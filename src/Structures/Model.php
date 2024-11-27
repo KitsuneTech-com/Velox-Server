@@ -2,6 +2,7 @@
 
 namespace KitsuneTech\Velox\Structures;
 use KitsuneTech\Velox\VeloxException;
+use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
@@ -13,7 +14,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
-    private object $_vql;
+    private object $_diff;
     private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
@@ -49,7 +50,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-            $this->_vql = new VeloxQL('{}');
+            $this->_diff = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
     
@@ -104,6 +105,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return isset($this->_data[$offset]);
     }
 
+
+    
     // Class-specific methods
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
@@ -136,22 +139,22 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             
             if ($vql) {
-                $this->_vql = new VeloxQL();
+                $this->_diff = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->_vql->delete[] = (object)$row;
+                        $this->_diff->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
                     if (!in_array($row,$this->_data)){
                         $this->_data[] = $row;
-                        $this->_vql->insert[] = (object)$row;
+                        $this->_diff->insert[] = (object)$row;
                     }
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_vql;
+                return $this->_diff;
             }
             else {
                 return true;
@@ -287,7 +290,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     public function diff() : VeloxQL {
-        return $this->_vql;
+        return $this->_diff;
     }
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
@@ -486,28 +489,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (is_string($joinConditions) && !in_array($joinConditions, $commonColumns)){
             throw new VeloxException("Join column specified does not exist in both Models",73);
         }
-        elseif (is_array($joinConditions)){
-            //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
-            if ((function($arr){ return array_sum(array_map('is_string',$arr)) == 3; })($joinConditions)){
-                throw new VeloxException("Join conditions array must contain exactly three strings",74);
-            }
-            if (!in_array($joinConditions[0],$this->columns())){
-                throw new VeloxException("Left side column does not exist in invoking Model",75);
-            }
-            if (!in_array($joinConditions[1],array_keys($comparisons))){
-                throw new VeloxException("The provided operator is invalid",76);
-            }
-            if (!in_array($joinConditions[2],$joinModel->columns())){
-                throw new VeloxException("Right side column does not exist in joining Model",77);
-            }
-        }
-        //If there are matching column names in both Models, and they aren't part of the join operation (or if they are,
+        //If there are matching column names in both Models and they aren't part of the join operation (or if they are,
         //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
-        $commonColumnCount = count($commonColumns);
-        if ($commonColumnCount > 1 ||
-            $commonColumnCount == 1 && is_array($joinConditions) && $this->instanceName == $joinModel->instanceName){
-            throw new VeloxException("Identical column names exist in both Models",78);
-        }
+        //TODO: write the if block that does this
+
+        //Create a merged column list
+        $mergedColumns = $this->_columns + $joinModel->_columns;
 
         //Define the left and right sides of the join
         $left = $this;
