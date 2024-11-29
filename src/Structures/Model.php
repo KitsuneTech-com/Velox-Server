@@ -435,13 +435,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         return $outputModel;
     }
-    public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model {
+    public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model
+    {
         //SQL wildcards to be replaced by PCRE equivalents (for use in LIKE/NOT LIKE)
         $wildcards = [
-            ["%","_"],
-            [".*",".{1}"]
+            ["%", "_"],
+            [".*", ".{1}"]
         ];
-        $comparisons = ["=","<",">","<=",">=","<>","LIKE","NOT LIKE","RLIKE","NOT RLIKE"];
+        $comparisons = ["=", "<", ">", "<=", ">=", "<>", "LIKE", "NOT LIKE", "RLIKE", "NOT RLIKE"];
         $returnModel = new Model;
         //$joinConditions can be:
         //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
@@ -457,68 +458,71 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //      comparison is necessary or used.
 
         // --- Initial condition checks (is there anything about the current state that will prevent a successful join?) --- //
-        if (!$joinConditions && $joinType !== CROSS_JOIN){
-            throw new VeloxException("Join conditions must be specified",72);
+        if (!$joinConditions && $joinType !== CROSS_JOIN) {
+            throw new VeloxException("Join conditions must be specified", 72);
         }
-        $commonColumns = array_intersect($this->columns(),$joinModel->columns());
+        $commonColumns = array_intersect($this->columns(), $joinModel->columns());
         $usingEquivalent = false;
-        if (is_string($joinConditions)){
-            if (!in_array($joinConditions,$commonColumns)){
-                throw new VeloxException("Join column specified does not exist in both Models",73);
-            }
-            else {
-                $joinConditions = [$joinConditions,"=",$joinConditions];
+        if (is_string($joinConditions)) {
+            if (!in_array($joinConditions, $commonColumns)) {
+                throw new VeloxException("Join column specified does not exist in both Models", 73);
+            } else {
+                $joinConditions = [$joinConditions, "=", $joinConditions];
                 $usingEquivalent = true;
             }
-        }
-        elseif (is_array($joinConditions)){
+        } elseif (is_array($joinConditions)) {
             //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
-            if ((function($arr){ return array_sum(array_map('is_string',$arr)) == 3; })($joinConditions)){
-                throw new VeloxException("Join conditions array must contain exactly three strings",74);
+            if ((function ($arr) {
+                return array_sum(array_map('is_string', $arr)) == 3;
+            })($joinConditions)) {
+                throw new VeloxException("Join conditions array must contain exactly three strings", 74);
             }
-            if (!in_array($joinConditions[0],$this->columns())){
-                throw new VeloxException("Left side column does not exist in invoking Model",75);
+            if (!in_array($joinConditions[0], $this->columns())) {
+                throw new VeloxException("Left side column does not exist in invoking Model", 75);
             }
-            if (!in_array($joinConditions[1],$comparisons)){
-                throw new VeloxException("The provided operator is invalid",76);
+            if (!in_array($joinConditions[1], $comparisons)) {
+                throw new VeloxException("The provided operator is invalid", 76);
             }
-            if (!in_array($joinConditions[2],$joinModel->columns())){
-                throw new VeloxException("Right side column does not exist in joining Model",77);
+            if (!in_array($joinConditions[2], $joinModel->columns())) {
+                throw new VeloxException("Right side column does not exist in joining Model", 77);
             }
         }
         //If there are matching column names in both Models, and they aren't part of the join operation (or if they are,
         //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
         $commonColumnCount = count($commonColumns);
         if ($commonColumnCount > 1 ||
-            $commonColumnCount == 1 && !$usingEquivalent && $this->instanceName == $joinModel->instanceName){
-            throw new VeloxException("Identical column names exist in both Models",78);
+            $commonColumnCount == 1 && !$usingEquivalent && $this->instanceName == $joinModel->instanceName) {
+            throw new VeloxException("Identical column names exist in both Models", 78);
         }
 
         // --- Perform comparisons and match indices from each side --- //
 
-        $leftUniqueValues = array_unique(array_column($this,$joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($joinModel,$joinConditions[2]));
+        $leftUniqueValues = array_unique(array_column($this, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($joinModel, $joinConditions[2]));
         $joinIndices = [];
+        $unjoinedRightIndices = [];
 
-        if ($joinType == RIGHT_JOIN){
-            foreach ($rightUniqueValues as $rightIndex => $rightValue){
+        if ($joinType == RIGHT_JOIN) {
+            foreach ($rightUniqueValues as $rightIndex => $rightValue) {
                 $joinIndices[$rightIndex] = [];
-                foreach ($leftUniqueValues as $leftIndex => $leftValue){
-                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)){
+                foreach ($leftUniqueValues as $leftIndex => $leftValue) {
+                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
                         $joinIndices[$rightIndex][] = $leftValue;
                     }
                 }
             }
-        }
-        else {
+        } else {
+            $unjoinedRightIndices = array_flip(array_keys($joinModel));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
                     if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
                         $joinIndices[$leftIndex][] = $rightIndex;
+                        unset($unjoinedRightIndices[$rightIndex]);
                     }
                 }
             }
+            $unjoinedRightIndices = array_flip($unjoinedRightIndices);
         }
 
         // --- Assemble joined data set based on matched indices --- //
@@ -527,34 +531,47 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $left = $joinType == RIGHT_JOIN ? $joinModel : $this;
         $right = $joinType == RIGHT_JOIN ? $this : $joinModel;
 
-        //These refer to the indexes of the elements in $joinConditions, swapped for a right join
-        $leftJoinConditionIndex = $joinType == RIGHT_JOIN ? 2 : 0;
-        $rightJoinConditionIndex = $joinType == RIGHT_JOIN ? 0 : 2;
-
         $joinRows = [];
-        $emptyLeftRow = array_map(function($elem){ return null; },array_flip($left->_columns));
-        $emptyRightRow = array_map(function($elem){ return null; },array_flip($right->_columns));
+        $emptyLeftRow = array_map(function ($elem) {
+            return null;
+        }, array_flip($left->_columns));
+        $emptyRightRow = array_map(function ($elem) {
+            return null;
+        }, array_flip($right->_columns));
 
         $leftRowCount = count($left);
         $rightRowCount = count($right);
+        $unjoinedRightRowCount = count($unjoinedRightIndices);
 
-        for ($i=0; $i<$leftRowCount; $i++) {
-            $currentLeftRow = $left[$i];
-            //Inner join
-            if (isset($joinIndices[$i])) {
-                $rightJoinCount = count($joinIndices[$i]);
-                for ($j = 0; $j < $rightJoinCount; $j++) {
-                    $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
+        if ($joinType == CROSS_JOIN){
+            for ($i=0; $i<$leftRowCount; $i++){
+                for ($j=0; $j<$rightRowCount; $j++){
+                    $joinRows[] = array_merge($left[$i], $right[$j]);
                 }
             }
-            //Left/right outer join
-            elseif ($joinType != INNER_JOIN) {
-                $joinRows[] = array_merge($currentLeftRow, $emptyLeftRow);
+        }
+        else {
+            for ($i = 0; $i < $leftRowCount; $i++) {
+                $currentLeftRow = $left[$i];
+                //Inner join
+                if (isset($joinIndices[$i])) {
+                    $rightJoinCount = count($joinIndices[$i]);
+                    for ($j = 0; $j < $rightJoinCount; $j++) {
+                        $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
+                    }
+                } //Left/right outer join
+                elseif ($joinType != INNER_JOIN) {
+                    $joinRows[] = array_merge($currentLeftRow, $emptyRightRow);
+                }
+            }
+            if ($joinType == FULL_JOIN) {
+                for ($i = 0; $i < $unjoinedRightRowCount; $i++) {
+                    $joinRows[] = array_merge($emptyLeftRow, $right[$unjoinedRightIndices[$i]]);
+                }
             }
         }
-        for ($i=0; $i<$rightRowCount; $i++) {
-            $currentRightRow = $right[$i];
-        }
+        $returnModel->_data = $joinRows;
+        $returnModel->_columns = array_keys($returnModel->_data[0]);
         return $returnModel;
     }
     public function lastQuery() : ?int {
