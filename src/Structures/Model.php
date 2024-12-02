@@ -334,6 +334,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
     }
+    public function renameColumn(string $oldName, string $newName) : void {
+        if (!$oldName) throw new VeloxException("Column '".$oldName."' does not exist in result set.",39);
+    }
     public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
         // This method performs a pivot-like operation on the current data and returns the result as a new Model.
         //
