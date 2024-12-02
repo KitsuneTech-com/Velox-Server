@@ -497,8 +497,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         // --- Perform comparisons and match indices from each side --- //
 
-        $leftUniqueValues = array_unique(array_column($this, $joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($joinModel, $joinConditions[2]));
+        $leftUniqueValues = array_unique(array_column($this->_data, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($joinModel->_data, $joinConditions[2]));
         $joinIndices = [];
         $unjoinedRightIndices = [];
 
@@ -511,8 +511,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-        } else {
-            $unjoinedRightIndices = array_flip(array_keys($joinModel));
+        }
+        else {
+            $unjoinedRightIndices = array_flip(array_keys($joinModel->data()));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
