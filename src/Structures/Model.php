@@ -493,12 +493,16 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 throw new VeloxException("Right side column does not exist in joining Model", 77);
             }
         }
-        //If there are matching column names in both Models, and they aren't part of the join operation (or if they are,
-        //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
+        //If there are matching column names in both Models, they aren't part of a USING-equivalent join operation,
+        // and the Models do not have distinct instanceName properties, throw an error for ambiguity
         $commonColumnCount = count($commonColumns);
-        if ($commonColumnCount > 1 ||
-            $commonColumnCount == 1 && !$usingEquivalent && $left->instanceName == $right->instanceName) {
-            throw new VeloxException("Identical column names exist in both Models", 78);
+        if ($commonColumnCount > 0){
+            if ((!$usingEquivalent || $commonColumnCount > 1) && (!isset($left->instanceName) || !isset($right->instanceName) || $left->instanceName == $right->instanceName)){
+                throw new VeloxException("Identical column names exist in both Models", 78);
+            }
+            for ($i=0; $i<$commonColumnCount; $i++){
+
+            }
         }
 
         // --- Perform comparisons and match indices from each side --- //
