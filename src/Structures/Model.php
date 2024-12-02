@@ -497,8 +497,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         // --- Perform comparisons and match indices from each side --- //
 
-        $leftUniqueValues = array_unique(array_column($this->_data, $joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($joinModel->_data, $joinConditions[2]));
+        $left = $this;
+        $right = $joinModel;
+
+        $leftUniqueValues = array_unique(array_column($left->_data, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($right->_data, $joinConditions[2]));
         $joinIndices = [];
         $unjoinedRightIndices = [];
 
@@ -511,9 +514,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
+            [$left, $right] = [$right, $left];  //Swap the join order and proceed as a left join
         }
         elseif ($joinType != CROSS_JOIN) {
-            $unjoinedRightIndices = array_flip(array_keys($joinModel->data()));
+            $unjoinedRightIndices = array_flip(array_keys($left->_data));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
@@ -527,10 +531,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
 
         // --- Assemble joined data set based on matched indices --- //
-
-        //Define sides based on type of join
-        $left = $joinType == RIGHT_JOIN ? $joinModel : $this;
-        $right = $joinType == RIGHT_JOIN ? $this : $joinModel;
 
         $joinRows = [];
         $emptyLeftRow = array_map(function ($elem) {
