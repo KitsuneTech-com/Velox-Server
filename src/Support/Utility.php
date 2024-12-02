@@ -70,3 +70,12 @@ function array_change_key_case_recursive($arr, $case = CASE_LOWER) {
         return $item;
     },array_change_key_case($arr, $case));
 }
+
+/**
+ * Pretty self-explanatory.
+ * @param int $num The integer to be checked
+ * @return bool Whether this integer is a power of 2
+ */
+function isPowerOf2(int $num) : bool {
+    return ($num != 0) && (($num & ($num-1)) == 0);
+}

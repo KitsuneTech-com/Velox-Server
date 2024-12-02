@@ -8,36 +8,71 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private int $_position = 0;
     private array $_lastAffected = [];
     private array $_keys = [];
+
+    /**
+     * ResultSet is the default data structure returned by Velox database procedures. This can be iterated as
+     * a sparse two-dimensional array using native functions, and the available column names can be retrieved
+     * through the ResultSet::columns() method.
+     *
+     * @param array $_resultArray
+     */
     public function __construct(private array $_resultArray = []) {
-        if (count($this->_resultArray) > 0){
-            $this->_columns = array_keys($this->_resultArray[0]);
+        for ($i=0; $i<count($this->_resultArray); $i++) {
+            $rowColumns = array_keys($this->_resultArray[$i]);
+            for ($j=0; $j<count($rowColumns); $j++) {
+                if (!isset($this->_columns[$rowColumns[$j]])) {
+                    $this->_columns[$rowColumns[$j]] = count($this->_columns);
+                }
+            }
         }
+        $this->_columns = array_flip($this->_columns);
         $this->_keys = array_keys($this->_resultArray) ?? [];
     }
     
     // Countable implementation
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function count() : int {
         return count($this->_keys);
     }
     
     // Iterator implementation
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function current() : array {
         return $this->_resultArray[$this->_keys[$this->_position]];
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function key() : int|string {
         return $this->_keys[$this->_position];
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function next() : void {
         $this->_position++;
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function rewind() : void {
         $this->_position = 0;
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function valid() : bool {
         return isset($this->_keys[$this->_position]);
     }
-    
+
     // ArrayAccess implementation
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function offsetSet(mixed $offset, mixed $row) : void {
         if (is_null($offset)){
             $this->_resultArray[] = $row;
@@ -50,25 +85,52 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
             }
         }
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_resultArray[$offset]);
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function offsetUnset(mixed $offset) : void {
         unset($this->_resultArray[$offset]);
         unset($this->_keys[array_search($offset,$this->_keys)]);
         $this->_keys = array_values($this->_keys);
     }
+    /**
+     * @ignore No usage documentation required for core interface implementation
+     */
     public function offsetGet(mixed $offset) : ?array {
         return $this->_resultArray[$offset] ?? null;
     }
     
     //Class-specific functionality
+    /**
+     * @return array The index values of the last row(s) affected by the procedure that generated this ResultSet.
+     */
     public function lastAffected() : array {
         return $this->_lastAffected;
     }
+    /**
+     * @ignore This is to only be used by Velox procedures
+     */
     public function appendAffected(array $affected) : void {
         $this->_lastAffected = array_merge($this->_lastAffected,$affected);
     }
+
+    /**
+     * ResultSet::merge() is functionally equivalent to a SQL UNION or UNION ALL. The contents of the ResultSet
+     * provided are appended to the end of this ResultSet. If $filterDuplicates is passed as true, any rows from
+     * the provided ResultSet that already exist in this ResultSet are skipped (as in a UNION operation).
+     *
+     * The provided ResultSet is unaltered by this operation.
+     *
+     * @param ResultSet $mergeResultSet
+     * @param bool $filterDuplicates
+     * @return void
+     */
     public function merge(ResultSet $mergeResultSet, bool $filterDuplicates = false) : void {
         foreach ($mergeResultSet as $row){
             if (!$filterDuplicates || !in_array($row,$this->_resultArray)){
@@ -79,9 +141,17 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
         $this->_columns = array_unique(array_merge($this->_columns, $mergeResultSet->columns()));
         $this->appendAffected($mergeResultSet->lastAffected());
     }
+
+    /**
+     * @return array The unwrapped contents of this ResultSet, as a two-dimensional array
+     */
     public function getRawData() : array {
         return $this->_resultArray;
     }
+
+    /**
+     * @return array An array consisting of all column names in this ResultSet.
+     */
     public function columns() : array {
         return $this->_columns;
     }

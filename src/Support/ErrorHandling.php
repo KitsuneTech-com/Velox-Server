@@ -30,7 +30,7 @@ function VeloxExceptionHandler(\Throwable $ex) : void {
             }
         }
         if ($GLOBALS['Velox']['ErrorReportingMode'] & VELOX_ERR_JSONOUT){
-            header('Content-Type: application/json');
+            if (!headers_sent()) header('Content-Type: application/json');
             echo json_encode($outputObj, JSON_PRETTY_PRINT);
         }
     }
