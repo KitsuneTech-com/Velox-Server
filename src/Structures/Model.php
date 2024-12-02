@@ -573,6 +573,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         $returnModel->_data = $joinRows;
         $returnModel->_columns = array_keys($returnModel->_data[0]);
+        $returnModel->_lastQuery = time();
         return $returnModel;
     }
     public function lastQuery() : ?int {
