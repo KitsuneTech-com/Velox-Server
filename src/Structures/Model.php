@@ -512,7 +512,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
         }
-        else {
+        elseif ($joinType != CROSS_JOIN) {
             $unjoinedRightIndices = array_flip(array_keys($joinModel->data()));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
