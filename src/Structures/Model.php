@@ -497,11 +497,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         // --- Perform comparisons and match indices from each side --- //
 
-        $left = $this;
-        $right = $joinModel;
+        $left = $this->_data;
+        $right = $joinModel->_data;
 
-        $leftUniqueValues = array_unique(array_column($left->_data, $joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($right->_data, $joinConditions[2]));
+        $leftUniqueValues = array_unique(array_column($left, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($right, $joinConditions[2]));
         $joinIndices = [];
         $unjoinedRightIndices = [];
 
@@ -517,7 +517,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             [$left, $right] = [$right, $left];  //Swap the join order and proceed as a left join
         }
         elseif ($joinType != CROSS_JOIN) {
-            $unjoinedRightIndices = array_flip(array_keys($left->_data));
+            $unjoinedRightIndices = array_flip(array_keys($left));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
@@ -528,6 +528,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
             $unjoinedRightIndices = array_flip($unjoinedRightIndices);
+            $unjoinedRightRowCount = count($unjoinedRightIndices);
         }
 
         // --- Assemble joined data set based on matched indices --- //
@@ -535,14 +536,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $joinRows = [];
         $emptyLeftRow = array_map(function ($elem) {
             return null;
-        }, array_flip($left->_columns));
+        }, array_flip($this->_columns));
         $emptyRightRow = array_map(function ($elem) {
             return null;
-        }, array_flip($right->_columns));
+        }, array_flip($joinModel->_columns));
 
         $leftRowCount = count($left);
         $rightRowCount = count($right);
-        $unjoinedRightRowCount = count($unjoinedRightIndices);
 
         if ($joinType == CROSS_JOIN){
             for ($i=0; $i<$leftRowCount; $i++){
