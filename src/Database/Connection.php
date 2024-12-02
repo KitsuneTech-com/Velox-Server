@@ -232,7 +232,7 @@ class Connection {
                 }
                 if ($connected) break;
             default:
-                throw new VeloxException("Unknown connection type",55);
+                throw new VeloxException("Connection type not supported or extension not available",55);
         }
     }
     public function __destruct(){
