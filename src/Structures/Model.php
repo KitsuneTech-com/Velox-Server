@@ -443,7 +443,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             [".*", ".{1}"]
         ];
         $comparisons = ["=", "<", ">", "<=", ">=", "<>", "LIKE", "NOT LIKE", "RLIKE", "NOT RLIKE"];
+
+        $left = $this;
+        $right = $joinModel;
         $returnModel = new Model;
+
         //$joinConditions can be:
         //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
         //      performing an equijoin on columns having that name in each Model and coalescing those columns into one.
@@ -461,29 +465,31 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$joinConditions && $joinType !== CROSS_JOIN) {
             throw new VeloxException("Join conditions must be specified", 72);
         }
-        $commonColumns = array_intersect($this->columns(), $joinModel->columns());
+        $commonColumns = array_intersect($left->_columns, $right->_columns);
         $usingEquivalent = false;
         if (is_string($joinConditions)) {
             if (!in_array($joinConditions, $commonColumns)) {
                 throw new VeloxException("Join column specified does not exist in both Models", 73);
-            } else {
+            }
+            else {
                 $joinConditions = [$joinConditions, "=", $joinConditions];
                 $usingEquivalent = true;
             }
-        } elseif (is_array($joinConditions)) {
+        }
+        elseif (is_array($joinConditions)) {
             //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
             if ((function ($arr) {
                 return array_sum(array_map('is_string', $arr)) == 3;
             })($joinConditions)) {
                 throw new VeloxException("Join conditions array must contain exactly three strings", 74);
             }
-            if (!in_array($joinConditions[0], $this->columns())) {
+            if (!in_array($joinConditions[0], $left->_columns)) {
                 throw new VeloxException("Left side column does not exist in invoking Model", 75);
             }
             if (!in_array($joinConditions[1], $comparisons)) {
                 throw new VeloxException("The provided operator is invalid", 76);
             }
-            if (!in_array($joinConditions[2], $joinModel->columns())) {
+            if (!in_array($joinConditions[2], $right->_columns)) {
                 throw new VeloxException("Right side column does not exist in joining Model", 77);
             }
         }
@@ -491,24 +497,24 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         //the join is ON-equivalent, and the Models do not have distinct instanceName properties), throw an error for ambiguity
         $commonColumnCount = count($commonColumns);
         if ($commonColumnCount > 1 ||
-            $commonColumnCount == 1 && !$usingEquivalent && $this->instanceName == $joinModel->instanceName) {
+            $commonColumnCount == 1 && !$usingEquivalent && $left->instanceName == $right->instanceName) {
             throw new VeloxException("Identical column names exist in both Models", 78);
         }
 
         // --- Perform comparisons and match indices from each side --- //
 
-        $left = $this->_data;
-        $right = $joinModel->_data;
+        $leftData = $left->_data;
+        $rightData = $right->_data;
 
-        $leftUniqueValues = array_unique(array_column($left, $joinConditions[0]));
-        $rightUniqueValues = array_unique(array_column($right, $joinConditions[2]));
+        $leftUniqueValues = array_unique(array_column($leftData, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($rightData, $joinConditions[2]));
         $joinIndices = [];
         $unjoinedRightIndices = [];
 
         if ($joinType == RIGHT_JOIN) {
             foreach ($rightUniqueValues as $rightIndex => $rightValue) {
                 $joinIndices[$rightIndex] = [];
-                foreach ($leftUniqueValues as $leftIndex => $leftValue) {
+                foreach ($leftUniqueValues as $leftValue) {
                     if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
                         $joinIndices[$rightIndex][] = $leftValue;
                     }
@@ -517,7 +523,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             [$left, $right] = [$right, $left];  //Swap the join order and proceed as a left join
         }
         elseif ($joinType != CROSS_JOIN) {
-            $unjoinedRightIndices = array_flip(array_keys($left));
+            $unjoinedRightIndices = array_flip(array_keys($leftData));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
@@ -536,29 +542,29 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $joinRows = [];
         $emptyLeftRow = array_map(function ($elem) {
             return null;
-        }, array_flip($this->_columns));
+        }, array_flip($left->_columns));
         $emptyRightRow = array_map(function ($elem) {
             return null;
-        }, array_flip($joinModel->_columns));
+        }, array_flip($right->_columns));
 
-        $leftRowCount = count($left);
-        $rightRowCount = count($right);
+        $leftRowCount = count($leftData);
+        $rightRowCount = count($rightData);
 
         if ($joinType == CROSS_JOIN){
             for ($i=0; $i<$leftRowCount; $i++){
                 for ($j=0; $j<$rightRowCount; $j++){
-                    $joinRows[] = array_merge($left[$i], $right[$j]);
+                    $joinRows[] = array_merge($leftData[$i], $rightData[$j]);
                 }
             }
         }
         else {
             for ($i = 0; $i < $leftRowCount; $i++) {
-                $currentLeftRow = $left[$i];
+                $currentLeftRow = $leftData[$i];
                 //Inner join
                 if (isset($joinIndices[$i])) {
                     $rightJoinCount = count($joinIndices[$i]);
                     for ($j = 0; $j < $rightJoinCount; $j++) {
-                        $joinRows[] = array_merge($currentLeftRow, $right[$joinIndices[$i][$j]]);
+                        $joinRows[] = array_merge($currentLeftRow, $rightData[$joinIndices[$i][$j]]);
                     }
                 } //Left/right outer join
                 elseif ($joinType != INNER_JOIN) {
@@ -567,7 +573,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             if ($joinType == FULL_JOIN) {
                 for ($i = 0; $i < $unjoinedRightRowCount; $i++) {
-                    $joinRows[] = array_merge($emptyLeftRow, $right[$unjoinedRightIndices[$i]]);
+                    $joinRows[] = array_merge($emptyLeftRow, $rightData[$unjoinedRightIndices[$i]]);
                 }
             }
         }
