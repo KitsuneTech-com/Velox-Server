@@ -142,6 +142,9 @@ class Connection {
                         break;
                     }
                 }
+                elseif ($this->connectionType === self::CONN_PDO){
+                    throw new VeloxException("The PDO extension is not installed.",79);
+                }
             case self::CONN_NATIVE:
                 switch ($this->serverType){
                     case self::DB_MYSQL:
