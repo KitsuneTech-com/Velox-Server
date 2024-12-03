@@ -335,7 +335,20 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     public function renameColumn(string $oldName, string $newName) : void {
-        if (!$oldName) throw new VeloxException("Column '".$oldName."' does not exist in result set.",39);
+        if (!$oldName || !$newName) throw new VeloxException("Both old and new column names must be specified.",79);
+        if (!in_array($oldName,$this->_columns)) throw new VeloxException("Column '".$oldName."' does not exist in Model.",80);
+        if (!in_array($newName,$this->_columns)) throw new VeloxException("Column '".$newName."' already exists in Model.",81);
+
+        /* Replacement by flipping the columns array and setting/unsetting the keys for this and for the underlying dataset */
+        $flippedColumns = array_flip($this->_columns);
+        $flippedColumns[$newName] = null;
+        unset ($flippedColumns[$oldName]);
+        $this->_columns = array_keys($flippedColumns);
+        $rowCount = count($this);
+        for ($i=0; $i<$rowCount; $i++){
+            $this[$i][$newName] = $this[$i][$oldName];
+            unset ($this[$i][$oldName]);
+        }
     }
     public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
         // This method performs a pivot-like operation on the current data and returns the result as a new Model.
