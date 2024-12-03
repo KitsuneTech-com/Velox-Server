@@ -517,7 +517,19 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 throw new VeloxException("Identical column names exist in both Models", 78);
             }
             for ($i=0; $i<$commonColumnCount; $i++){
+                if ($commonColumns[$i] == $joinConditions[0]){
+                    if ($usingEquivalent){
+                        continue;
+                    }
+                    else {
+                        $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
+                        $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
+                    }
 
+                    //TODO: refactor the following such that the original Models are not altered.
+                    $left->renameColumn($commonColumns[$i],$left->instanceName.".".$commonColumns[$i]);
+                    $right->renameColumn($commonColumns[$i],$right->instanceName.".".$commonColumns[$i]);
+                }
             }
         }
 
