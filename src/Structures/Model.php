@@ -453,6 +453,24 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model
     {
+        /**
+         * changeColumn() replaces the given $oldColumn key with the $newColumn key for each row in a two-dimensional array.
+         * This acts directly on the given $array, by reference.
+         *
+         * @param string $oldColumn The old column key
+         * @param string $newColumn The replacement column key
+         * @param array $array The array on which the operation is to be performed
+         * @return void
+         */
+        function changeColumn(string $oldColumn, string $newColumn, array &$array) : void {
+            $rowCount = count($array);
+            for ($i=0; $i<$rowCount; $i++){
+                if (isset($array[$i][$oldColumn])){
+                    $array[$i][$newColumn] = $array[$i][$oldColumn];
+                    unset($array[$i][$oldColumn]);
+                }
+            }
+        }
         //SQL wildcards to be replaced by PCRE equivalents (for use in LIKE/NOT LIKE)
         $wildcards = [
             ["%", "_"],
@@ -462,6 +480,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         $left = $this;
         $right = $joinModel;
+        $leftColumns = $left->_columns;
+        $rightColumns = $right->_columns;
+
         $returnModel = new Model;
 
         //$joinConditions can be:
@@ -494,9 +515,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         elseif (is_array($joinConditions)) {
             //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
-            if ((function ($arr) {
-                return array_sum(array_map('is_string', $arr)) == 3;
-            })($joinConditions)) {
+            if ((function ($arr) { return array_sum(array_map('is_string', $arr)) == 3;})($joinConditions)) {
                 throw new VeloxException("Join conditions array must contain exactly three strings", 74);
             }
             if (!in_array($joinConditions[0], $left->_columns)) {
@@ -509,34 +528,41 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 throw new VeloxException("Right side column does not exist in joining Model", 77);
             }
         }
-        //If there are matching column names in both Models, they aren't part of a USING-equivalent join operation,
-        // and the Models do not have distinct instanceName properties, throw an error for ambiguity
+
         $commonColumnCount = count($commonColumns);
+        $leftColumnSubstitutes = [];
+        $rightColumnSubstitutes = [];
+
         if ($commonColumnCount > 0){
+            //If there are matching column names in both Models, they aren't part of a USING-equivalent join operation,
+            // and the Models do not have distinct instanceName properties, throw an error for ambiguity
             if ((!$usingEquivalent || $commonColumnCount > 1) && (!isset($left->instanceName) || !isset($right->instanceName) || $left->instanceName == $right->instanceName)){
                 throw new VeloxException("Identical column names exist in both Models", 78);
             }
             for ($i=0; $i<$commonColumnCount; $i++){
-                if ($commonColumns[$i] == $joinConditions[0]){
-                    if ($usingEquivalent){
-                        continue;
-                    }
-                    else {
-                        $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
-                        $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
-                    }
-
-                    //TODO: refactor the following such that the original Models are not altered.
-                    $left->renameColumn($commonColumns[$i],$left->instanceName.".".$commonColumns[$i]);
-                    $right->renameColumn($commonColumns[$i],$right->instanceName.".".$commonColumns[$i]);
+                if (!$usingEquivalent && $commonColumns[$i] == $joinConditions[0]){
+                    $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
+                    $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
                 }
+                $leftColumnSubstitutes[$commonColumns[$i]] = $left->instanceName.".".$commonColumns[$i];
+                $rightColumnSubstitutes[$commonColumns[$i]] = $right->instanceName.".".$commonColumns[$i];
             }
+            $leftColumns = str_replace(array_flip($leftColumnSubstitutes), $leftColumnSubstitutes, $leftColumns);
+            $rightColumns = str_replace(array_flip($rightColumnSubstitutes), $rightColumnSubstitutes, $rightColumns);
         }
+
+        $mergedColumns = $leftColumns + $rightColumns; //Union operator coalesces duplicate column names for USING-equivalent joins
 
         // --- Perform comparisons and match indices from each side --- //
 
         $leftData = $left->_data;
         $rightData = $right->_data;
+        foreach ($leftColumnSubstitutes as $oldColumn => $newColumn){
+            changeColumn($oldColumn, $newColumn, $leftData);
+        }
+        foreach($rightColumnSubstitutes as $oldColumn => $newColumn){
+            changeColumn($oldColumn, $newColumn, $rightData);
+        }
 
         $leftUniqueValues = array_unique(array_column($leftData, $joinConditions[0]));
         $rightUniqueValues = array_unique(array_column($rightData, $joinConditions[2]));
@@ -572,12 +598,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         // --- Assemble joined data set based on matched indices --- //
 
         $joinRows = [];
-        $emptyLeftRow = array_map(function ($elem) {
-            return null;
-        }, array_flip($left->_columns));
-        $emptyRightRow = array_map(function ($elem) {
-            return null;
-        }, array_flip($right->_columns));
+        $emptyLeftRow = array_map(function ($elem) { return null; }, array_flip($left->_columns));
+        $emptyRightRow = array_map(function ($elem) { return null; }, array_flip($right->_columns));
 
         $leftRowCount = count($leftData);
         $rightRowCount = count($rightData);
@@ -610,7 +632,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
         $returnModel->_data = $joinRows;
-        $returnModel->_columns = array_keys($returnModel->_data[0]);
+        $returnModel->_columns = $mergedColumns;
         $returnModel->_lastQuery = time();
         return $returnModel;
     }
