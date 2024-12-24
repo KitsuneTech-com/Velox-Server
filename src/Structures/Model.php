@@ -589,12 +589,16 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             $unjoinedRightIndices = array_flip(array_keys($leftData));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $joinIndices[$leftIndex] = [];
+                $currentJoinArray = [];
+                $joinFound = false;
                 foreach ($rightUniqueValues as $rightIndex => $rightValue) {
                     if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
-                        $joinIndices[$leftIndex][] = $rightIndex;
+                        $joinFound = true;
+                        $currentJoinArray[] = $rightIndex;
                         unset($unjoinedRightIndices[$rightIndex]);
                     }
                 }
+                if ($joinFound) $joinIndices[$leftIndex] = $currentJoinArray;
             }
             $unjoinedRightIndices = array_flip($unjoinedRightIndices);
             $unjoinedRightRowCount = count($unjoinedRightIndices);
