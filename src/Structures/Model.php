@@ -515,7 +515,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         elseif (is_array($joinConditions)) {
             //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
-            if ((function ($arr) { return array_sum(array_map('is_string', $arr)) == 3;})($joinConditions)) {
+            if ((function ($arr) { return array_sum(array_map('is_string', $arr)) != 3;})($joinConditions)) {
                 throw new VeloxException("Join conditions array must contain exactly three strings", 74);
             }
             if (!in_array($joinConditions[0], $left->_columns)) {
