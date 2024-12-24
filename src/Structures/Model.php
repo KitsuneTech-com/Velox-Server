@@ -502,7 +502,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         if (!$joinConditions && $joinType !== CROSS_JOIN) {
             throw new VeloxException("Join conditions must be specified", 72);
         }
-        $commonColumns = array_intersect($left->_columns, $right->_columns);
+
+        $commonColumns = array_values(array_intersect($left->_columns, $right->_columns));
+        $commonColumnCount = count($commonColumns);
+
         $usingEquivalent = false;
         if (is_string($joinConditions)) {
             if (!in_array($joinConditions, $commonColumns)) {
@@ -529,7 +532,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
 
-        $commonColumnCount = count($commonColumns);
         $leftColumnSubstitutes = [];
         $rightColumnSubstitutes = [];
 
