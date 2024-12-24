@@ -564,6 +564,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         $leftData = $left->_data;
         $rightData = $right->_data;
+
         foreach ($leftColumnSubstitutes as $oldColumn => $newColumn){
             changeColumn($oldColumn, $newColumn, $leftData);
         }
@@ -578,14 +579,17 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         if ($joinType == RIGHT_JOIN) {
             foreach ($rightUniqueValues as $rightIndex => $rightValue) {
-                $joinIndices[$rightIndex] = [];
+                $currentJoinArray = [];
+                $joinFound = false;
                 foreach ($leftUniqueValues as $leftValue) {
                     if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
-                        $joinIndices[$rightIndex][] = $leftValue;
+                        $joinFound = true;
+                        $currentJoinArray[] = $leftValue;
                     }
                 }
+                if ($joinFound) $joinIndices[$rightIndex] = $currentJoinArray;
             }
-            [$left, $right] = [$right, $left];  //Swap the join order and proceed as a left join
+            [$leftData, $rightData] = [$rightData, $leftData];  //Swap the join order and proceed as a left join
         }
         elseif ($joinType != CROSS_JOIN) {
             $unjoinedRightIndices = array_flip(array_keys($leftData));
