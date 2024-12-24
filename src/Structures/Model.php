@@ -636,7 +636,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 } //Left/right outer join
                 elseif ($joinType != INNER_JOIN) {
-                    $joinRows[] = array_merge($emptyRightRow, $currentLeftRow);
+                    $joinRows[] = array_merge($joinType = LEFT_JOIN ? $emptyRightRow : $emptyLeftRow, $currentLeftRow);
                 }
             }
             if ($joinType == FULL_JOIN) {
