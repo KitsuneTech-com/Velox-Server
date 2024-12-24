@@ -598,8 +598,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         // --- Assemble joined data set based on matched indices --- //
 
         $joinRows = [];
-        $emptyLeftRow = array_map(function ($elem) { return null; }, array_flip($left->_columns));
-        $emptyRightRow = array_map(function ($elem) { return null; }, array_flip($right->_columns));
+        $emptyLeftRow = array_map(function ($elem) { return null; }, array_flip($leftColumns));
+        $emptyRightRow = array_map(function ($elem) { return null; }, array_flip($rightColumns));
 
         $leftRowCount = count($leftData);
         $rightRowCount = count($rightData);
