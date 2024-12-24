@@ -581,10 +581,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             foreach ($rightUniqueValues as $rightIndex => $rightValue) {
                 $currentJoinArray = [];
                 $joinFound = false;
-                foreach ($leftUniqueValues as $leftValue) {
+                foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                     if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
                         $joinFound = true;
-                        $currentJoinArray[] = $leftValue;
+                        $currentJoinArray[] = $leftIndex;
                     }
                 }
                 if ($joinFound) $joinIndices[$rightIndex] = $currentJoinArray;
