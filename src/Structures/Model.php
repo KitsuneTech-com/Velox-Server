@@ -556,7 +556,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             $rightColumns = str_replace(array_flip($rightColumnSubstitutes), $rightColumnSubstitutes, $rightColumns);
         }
 
-        $mergedColumns = $leftColumns + $rightColumns; //Union operator coalesces duplicate column names for USING-equivalent joins
+        $mergedColumns = array_unique(array_merge($leftColumns,$rightColumns));
 
         // --- Perform comparisons and match indices from each side --- //
 
