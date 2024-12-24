@@ -540,9 +540,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 throw new VeloxException("Identical column names exist in both Models", 78);
             }
             for ($i=0; $i<$commonColumnCount; $i++){
-                if (!$usingEquivalent && $commonColumns[$i] == $joinConditions[0]){
-                    $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
-                    $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
+                if ($commonColumns[$i] == $joinConditions[0]){
+                    if ($usingEquivalent){
+                        continue;
+                    }
+                    else {
+                        $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
+                        $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
+                    }
                 }
                 $leftColumnSubstitutes[$commonColumns[$i]] = $left->instanceName.".".$commonColumns[$i];
                 $rightColumnSubstitutes[$commonColumns[$i]] = $right->instanceName.".".$commonColumns[$i];
