@@ -6,6 +6,10 @@ use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSe
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
+/**
+ * Model is the core data storage class for Velox. Each instance of this class holds an iterable dataset composed of the results of
+ * the procedure passed to the first argument of its constructor; alternatively, the Model can be directly populated
+ */
 class Model implements \ArrayAccess, \Iterator, \Countable {
     
     // Note: in Model::update() and Model::delete(), $where is an array of arrays containing a set of conditions to be OR'd toogether.
@@ -21,10 +25,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private int $_currentIndex = 0;
 
     /**
-     * Model is the core data storage class for Velox. Each instance of this class holds an iterable dataset composed of the results of
-     * the procedure passed to the first argument of its constructor; alternatively, the Model can be directly populated
-     *
-     *
+
      * @param PreparedStatement|StatementSet|null $_select              The SELECT-equivalent procedure used to populate the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
@@ -58,15 +59,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return count($this->_data);
     }
 
-    public function countDistinct(string $column) : int {
-        if (count($this->_data) == 0){
-            return 0;
-        }
-        if (!in_array($column,$this->_columns)){
-            throw new VeloxException("Column $column does not exist in result set.",38);
-        }
-        return count(array_unique(array_column($this->_data,$column)));
-    }
 
     // Iterator implementation
     public function current() : array {
@@ -286,6 +278,23 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             return $this->_data;
         }
     }
+
+    /**
+     * Model::countDistinct() is a Model-specific counting method that returns the number of distinct values in a given column.
+     *
+     * @param string $column A column whose distinct values are to be counted
+     * @return int The number of distinct values in the specified column
+     * @throws VeloxException if the specified column doesn't exist
+     */
+    public function countDistinct(string $column) : int {
+        if (count($this->_data) == 0){
+            return 0;
+        }
+        if (!in_array($column,$this->_columns)){
+            throw new VeloxException("Column $column does not exist in result set.",38);
+        }
+        return count(array_unique(array_column($this->_data,$column)));
+    }
     public function diff() : VeloxQL {
         return $this->_vql;
     }
@@ -454,9 +463,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     /**
      * Model::join() performs a join of the specified type between the dataset of this Model and the dataset of the specified Model.
      *
-     * @param int $joinType One of the following constants, representing the type of join to be done: LEFT_JOIN,
+     * @param int $joinType     One of the following constants, representing the type of join to be done: LEFT_JOIN,
      *      RIGHT_JOIN, INNER_JOIN, FULL_JOIN, CROSS_JOIN (with behavior according to SQL standards)
-     * @param Model $joinModel The Model with which the dataset of this Model will be joined
+     * @param Model $joinModel  The Model with which the dataset of this Model will be joined
      *
      * @param string|array|null $joinConditions One of the following:
      *   * a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
@@ -472,7 +481,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *       comparison is necessary or used.
      *
      * @return Model A new Model representing the joined data set
-     *
+     * @throws VeloxException if the join is improperly specified by the parameters
      */
     public function join(int $joinType, Model $joinModel, string|array|null $joinConditions = null) : Model
     {
@@ -484,6 +493,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
          * @param string $newColumn The replacement column key
          * @param array $array The array on which the operation is to be performed
          * @return void
+
          */
         function changeColumn(string $oldColumn, string $newColumn, array &$array) : void {
             $rowCount = count($array);
