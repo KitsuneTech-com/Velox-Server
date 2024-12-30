@@ -338,7 +338,7 @@ class Query {
                     $resultSet = $this->executeStatement($stmt, $placeholders);
                     if (count($resultSet) > 0) {
                         if ($this->resultType == Query::RESULT_ARRAY){
-                            array_merge($results,$resultSet->getRawData());
+                            $results = array_merge($results,$resultSet->getRawData());
                         }
                         else if ($i == 0) {
                             $results[] = $resultSet;
