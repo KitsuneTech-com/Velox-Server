@@ -451,7 +451,30 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         return $outputModel;
     }
-    public function join(int $joinType, Model $joinModel, array|string|null $joinConditions = null) : Model
+    /**
+     * Model::join() performs a join of the specified type between the dataset of this Model and the dataset of the specified Model.
+     *
+     * @param int $joinType One of the following constants, representing the type of join to be done: LEFT_JOIN,
+     *      RIGHT_JOIN, INNER_JOIN, FULL_JOIN, CROSS_JOIN (with behavior according to SQL standards)
+     * @param Model $joinModel The Model with which the dataset of this Model will be joined
+     *
+     * @param string|array|null $joinConditions One of the following:
+     *   * a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
+     *       performing an equijoin on columns having that name in each Model and coalescing those columns into one.
+     *   * an array; this array must have three elements. The first and third elements must be the names of the columns
+     *       on which the join is to be made - the first being the column existing in the invoked Model, the third being
+     *       the column existing in the Model to be joined. The second element should be a string containing the SQL
+     *       comparison operator to be used; the direction of comparison follows the order of elements.
+     *           e.g. `["parentColumn","<","joinedColumn"]`
+     *       All SQL comparison operators are supported. EKIL, EKILR and their NOT inverses are also available as
+     *       reverse-order LIKE and RLIKE comparisons (the pattern comes first)
+     *   * null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
+     *       comparison is necessary or used.
+     *
+     * @return Model A new Model representing the joined data set
+     *
+     */
+    public function join(int $joinType, Model $joinModel, string|array|null $joinConditions = null) : Model
     {
         /**
          * changeColumn() replaces the given $oldColumn key with the $newColumn key for each row in a two-dimensional array.
@@ -484,19 +507,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $rightColumns = $right->_columns;
 
         $returnModel = new Model;
-
-        //$joinConditions can be:
-        //  a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
-        //      performing an equijoin on columns having that name in each Model and coalescing those columns into one.
-        //  an array; this array must have three elements. The first and third elements must be the names of the columns
-        //      on which the join is to be made - the first being the column existing in the invoked Model, the third being
-        //      the column existing in the Model to be joined. The second element should be a string containing the SQL
-        //      comparison operator to be used; the direction of comparison follows the order of elements.
-        //          e.g. ["parentColumn","<","joinedColumn"]
-        //      All SQL comparison operators are supported. EKIL, EKILR and their NOT inverses are also available as
-        //      reverse-order LIKE and RLIKE comparisons (the pattern comes first)
-        //  null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
-        //      comparison is necessary or used.
 
         // --- Initial condition checks (is there anything about the current state that will prevent a successful join?) --- //
         if (!$joinConditions && $joinType !== CROSS_JOIN) {
