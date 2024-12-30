@@ -1,7 +1,7 @@
 <?php
 
 namespace KitsuneTech\Velox\Structures;
-use KitsuneTech\Velox\VeloxException as VeloxException;
+use KitsuneTech\Velox\VeloxException;
 use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSet, Transaction};
 use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
@@ -13,13 +13,25 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
-    private object $_diff;
+    private object $_vql;
     private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
     private bool $_delaySelect = false;
     private int $_currentIndex = 0;
-    
+
+    /**
+     * Model is the core data storage class for Velox. Each instance of this class holds an iterable dataset composed of the results of
+     * the procedure passed to the first argument of its constructor; alternatively, the Model can be directly populated
+     *
+     *
+     * @param PreparedStatement|StatementSet|null $_select              The SELECT-equivalent procedure used to populate the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
+     * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
+     * @param string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
+     * @throws VeloxException                                           if the initial SELECT procedure throws an exception
+     */
     public function __construct(
         private PreparedStatement|StatementSet|null             $_select = null,
         private PreparedStatement|StatementSet|Transaction|null $_update = null,
@@ -37,7 +49,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
-            $this->_diff = new VeloxQL('{}');
+            $this->_vql = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
     
@@ -92,10 +104,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return isset($this->_data[$offset]);
     }
 
-
-    
     // Class-specific methods
-    public function select(bool $diff = false) : VeloxQL|bool {
+    public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
@@ -125,23 +135,23 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 $this->_data = [];
             }
             
-            if ($diff) {
-                $this->_diff = new VeloxQL();
+            if ($vql) {
+                $this->_vql = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->_diff->delete[] = (object)$row;
+                        $this->_vql->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
                     if (!in_array($row,$this->_data)){
                         $this->_data[] = $row;
-                        $this->_diff->insert[] = (object)$row;
+                        $this->_vql->insert[] = (object)$row;
                     }
                 }
                 //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
-                return $this->_diff;
+                return $this->_vql;
             }
             else {
                 return true;
@@ -251,19 +261,16 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         array_multisort(...$sortArray);
     }
     
-    public function synchronize(VeloxQL $diff) : void {
+    public function synchronize(VeloxQL $vql) : void {
         $this->_delaySelect = true;
-        if ($diff->update) {
-            $this->update($diff->update);
-        }
-        if ($diff->delete) {
-            $this->delete($diff->delete);
-        }
-        if ($diff->insert) {
-            $this->insert($diff->insert);
-        }
-        if ($diff->select) {
-            $this->setFilter($diff);
+        $operations = ["update","delete","insert","select"]; //Perform operations in this order
+        for ($i=0; $i<count($operations); $i++){
+            if ($operations[$i] !== "select"){
+                $this->executeDML($operations[$i],$vql->{$operations[$i]});
+            }
+            else {
+                $this->setFilter($vql);
+            }
         }
         $this->select();
         $this->_delaySelect = false;
@@ -280,7 +287,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     public function diff() : VeloxQL {
-        return $this->_diff;
+        return $this->_vql;
     }
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
@@ -325,6 +332,22 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 if (!in_array($idx,$this->_filteredIndices)) $this->_filteredIndices[] = $idx;
             }
+        }
+    }
+    public function renameColumn(string $oldName, string $newName) : void {
+        if (!$oldName || !$newName) throw new VeloxException("Both old and new column names must be specified.",79);
+        if (!in_array($oldName,$this->_columns)) throw new VeloxException("Column '".$oldName."' does not exist in Model.",80);
+        if (!in_array($newName,$this->_columns)) throw new VeloxException("Column '".$newName."' already exists in Model.",81);
+
+        /* Replacement by flipping the columns array and setting/unsetting the keys for this and for the underlying dataset */
+        $flippedColumns = array_flip($this->_columns);
+        $flippedColumns[$newName] = null;
+        unset ($flippedColumns[$oldName]);
+        $this->_columns = array_keys($flippedColumns);
+        $rowCount = count($this);
+        for ($i=0; $i<$rowCount; $i++){
+            $this[$i][$newName] = $this[$i][$oldName];
+            unset ($this[$i][$oldName]);
         }
     }
     public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
@@ -372,9 +395,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
 
         //Check whether all given columns exist in the $pivotBy column
-        $diff = array_diff($pivotColumns,$pivotByValues);
-        if (count($diff) > 0 && !$suppressColumnException){
-            throw new VeloxException("Value(s) ".implode(",",$diff)." specified in pivot columns array do not exist in $pivotBy column.",71);
+        $vql = array_diff($pivotColumns,$pivotByValues);
+        if (count($vql) > 0 && !$suppressColumnException){
+            throw new VeloxException("Value(s) ".implode(",",$vql)." specified in pivot columns array do not exist in $pivotBy column.",71);
         }
 
         $flippedColumns = array_flip($pivotColumns);
@@ -427,6 +450,215 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $outputModel->_columns = [$indexColumn, ...$pivotColumns];
 
         return $outputModel;
+    }
+    /**
+     * Model::join() performs a join of the specified type between the dataset of this Model and the dataset of the specified Model.
+     *
+     * @param int $joinType One of the following constants, representing the type of join to be done: LEFT_JOIN,
+     *      RIGHT_JOIN, INNER_JOIN, FULL_JOIN, CROSS_JOIN (with behavior according to SQL standards)
+     * @param Model $joinModel The Model with which the dataset of this Model will be joined
+     *
+     * @param string|array|null $joinConditions One of the following:
+     *   * a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
+     *       performing an equijoin on columns having that name in each Model and coalescing those columns into one.
+     *   * an array; this array must have three elements. The first and third elements must be the names of the columns
+     *       on which the join is to be made - the first being the column existing in the invoked Model, the third being
+     *       the column existing in the Model to be joined. The second element should be a string containing the SQL
+     *       comparison operator to be used; the direction of comparison follows the order of elements.
+     *           e.g. `["parentColumn","<","joinedColumn"]`
+     *       All SQL comparison operators are supported. EKIL, EKILR and their NOT inverses are also available as
+     *       reverse-order LIKE and RLIKE comparisons (the pattern comes first)
+     *   * null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
+     *       comparison is necessary or used.
+     *
+     * @return Model A new Model representing the joined data set
+     *
+     */
+    public function join(int $joinType, Model $joinModel, string|array|null $joinConditions = null) : Model
+    {
+        /**
+         * changeColumn() replaces the given $oldColumn key with the $newColumn key for each row in a two-dimensional array.
+         * This acts directly on the given $array, by reference.
+         *
+         * @param string $oldColumn The old column key
+         * @param string $newColumn The replacement column key
+         * @param array $array The array on which the operation is to be performed
+         * @return void
+         */
+        function changeColumn(string $oldColumn, string $newColumn, array &$array) : void {
+            $rowCount = count($array);
+            for ($i=0; $i<$rowCount; $i++){
+                if (isset($array[$i][$oldColumn])){
+                    $array[$i][$newColumn] = $array[$i][$oldColumn];
+                    unset($array[$i][$oldColumn]);
+                }
+            }
+        }
+        //SQL wildcards to be replaced by PCRE equivalents (for use in LIKE/NOT LIKE)
+        $wildcards = [
+            ["%", "_"],
+            [".*", ".{1}"]
+        ];
+        $comparisons = ["=", "<", ">", "<=", ">=", "<>", "LIKE", "NOT LIKE", "RLIKE", "NOT RLIKE"];
+
+        $left = $this;
+        $right = $joinModel;
+        $leftColumns = $left->_columns;
+        $rightColumns = $right->_columns;
+
+        $returnModel = new Model;
+
+        // --- Initial condition checks (is there anything about the current state that will prevent a successful join?) --- //
+        if (!$joinConditions && $joinType !== CROSS_JOIN) {
+            throw new VeloxException("Join conditions must be specified", 72);
+        }
+
+        $commonColumns = array_values(array_intersect($left->_columns, $right->_columns));
+        $commonColumnCount = count($commonColumns);
+
+        $usingEquivalent = false;
+        if (is_string($joinConditions)) {
+            if (!in_array($joinConditions, $commonColumns)) {
+                throw new VeloxException("Join column specified does not exist in both Models", 73);
+            }
+            else {
+                $joinConditions = [$joinConditions, "=", $joinConditions];
+                $usingEquivalent = true;
+            }
+        }
+        elseif (is_array($joinConditions)) {
+            //If an array is specified for $joinConditions, it must contain exactly the elements needed to perform the join
+            if ((function ($arr) { return array_sum(array_map('is_string', $arr)) != 3;})($joinConditions)) {
+                throw new VeloxException("Join conditions array must contain exactly three strings", 74);
+            }
+            if (!in_array($joinConditions[0], $left->_columns)) {
+                throw new VeloxException("Left side column does not exist in invoking Model", 75);
+            }
+            if (!in_array($joinConditions[1], $comparisons)) {
+                throw new VeloxException("The provided operator is invalid", 76);
+            }
+            if (!in_array($joinConditions[2], $right->_columns)) {
+                throw new VeloxException("Right side column does not exist in joining Model", 77);
+            }
+        }
+
+        $leftColumnSubstitutes = [];
+        $rightColumnSubstitutes = [];
+
+        if ($commonColumnCount > 0){
+            //If there are matching column names in both Models, they aren't part of a USING-equivalent join operation,
+            // and the Models do not have distinct instanceName properties, throw an error for ambiguity
+            if ((!$usingEquivalent || $commonColumnCount > 1) && (!isset($left->instanceName) || !isset($right->instanceName) || $left->instanceName == $right->instanceName)){
+                throw new VeloxException("Identical column names exist in both Models", 78);
+            }
+            for ($i=0; $i<$commonColumnCount; $i++){
+                if ($commonColumns[$i] == $joinConditions[0]){
+                    if ($usingEquivalent){
+                        continue;
+                    }
+                    else {
+                        $joinConditions[0] = $left->instanceName.".".$joinConditions[0];
+                        $joinConditions[2] = $right->instanceName.".".$joinConditions[2];
+                    }
+                }
+                $leftColumnSubstitutes[$commonColumns[$i]] = $left->instanceName.".".$commonColumns[$i];
+                $rightColumnSubstitutes[$commonColumns[$i]] = $right->instanceName.".".$commonColumns[$i];
+            }
+            $leftColumns = str_replace(array_flip($leftColumnSubstitutes), $leftColumnSubstitutes, $leftColumns);
+            $rightColumns = str_replace(array_flip($rightColumnSubstitutes), $rightColumnSubstitutes, $rightColumns);
+        }
+
+        $mergedColumns = array_unique(array_merge($leftColumns,$rightColumns));
+
+        // --- Perform comparisons and match indices from each side --- //
+
+        $leftData = $left->_data;
+        $rightData = $right->_data;
+
+        foreach ($leftColumnSubstitutes as $oldColumn => $newColumn){
+            changeColumn($oldColumn, $newColumn, $leftData);
+        }
+        foreach($rightColumnSubstitutes as $oldColumn => $newColumn){
+            changeColumn($oldColumn, $newColumn, $rightData);
+        }
+
+        $leftUniqueValues = array_unique(array_column($leftData, $joinConditions[0]));
+        $rightUniqueValues = array_unique(array_column($rightData, $joinConditions[2]));
+        $joinIndices = [];
+        $unjoinedRightIndices = [];
+
+        if ($joinType == RIGHT_JOIN) {
+            foreach ($rightUniqueValues as $rightIndex => $rightValue) {
+                $currentJoinArray = [];
+                $joinFound = false;
+                foreach ($leftUniqueValues as $leftIndex => $leftValue) {
+                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
+                        $joinFound = true;
+                        $currentJoinArray[] = $leftIndex;
+                    }
+                }
+                if ($joinFound) $joinIndices[$rightIndex] = $currentJoinArray;
+            }
+            [$leftData, $rightData] = [$rightData, $leftData];  //Swap the join order and proceed as a left join
+        }
+        elseif ($joinType != CROSS_JOIN) {
+            $unjoinedRightIndices = array_flip(array_keys($rightData));
+            foreach ($leftUniqueValues as $leftIndex => $leftValue) {
+                $currentJoinArray = [];
+                $joinFound = false;
+                foreach ($rightUniqueValues as $rightIndex => $rightValue) {
+                    if (sqllike_comp($leftValue, $joinConditions[1], $rightValue)) {
+                        $joinFound = true;
+                        $currentJoinArray[] = $rightIndex;
+                        unset($unjoinedRightIndices[$rightIndex]);
+                    }
+                }
+                if ($joinFound) $joinIndices[$leftIndex] = $currentJoinArray;
+            }
+            $unjoinedRightIndices = array_values(array_flip($unjoinedRightIndices));
+            $unjoinedRightRowCount = count($unjoinedRightIndices);
+        }
+
+        // --- Assemble joined data set based on matched indices --- //
+
+        $joinRows = [];
+        $emptyLeftRow = array_map(function ($elem) { return null; }, array_flip($leftColumns));
+        $emptyRightRow = array_map(function ($elem) { return null; }, array_flip($rightColumns));
+
+        $leftRowCount = count($leftData);
+        $rightRowCount = count($rightData);
+
+        if ($joinType == CROSS_JOIN){
+            for ($i=0; $i<$leftRowCount; $i++){
+                for ($j=0; $j<$rightRowCount; $j++){
+                    $joinRows[] = array_merge($leftData[$i], $rightData[$j]);
+                }
+            }
+        }
+        else {
+            for ($i = 0; $i < $leftRowCount; $i++) {
+                $currentLeftRow = $leftData[$i];
+                //Inner join
+                if (isset($joinIndices[$i])) {
+                    $rightJoinCount = count($joinIndices[$i]);
+                    for ($j = 0; $j < $rightJoinCount; $j++) {
+                        $joinRows[] = array_merge($currentLeftRow, $rightData[$joinIndices[$i][$j]]);
+                    }
+                } //Left/right outer join
+                elseif ($joinType != INNER_JOIN) {
+                    $joinRows[] = array_merge($joinType == RIGHT_JOIN ? $emptyLeftRow : $emptyRightRow, $currentLeftRow);
+                }
+            }
+            if ($joinType == FULL_JOIN) {
+                for ($i = 0; $i < $unjoinedRightRowCount; $i++) {
+                    $joinRows[] = array_merge($emptyLeftRow, $rightData[$unjoinedRightIndices[$i]]);
+                }
+            }
+        }
+        $returnModel->_data = $joinRows;
+        $returnModel->_columns = $mergedColumns;
+        $returnModel->_lastQuery = time();
+        return $returnModel;
     }
     public function lastQuery() : ?int {
         return $this->_lastQuery;
