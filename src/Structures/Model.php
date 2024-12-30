@@ -592,7 +592,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             [$leftData, $rightData] = [$rightData, $leftData];  //Swap the join order and proceed as a left join
         }
         elseif ($joinType != CROSS_JOIN) {
-            $unjoinedRightIndices = array_flip(array_keys($leftData));
+            $unjoinedRightIndices = array_flip(array_keys($rightData));
             foreach ($leftUniqueValues as $leftIndex => $leftValue) {
                 $currentJoinArray = [];
                 $joinFound = false;
@@ -605,7 +605,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
                 if ($joinFound) $joinIndices[$leftIndex] = $currentJoinArray;
             }
-            $unjoinedRightIndices = array_flip($unjoinedRightIndices);
+            $unjoinedRightIndices = array_values(array_flip($unjoinedRightIndices));
             $unjoinedRightRowCount = count($unjoinedRightIndices);
         }
 
