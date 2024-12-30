@@ -64,8 +64,8 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 26   | Transaction has no active connection                                              | A query string was passed to Transaction::addQuery() without first setting a connection to use. |
 | 27   | Query in transaction failed                                                       | The transaction was rolled back after a failed query. See the chained exception for details.    |
 | 39   | User-defined function failed                                                      | A custom function added to the Transaction failed. See the chained exception for details.       |
- | 61   | Attempted to add parameter set to Transaction without a leading PreparedStatement | Transaction::addParameterSet() requires the first assigned procedure to be a PreparedStatement. |
- | 62   | Attempted to add criteria to Transaction without a leading StatementSet           | Transaction::addCriteria() requires the first assigned procedure to be a StatementSet.          |
+| 61   | Attempted to add parameter set to Transaction without a leading PreparedStatement | Transaction::addParameterSet() requires the first assigned procedure to be a PreparedStatement. |
+| 62   | Attempted to add criteria to Transaction without a leading StatementSet           | Transaction::addCriteria() requires the first assigned procedure to be a StatementSet.          |
 
 ### Structures\ResultSet
 | Code | Text                                | Explanation                                                               |
