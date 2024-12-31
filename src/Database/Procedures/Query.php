@@ -93,7 +93,10 @@ class Query {
         $this->results = [];
         $this->_lastAffected = [];
     }
-
+    //Magic method wrapper for execute() to make Query instance callable
+    public function __invoke() : bool {
+        return $this->execute();
+    }
     private function executeStatement(&$stmt, array &$parameters = null) : ResultSet {
         $connObj = $this->conn;
         $queryType = $this->queryType;
@@ -370,10 +373,7 @@ class Query {
         }
         return true;
     }
-    //Magic method wrapper for execute() to make Query instance callable
-    public function __invoke() : bool {
-        return $this->execute();
-    }
+
     /**
      * Returns the results of the query as executed. The return type will vary depending on which result type was set
      * for the query.
