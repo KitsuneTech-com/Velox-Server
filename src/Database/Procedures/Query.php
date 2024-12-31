@@ -93,7 +93,9 @@ class Query {
         $this->results = [];
         $this->_lastAffected = [];
     }
-    //Magic method wrapper for execute() to make Query instance callable
+    /**
+     * Magic method wrapper for {@see execute() execute()} to make Query instance callable
+     * */
     public function __invoke() : bool {
         return $this->execute();
     }
