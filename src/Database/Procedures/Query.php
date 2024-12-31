@@ -88,17 +88,17 @@ class Query {
             }
         }
     }
+    /** @ignore */
     public function __clone() : void {
         //A cloned Query doesn't retain the original's results.
         $this->results = [];
         $this->_lastAffected = [];
     }
-    /**
-     * Magic method wrapper for {@see execute() execute()} to make Query instance callable
-     * */
+    /** @ignore */
     public function __invoke() : bool {
         return $this->execute();
     }
+    /** @internal */
     private function executeStatement(&$stmt, array &$parameters = null) : ResultSet {
         $connObj = $this->conn;
         $queryType = $this->queryType;
