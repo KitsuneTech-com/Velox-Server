@@ -7,10 +7,11 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 /**
- * `Query` is the base class for all Velox query procedures. An instance of `Query` can be used to execute any SQL query the
- * underlying database supports; however, for any queries that require input, `PreparedStatement` or `StatementSet` should be
- * used instead. These classes provide automatic sanitation of input parameters, and `StatementSet` provides the ability to
- * execute multiple queries in a single call.
+ * The base class for all Velox database query procedures.
+ *
+ * An instance of `Query` can be used to execute any SQL query the underlying database supports; however, for any queries
+ * that require input, {@see PreparedStatement} or {@see StatementSet} should be used instead. These classes provide automatic
+ * sanitation of input parameters, and `StatementSet` provides the ability to execute multiple queries in a single call.
  *
  * @author KitsuneTech
  * @version 1.0 beta 1
@@ -109,7 +110,7 @@ class Query {
                 try {
                     if (!$stmt->execute()){
                         throw new VeloxException("Query execution failed: ".$stmt->errorInfo()[2]);
-                    };
+                    }
                 }
                 catch (\Exception $e) {
                     if ($stmt->errorCode() == "HY000" && $stmt->errorInfo()[1] == 2006) {
@@ -306,7 +307,7 @@ class Query {
                             if (count($placeholders) > 0){
                                 if (!$stmt->bind_param(str_repeat("s", count($placeholders)), ...$placeholders)) {
                                     throw new VeloxException('MySQL Error: ' . $stmt->errorInfo(), (int)$stmt->errorCode());
-                                };
+                                }
                             }
                             break;
                         case Connection::DB_MSSQL:
@@ -361,7 +362,7 @@ class Query {
                 }
             }
         }
-        catch (Exception $ex){
+        catch (\Exception $ex){
             throw new VeloxException("SQL statement failed to execute",21,$ex);
         }
         $finalResult = match ($this->resultType) {
