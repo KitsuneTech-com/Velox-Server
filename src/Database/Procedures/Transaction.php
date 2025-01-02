@@ -265,7 +265,7 @@ class Transaction {
         try {
             if (!isset($this->_iterations[$this->_currentIterationIndex])) return false;
             while ($this->executeNextProcedure()){ /* continue execution */ }
-            if ($commit) $this->commitAll();
+            if ($commit) $this->commit();
             $this->_currentIterationIndex++;
             $this->_currentProcedureIndex = 0;
             return (!isset($this->_iterations[$this->_currentIterationIndex]));
@@ -286,11 +286,11 @@ class Transaction {
     public function executeAll($commit = false) : void {
         while ($this->executeIteration()){ /* continue execution */ }
         if ($commit){
-            $this->commitAll();
+            $this->commit();
         }
     }
 
-    public function commitAll() : void {
+    public function commit() : void {
         foreach ($this->_connections as $conn){
             $conn->commit();
         }
