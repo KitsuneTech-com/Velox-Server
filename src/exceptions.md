@@ -1,5 +1,5 @@
-## VeloxException codes/descriptions (subject to change during development)
-Note: exceptions are not necessarily sequential per class. Numbers are added as needed during development.
+## VeloxException codes/descriptions
+Note: Exception codes are not necessarily sequential per class, method or function; they are, however, unique across the library.
 
 ### Database\Connection
 
@@ -111,9 +111,3 @@ Note: exceptions are not necessarily sequential per class. Numbers are added as 
 | 33   | Array contains elements other than instances of Model                                  | If an array is passed to Export, it must only contain Models.                         |
 | 34   | XML export requires the xmlwriter extension                                            | The XML generated with an AS_XML Export() call is built with the xmlwriter extension. |
 | 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification.                       |
-
-### Transport\Webhook\Request
-| Code | Text                                                | Explanation                                                                                                                                                                                                                               |
-|------|-----------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 66   | Unable to create temporary file for webhook payload | The payload for each request is stored in a temporary file to be accessed by the dispatch script. This file couldn't be created. Check to see if the user running the script has permission to write to the system's temporary directory. |
-| 67   | Unable to start webhook dispatcher                  | The dispatch script couldn't be run.                                                                                                                                                                                                      |
