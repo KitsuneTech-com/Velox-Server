@@ -28,6 +28,8 @@ use KitsuneTech\Velox\VeloxException;
  *
  * If any query fails during the execution of a Transaction, all databases affected are rolled back to their previous state.
  * Transactions can also be nested for more granular control of the commit/rollback process.
+ *
+ * The Transaction instance is itself callable, and invoking it as a function is a simple alias for calling {@see Transaction::executeAll()}.
  */
 
 class Transaction {
@@ -239,7 +241,7 @@ class Transaction {
     }
 
     /**
-     * Returns the resultset(s) from the Transaction in its current state.
+     * Returns the result set(s) from the Transaction in its current state.
      *
      * These results are returned by default as a
      * two-dimensional array in which each element is an array containing the results of each iteration of the Transaction,
