@@ -111,3 +111,5 @@ Note: Exception codes are not necessarily sequential per class, method or functi
 | 33   | Array contains elements other than instances of Model                                  | If an array is passed to Export, it must only contain Models.                         |
 | 34   | XML export requires the xmlwriter extension                                            | The XML generated with an AS_XML Export() call is built with the xmlwriter extension. |
 | 35   | A CSV file can have only one worksheet. You will need to export each Model separately. | Multiple worksheets are not supported by the CSV specification.                       |
+
+Exceptions 66 and 67 are unused.
