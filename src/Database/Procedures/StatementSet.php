@@ -44,9 +44,9 @@ use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
  *      {"col1": "val1", "col2": "val2"}
  *  ],
  *  "where": [
- *      {col1: ["=", "val1"], col2: ["BETWEEN", 3, 4]},
- *      {col2: ["IN", ["val2", "val3"]]},
- *      {col1: ["IS NULL"]}
+ *      {"col1": ["=", "val1"], "col2": ["BETWEEN", 3, 4]},
+ *      {"col2": ["IN", ["val2", "val3"]]},
+ *      {"col1": ["IS NULL"]}
  *  ]
  *}
  * ```
