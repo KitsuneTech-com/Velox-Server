@@ -9,29 +9,30 @@ use KitsuneTech\Velox\Database\Procedures\{Query, Transaction};
 use KitsuneTech\Velox\Structures\{VeloxQL, ResultSet};
 use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
 
-/** `StatementSet` is a class that dynamically generates a collection of related PreparedStatements. This is best used for
- * queries that may have an unknown number of parameters, such as a search query. The standard SQL syntax is augmented
- * with AngularJS-style placeholders for the contents of typical clauses; these placeholders are substituted at execution
- * time with the appropriate prepared statement syntax based on the content of the criteria set assigned to it. This also
- * supports the use of all standard SQL comparisons, including IN, NOT IN, BETWEEN, NOT BETWEEN, and LIKE, and also provides
- * a reverse-pattern lookup for LIKE and RLIKE ("EKIL" and "ELIKR" respectively).
+/** A class that dynamically generates a collection of related PreparedStatements.
+ *
+ * This is best used for queries that may have an unknown number of parameters, such as a search query. The standard SQL
+ * syntax is augmented with AngularJS-style placeholders for the contents of typical clauses; these placeholders are
+ * substituted at execution time with the appropriate prepared statement syntax based on the content of the criteria set
+ * assigned to it. This also supports the use of all standard SQL comparisons, including IN, NOT IN, BETWEEN,
+ * NOT BETWEEN, and LIKE, and also provides a reverse-pattern lookup for LIKE and RLIKE ("EKIL" and "ELIKR" respectively).
  *
  * StatementSet placeholders are as follows:
- *  - <<columns>>: The columns to be inserted
- *  - <<values>>: The values to be inserted or updated
- *  - <<condition>>: The condition to be used in a WHERE clause
+ *  - `<<columns>>`: The columns to be inserted
+ *  - `<<values>>`: The values to be inserted or updated
+ *  - `<<condition>>`: The condition to be used in a WHERE clause
  *
  * These should be used where the appropriate clause(s) would normally be used in a standard SQL statement:
- * - SELECT <<columns>> FROM myTable WHERE <<condition>>
- * - INSERT INTO myTable (<<columns>>) VALUES (<<values>>)
- * - UPDATE myTable SET <<values>> WHERE <<condition>>
- * - DELETE FROM myTable WHERE <<condition>>
+ * - `SELECT <<columns>> FROM myTable WHERE <<condition>>`
+ * - `INSERT INTO myTable (<<columns>>) VALUES (<<values>>)`
+ * - `UPDATE myTable SET <<values>> WHERE <<condition>>`
+ * - `DELETE FROM myTable WHERE <<condition>>`
  *
  * Criteria are passed in as an associative array. This array should contain either or both of two keys, as appropriate
  * for the query type:
- * - "values": An array of associative arrays, with the keys being the column names and the values being the values to be
+ * - `"values"`: An array of associative arrays, with the keys being the column names and the values being the values to be
  *  inserted or updated.
- * - "where": An array of associative arrays, the construction of which determines how the corresponding <<condition>> is
+ * - `"where"`: An array of associative arrays, the construction of which determines how the corresponding <<condition>> is
  * constructed. Every array in the "where" array represents a set of conditions that will be joined by AND; each set of
  * conditions is joined by OR. The keys of each set of conditions are the column names, and the values are arrays having
  * an operator as the first element, followed by zero, one, or two values as appropriate for the operator.
