@@ -56,6 +56,10 @@ class Transaction {
             $this->_connections[] = $conn;
         }
     }
+    //Magic method wrapper for executeAll() to make Transaction callable
+    public function __invoke(bool $commit = false) : void {
+        $this->executeAll();
+    }
 
     /**
      * Inserts a query into the Transaction execution order.
@@ -261,11 +265,7 @@ class Transaction {
         try {
             if (!isset($this->_iterations[$this->_currentIterationIndex])) return false;
             while ($this->executeNextProcedure()){ /* continue execution */ }
-            if ($commit){
-                foreach ($this->_connections as $conn){
-                    $conn->commit();
-                }
-            }
+            if ($commit) $this->commitAll();
             $this->_currentIterationIndex++;
             $this->_currentProcedureIndex = 0;
             return (!isset($this->_iterations[$this->_currentIterationIndex]));
@@ -283,16 +283,19 @@ class Transaction {
         }
     }
 
-    public function executeAll() : void {
+    public function executeAll($commit = false) : void {
         while ($this->executeIteration()){ /* continue execution */ }
+        if ($commit){
+            $this->commitAll();
+        }
+    }
+
+    public function commitAll() : void {
         foreach ($this->_connections as $conn){
             $conn->commit();
         }
     }
-    //Magic method wrapper for executeAll() to make Transaction callable
-    public function __invoke(bool $commit = false) : void {
-        $this->executeAll();
-    }
+
     public function getLastAffected() : array {
         return $this->_lastAffected;
     }
