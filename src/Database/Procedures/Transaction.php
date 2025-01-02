@@ -59,7 +59,9 @@ class Transaction {
             $this->_connections[] = $conn;
         }
     }
-    //Magic method wrapper for executeAll() to make Transaction callable
+    /**
+     * @ignore
+     */
     public function __invoke(bool $commit = false) : void {
         $this->executeAll();
     }
