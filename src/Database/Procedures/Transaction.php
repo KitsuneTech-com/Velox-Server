@@ -31,6 +31,7 @@ use KitsuneTech\Velox\VeloxException;
  */
 
 class Transaction {
+    public const LAST = -1;
     private Connection $_baseConn;
     private array $_connections = [];
     private array $_results = [];
@@ -237,7 +238,28 @@ class Transaction {
         }
     }
 
+    /**
+     * Returns the resultset(s) from the Transaction in its current state.
+     *
+     * These results are returned by default as a
+     * two-dimensional array in which each element is an array containing the results of each iteration of the Transaction,
+     * in order. These arrays themselves contain, in execution order, the results for each procedure in the given iteration.
+     *
+     * Arguments can be passed to this method to filter the results as desired. The first optional argument is the index
+     * of the iteration whose results are to be retrieved (zero-indexed, in order of execution) and the second is the name
+     * or index (again in execution order) of a particular procedure. Specifying one and passing null for the other
+     * retrieves an array of results, in execution order belonging to the specified iteration or procedure.
+     *
+     * The special constant {@see Transaction::LAST} can also be passed as the first argument; in this case, only the result
+     * of the most recently committed iteration is returned.
+     *
+     * @param int|null $iterationIndex The index of the iteration whose results are to be returned
+     * @param int|string|null $name The name or index of the procedure whose results are to be returned
+     * @return ResultSet|array|bool The desired result set, in whichever form results from the combination (or lack thereof)
+     * of arguments passed.
+     */
     public function getQueryResults(?int $iterationIndex = null, int|string|null $name = null) : ResultSet|array|bool {
+        if ($iterationIndex == Transaction::LAST) $iterationIndex = $this->_currentIterationIndex - 1;
         if (count($this->_results) == 0){
             return false;
         }
@@ -266,8 +288,6 @@ class Transaction {
             if (!isset($this->_iterations[$this->_currentIterationIndex])) return false;
             while ($this->executeNextProcedure()){ /* continue execution */ }
             if ($commit) $this->commit();
-            $this->_currentIterationIndex++;
-            $this->_currentProcedureIndex = 0;
             return (!isset($this->_iterations[$this->_currentIterationIndex]));
         }
         catch (VeloxException $ex){
@@ -294,6 +314,8 @@ class Transaction {
         foreach ($this->_connections as $conn){
             $conn->commit();
         }
+        $this->_currentIterationIndex++;
+        $this->_currentProcedureIndex = 0;
     }
 
     public function getLastAffected() : array {
