@@ -6,11 +6,13 @@ use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\VeloxException;
 
 /**
- * `PreparedStatement` is a subclass of `Query` that allows for parameterized prepared statements. The SQL syntax for these
- * statements follows the MySQL syntax for prepared statements, which is the same as the syntax used by PDO. Either
- * named or positional parameters may be used. The values for the parameters are passed in as an associative array
- * to the `addParameterSet()` method; several calls to this method may be made to add multiple sets of parameters, each
- * of which will be bound and executed in sequence when the `execute()` method is called.
+ * A subclass of {@see Query} that allows for parameterized prepared statements.
+ *
+ * The SQL syntax for PreparedStatement queries follows the MySQL syntax for prepared statements, which is the same as
+ * the syntax used by PDO. Either named or positional parameters may be used. The values for the parameters are passed in
+ * as an associative array to the {@see PreparedStatement::addParameterSet() addParameterSet()} method; several calls to
+ * this method may be made to add multiple sets of parameters, each of which will be bound and executed in sequence when
+ * the {@see PreparedStatement::execute() execute()} method is called.
  */
 
 class PreparedStatement extends Query {
