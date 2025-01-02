@@ -46,6 +46,10 @@ class Transaction {
 
     /** @var array A collection of procedures (Queries, PreparedStatements, and/or nested Transactions) to be run in
      * sequence by this Transaction.
+     *
+     * **Note: though this property is public, it should be considered read-only and should not be modified directly.**
+     * Use {@see Transaction::addQuery()} and/or {@see Transaction::addFunction()} to insert procedures into the
+     * execution order.
      */
     public array $procedures = [];
 
