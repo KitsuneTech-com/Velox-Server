@@ -7,7 +7,7 @@ use KitsuneTech\Velox\Database\Procedures\Query;
 use KitsuneTech\Velox\Structures\ResultSet;
 
 /**
- * `Connection` - A generalized database connection class
+ * A generalized database connection class
  *
  * `Connection` establishes a connection to a given database. Supported databases include MySQL/MariaDB,
  * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using native extensions
@@ -43,7 +43,7 @@ class Connection {
     public const CONN_ODBC = 3;
 
     //Class properties
-    private $_conn;
+    private mixed $_conn;
     private bool $_inTransaction = false;
     private array $_lastAffected = [];
 
@@ -191,7 +191,7 @@ class Connection {
                                     throw new VeloxException("SQL Server error(s): " . implode(', ', $errorStrings), 17);
                                 }
                             }
-                            $connectionType = self::CONN_NATIVE;
+                            $this->connectionType = self::CONN_NATIVE;
                             $connected = true;
                         }
                         elseif ($this->connectionType === self::CONN_NATIVE) {
@@ -244,9 +244,9 @@ class Connection {
     /**
      * Returns the internal reference to the database connection. This is only public for use by the `Query` class and
      * should not be used by application code.
-     * @return object The database connection reference
+     * @return mixed The database connection reference
      */
-    public function connectionInstance() : object {
+    public function connectionInstance() : mixed {
         return $this->_conn;
     }
 
@@ -274,9 +274,8 @@ class Connection {
                     }
                 }
                 return $returnVal;
-                break;
             case self::CONN_ODBC:
-                return odbc_autocommit($this->_conn,false);
+                return odbc_autocommit($this->_conn);
             case self::CONN_NATIVE:
                 switch ($this->serverType){
                     case self::DB_MYSQL:
@@ -462,6 +461,7 @@ class Connection {
                     case self::DB_MSSQL:
                         return sqlsrv_close($this->_conn);
                 }
+                //fall through to default for unsupported server types
             default:
                 throw new VeloxException("Unknown connection type",55);
         }
@@ -469,7 +469,7 @@ class Connection {
     /** Executes a given query. This can either be an instance of the Query class or a standalone SQL query string. If the
      * latter is passed, a new `Query` instance will be created from it.
      * @param Query|string $query The query to execute.
-     * @param int $resultType The type of result to return (default is Query::RESULT_ARRAY). See {@see \KitsuneTech\Velox\Database\Procedures\Query Query} for the constants to use.
+     * @param int $resultType The type of result to return (default is Query::RESULT_ARRAY). See {@see Query Query} for the constants to use.
      * @return ResultSet|array|bool The result of the query, or false if the query failed.
      * @throws VeloxException If the query failed. The exception will be passed through from the Query class.
      */
