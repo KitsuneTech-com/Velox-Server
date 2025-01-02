@@ -6,7 +6,7 @@ use KitsuneTech\Velox\Database\Connection as Connection;
 use KitsuneTech\Velox\VeloxException;
 
 /**
- * A subclass of {@see Query} that allows for parameterized prepared statements.
+ * A subclass of {@see Query Query} that allows for parameterized prepared statements.
  *
  * The SQL syntax for PreparedStatement queries follows the MySQL syntax for prepared statements, which is the same as
  * the syntax used by PDO. Either named or positional parameters may be used. The values for the parameters are passed in
