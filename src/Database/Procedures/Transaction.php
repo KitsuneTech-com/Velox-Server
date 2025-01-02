@@ -109,7 +109,7 @@ class Transaction {
      *
      * Thus, the definition should resemble the following (type hinting is, of course, optional):
      *
-     * ```
+     * ```php
      * $transactionInstance = new Transaction();
      * $myFunction = function(array|null $previous, array|null $next, $optionalArgument1, $optionalArgument2...) : void {
      *     //function code goes here
