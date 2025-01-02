@@ -12,7 +12,7 @@ use KitsuneTech\Velox\VeloxException;
  * the syntax used by PDO. Either named or positional parameters may be used. The values for the parameters are passed in
  * as an associative array to the {@see PreparedStatement::addParameterSet() addParameterSet()} method; several calls to
  * this method may be made to add multiple sets of parameters, each of which will be bound and executed in sequence when
- * the {@see PreparedStatement::execute() execute()} method is called.
+ * the {@see Query::execute() execute()} method is called.
  */
 
 class PreparedStatement extends Query {
