@@ -8,23 +8,26 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 use KitsuneTech\Velox\VeloxException;
 
 /**
- * `Transaction` - a class for managing database transactions
+ * A class for managing database transactions
  *
- * This class expands on the basic concept of database transactions by both allowing transactions to be coordinated between
+ * This class expands on the basic concept of T-SQL database transactions by both allowing transactions to be coordinated between
  * data sources (including commit and rollback) and by allowing interstitial application code to be run between database procedure
- * calls. This can be used, for example, to manage import/export of data between disparate databases. Velox Transactions are
+ * calls (e.g., to transform the data returned by a previous procedure before passing it on to the next). Velox Transactions are
  * built by first instantiating a new Transaction object, then using one or more sequential calls to {@see Transaction::addQuery()}
  * or {@see Transaction::addFunction()} to add the desired procedures. Once this is done, the transaction is initiated by
  * calling {@see Transaction::begin()} to start the transaction on each data source. Initial parameters for each Transaction iteration
  * can be defined by calling {@see Transaction::addTransactionParameters()} using an array appropriate for the first procedure defined
  * in the Transaction; each additional call to this method will add an iteration to the Transaction. These iterations can be run
- * individually or all at once as desired, using the following methods:
+ * individually or all at once as desired, using one or several of the following methods:
  *
  *{@see Transaction::executeNextProcedure()}    Executes the next defined query or function.
  *
  *{@see Transaction::executeIteration()}        Runs a single iteration of the Transaction using the current set of parameters.
  *
- *{@see Transaction::executeAll()}             Runs the Transaction for each defined set of parameters.
+ *{@see Transaction::executeAll()}              Runs the Transaction for each defined set of parameters.
+ *
+ * If any query fails during the execution of a Transaction, all databases affected are rolled back to their previous state.
+ * Transactions can also be nested for more granular control of the commit/rollback process.
  */
 
 class Transaction {
@@ -38,16 +41,14 @@ class Transaction {
     private array $_currentIteration = [];
     private string|int $_lastDefinedProcedure;
 
+    /** @var array A collection of procedures (Queries, PreparedStatements, and/or nested Transactions) to be run in
+     * sequence by this Transaction.
+     */
     public array $procedures = [];
 
     /**
-     * `Transaction` emulates (and augments) the behavior of T-SQL transactions by allowing multiple sequential queries
-     * to be run as one block -- even across several connections, if necessary for ETL operations or something similar.
-     * Interstitial functions can also be added as callables to transform a result set before passing it on to the next
-     * query. If any query fails during the execution of a Transaction, all databases affected are rolled back to their
-     * previous state. Transactions can also be nested for more granular control of the commit/rollback process.
-     *
-     * @param Connection|null $conn     (optional) The Connection instance to begin this Transaction with; this is optional, and if this isn't provided, the Connection associated with the first added procedure will be adopted at that time.
+     * @param Connection|null $conn     (optional) The Connection instance to begin this Transaction with; this is
+     * optional, and if this isn't provided, the Connection associated with the first added procedure will be adopted at that time.
      */
     public function __construct(?Connection &$conn = null) {
         if (isset($conn)){
@@ -57,13 +58,15 @@ class Transaction {
     }
 
     /**
-     * Inserts a query into the Transaction execution order. This can take the form of a string of SQL, or any Velox
-     * procedure object.
+     * Inserts a query into the Transaction execution order.
+     *
+     * This query can take the form of a string of SQL, or any Velox procedure object. If a string is provided, the query
+     * will be run on the Transaction's base connection, as provided to the {@see __construct() constructor}.
      * @param string|Query|StatementSet|Transaction $query
      * @param int|null $resultType
      * @param string|null $name
      * @return void
-     * @throws VeloxException
+     * @throws VeloxException if a string is passed as the query and the Transaction does not have a base connection
      */
     public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name = null) : void {
         $executionCount = count($this->procedures);
@@ -93,6 +96,7 @@ class Transaction {
     }
 
     /**
+     * Inserts a user-defined callable function into the Transaction execution order.
      *
      * Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
      * is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
@@ -142,16 +146,39 @@ class Transaction {
         $this->_lastDefinedProcedure = $name ?? $procedureIndex;
         $this->procedures[] = ["instance" => $scopedFunction->bindTo($this,$this), "name" => $this->_lastDefinedProcedure];
     }
+
+    /**
+     * Adds a set of parameters to be used by the first procedure in the execution order.
+     *
+     * This acts as {@see PreparedStatement::addParameterSet()} or {@see StatementSet::addCriteria()} and feeds the first
+     * procedure in the execution order with the given parameters/criteria at execution time. This method can be called
+     * multiple times; the Transaction will be run once for each set of parameters/criteria, in the order provided.
+     *
+     * @param array $procedureParams
+     * @return void
+     */
     public function addTransactionParameters(array $procedureParams) : void {
         $this->_iterations[] = $procedureParams;
     }
 
-    //Execution
+    /**
+     * Initiates the T-SQL transaction for each distinct connection used by this Transaction.
+     *
+     * @return void
+     */
     public function begin() : void {
         foreach ($this->_connections as $conn){
             $conn->beginTransaction();
         }
     }
+
+    /**
+     * Runs the next procedure or function in the execution order. This can be used to step through a Transaction incrementally
+     * without committing the results for the procedure or function in question.
+     *
+     * @return bool True if the procedure or function completed successfully.
+     * @throws VeloxException if the procedure or function fails. See the call stack for more details.
+     */
     public function executeNextProcedure() : bool {
         if (!(isset($this->procedures[$this->_currentProcedureIndex]))){
             return false;
