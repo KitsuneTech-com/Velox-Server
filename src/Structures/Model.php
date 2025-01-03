@@ -27,12 +27,17 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     private int $_currentIndex = 0;
 
     /**
+     * @var ?string $instanceName An optional identifier (required for any Models involved in a join in which column names overlap)
+     */
+    public ?string $instanceName = null;
+
+    /**
 
      * @param PreparedStatement|StatementSet|null $_select              The SELECT-equivalent procedure used to populate the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
-     * @var   string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
+     * @param string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
      * @throws VeloxException                                           if the initial SELECT procedure throws an exception
      */
     public function __construct(
@@ -40,7 +45,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         private PreparedStatement|StatementSet|Transaction|null $_update = null,
         private PreparedStatement|StatementSet|Transaction|null $_insert = null,
         private PreparedStatement|StatementSet|Transaction|null $_delete = null,
-        public ?string                                          $instanceName = null){
+        ?string                                          $instanceName = null){
             $props = ["_select","_update","_insert","_delete"];
             foreach($props as $prop){
                 if (isset($this->$prop)){
@@ -52,6 +57,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                     }
                 }
             }
+            $this->instanceName = $instanceName;
             $this->_vql = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
@@ -327,7 +333,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         return count(array_unique(array_column($this->_data,$column)));
     }
-    public function diff() : VeloxQL {
+    public function vql() : VeloxQL {
         return $this->_vql;
     }
     public function setFilter(VeloxQL|array|null $filter = null) : void {
