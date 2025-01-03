@@ -6,10 +6,12 @@ use KitsuneTech\Velox\Database\Procedures\{Query, PreparedStatement, StatementSe
 use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
 
 /**
- * oneShot() is a means of running a single Velox procedure without binding it to a Model. Calling this function will
- * immediately execute this query -- and only this query -- returning the result as specified in the procedure's $resultType
- * argument. If the procedure is a Transaction, it is executed completely and committed. Parameter sets/criteria for this procedure
- * can be passed as a second argument, as they would be in the appropriate add method to the procedure itself.
+ * A function to run a single Velox procedure and automatically return its result.
+ *
+ * This function will immediately execute the given procedure -- and only this procedure -- returning the result as
+ * specified in the procedure's $resultType argument. If the procedure is a Transaction, it is executed completely
+ * and committed. Parameter sets/criteria for this procedure can be passed as a second argument, as they would be in
+ * the appropriate add method to the procedure itself.
  *
  * @param Query|StatementSet|Transaction $query  The procedure to be executed
  * @param array|object|null $input               Parameter sets/criteria to be added before execution
