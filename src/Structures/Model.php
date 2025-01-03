@@ -63,6 +63,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function count() : int {
         return count($this->_data);
     }
+    /**#@-*/
 
     /**#@+
      * Iterator implementation
