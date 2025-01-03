@@ -135,12 +135,58 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     // Class-specific methods
+
+    /**
+     * A private method that executes the appropriate Velox procedures defined by the DML verb specified, using the
+     * supplied data.
+     *
+     * This method is wrapped by public methods which call it with the appropriate DML verb.
+     *
+     * @param string $verb The DML verb to call (update, insert, delete)
+     * @param array $rows The data with which to run the procedure, as an array of associative arrays. If the associated
+     * update object is a PreparedStatement, each element must be an array of parameter sets ["placeholder"=>"value"];
+     * if the update object is a StatementSet, the array should be VeloxQL-like (each element having "values" and "where"
+     * keys with the appropriate structure [see {@see VeloxQL}].
+     * @return bool Success/failure
+     * @throws VeloxException if the procedure for the given SQL verb has not been defined.
+     * @ignore
+     */
+    private function executeDML(string $verb, array $rows) : bool {
+        $procedure = $this->{'_'.$verb};
+        if (!$procedure){
+            throw new VeloxException("The associated procedure for $verb has not been defined.",37);
+        }
+        $currentProcedure = clone $procedure;
+        $reflection = new \ReflectionClass($currentProcedure);
+        $statementType = $reflection->getShortName();
+
+        switch ($statementType){
+            case "PreparedStatement":
+                foreach($rows as $row){
+                    //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
+                    //PreparedStatement placeholders do not supply the necessary criteria for filtering.
+                    $currentProcedure->addParameterSet($row);
+                }
+                break;
+            case "StatementSet":
+                $currentProcedure->addCriteria($rows);
+                $currentProcedure->setStatements();
+                break;
+        }
+        $currentProcedure();
+
+        if (!$this->_delaySelect){
+            $this->select();
+        }
+        return true;
+    }
+
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
         }
         if ($this->_select->queryType == Query::QUERY_PROC){
-            //add criteria to query first   
+            //add criteria to query first
         }
         if ($this->_select->execute()){
             $this->_lastQuery = time();
@@ -190,42 +236,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         else {
             return false;
         }
-    }
-
-    private function executeDML(string $verb, array $rows) : bool {
-        //$rows is expected to be an array of associative arrays. If the associated update object is a PreparedStatement, each element must be
-        // an array of parameter sets ["placeholder"=>"value"]; if the update object is a StatementSet, the array should be VeloxQL-like (each element
-        // having "values" and "where" keys with the appropriate structure [see the comments in php/Structures/VeloxQL.php].
-
-        //This method is not called directly. Rather, each of the three DML methods (insert, update, delete) calls it with the appropriate verb.
-
-        $procedure = $this->{'_'.$verb};
-        if (!$procedure){
-            throw new VeloxException("The associated procedure for $verb has not been defined.",37);
-        }
-        $currentProcedure = clone $procedure;
-        $reflection = new \ReflectionClass($currentProcedure);
-        $statementType = $reflection->getShortName();
-
-        switch ($statementType){
-            case "PreparedStatement":
-                foreach($rows as $row){
-                    //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
-                    //PreparedStatement placeholders do not supply the necessary criteria for filtering.
-                    $currentProcedure->addParameterSet($row);
-                }
-                break;
-            case "StatementSet":
-                $currentProcedure->addCriteria($rows);
-                $currentProcedure->setStatements();
-                break;
-        }
-        $currentProcedure();
-
-        if (!$this->_delaySelect){
-            $this->select();
-        }
-        return true;
     }
     
     public function update(array $rows) : bool {
