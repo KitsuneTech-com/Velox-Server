@@ -340,7 +340,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     /**
-     * Model::countDistinct() is a Model-specific counting method that returns the number of distinct values in a given column.
+     * Returns the number of distinct values in a given column.
      *
      * @param string $column A column whose distinct values are to be counted
      * @return int The number of distinct values in the specified column
