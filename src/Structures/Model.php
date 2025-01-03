@@ -259,7 +259,15 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function delete(array $rows) : bool {
         return $this->executeDML("delete", $rows);
     }
-    
+
+    /**
+     * Sorts the Model in the manner specified.
+     *
+     *
+     * @param ...$args
+     * @return void
+     * @throws VeloxException
+     */
     public function sort(...$args) : void {
         //Note: this sorting will use the default case-sensitive PHP sorting behavior, since the default
         //SQL ORDER BY behavior is case-sensitive as well.
@@ -778,6 +786,19 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function lastQuery() : ?int {
         return $this->_lastQuery;
     }
+
+    /**
+     * Exports this Model in a chosen format.
+     *
+     * As {@see Export}, except this Model is used specifically.
+     *
+     * @param int $flags
+     * @param string|null $fileName
+     * @param int|null $ignoreRows
+     * @param bool $noHeader
+     * @return string|bool
+     * @throws VeloxException
+     */
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
     }
