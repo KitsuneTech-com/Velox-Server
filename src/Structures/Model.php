@@ -181,6 +181,20 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         return true;
     }
 
+    /**
+     * Performs a select operation using the designated Velox procedure.
+     *
+     * The dataset of this Model will be populated with the results of this select. Any data already stored in the Model
+     * will be replaced with the updated data from this call. The {@see Model::lastQuery()} timestamp is also updated
+     * when the database sends its response.
+     *
+     * @param bool $vql If this is passed as true, a VeloxQL object will be returned containing the rows inserted
+     *     and/or deleted from the previous dataset. (Updates are counted as a deletion of the old row and an insertion
+     *     of the updated row.)
+     * @return VeloxQL|bool As above, if $vql is passed as true. Otherwise, a boolean representing success or failure.
+     * @throws VeloxException if the select procedure is a {@see PreparedStatement} and the procedure returns multiple
+     *     result sets. Only one result set may be used to populate a Model.
+     */
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
             throw new VeloxException('The associated procedure for select has not been defined.',37);
@@ -225,8 +239,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         $this->_vql->insert[] = (object)$row;
                     }
                 }
-                //Note: no update is necessary on database-to-model VeloxQL because the model has no foreign key constraints. It's assumed that the
-                //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
                 return $this->_vql;
             }
             else {

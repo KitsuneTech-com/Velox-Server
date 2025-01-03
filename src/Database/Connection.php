@@ -467,10 +467,12 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
-    /** Executes a given query. This can either be an instance of the Query class or a standalone SQL query string. If the
-     * latter is passed, a new `Query` instance will be created from it.
+    /** Executes a given query.
+     *
+     * This can either be an instance of the {@see Query} class or a standalone SQL query string. If the
+     * latter is passed, a new Query instance will be created from it.
      * @param Query|string $query The query to execute.
-     * @param int $resultType The type of result to return (default is Query::RESULT_ARRAY). See {@see Query Query} for the constants to use.
+     * @param int $resultType The type of result to return (default is {@see Query::RESULT_ARRAY}). See {@see Query} for the constants to use.
      * @return ResultSet|array|bool The result of the query, or false if the query failed.
      * @throws VeloxException If the query failed. The exception will be passed through from the Query class.
      */
