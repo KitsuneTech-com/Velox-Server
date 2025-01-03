@@ -403,6 +403,17 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
         }
     }
+
+    /**
+     * Renames the specified column. This renaming affects both the column list available with the {@see columns()} method
+     * and the individual keys of the underlying data.
+     *
+     * @param string $oldName The column to be renamed
+     * @param string $newName The new name for the column
+     * @return void
+     * @throws VeloxException if the old column name doesn't exist, the new column name already does, or if one or the
+     * other isn't specified.
+     */
     public function renameColumn(string $oldName, string $newName) : void {
         if (!$oldName || !$newName) throw new VeloxException("Both old and new column names must be specified.",79);
         if (!in_array($oldName,$this->_columns)) throw new VeloxException("Column '".$oldName."' does not exist in Model.",80);
