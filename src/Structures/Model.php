@@ -424,7 +424,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * Performs a pivot-like operation on the current data and returns the result as a new Model.
      *
      * @param string $pivotBy                   The column to be pivoted (containing the intended column names)
-     * @param string $indexColumna              The column to be used as an index (the values by which the pivot results will be grouped)
+     * @param string $indexColumn               The column to be used as an index (the values by which the pivot results will be grouped)
      * @param string $valueColumn               The column in which the pivoted data values are to be found
      * @param array|null $pivotColumns          A set of specific values from $pivotBy to be used; all others will be ignored
      *                                          (if not provided, all unique values from the $pivotBy column will be used)
