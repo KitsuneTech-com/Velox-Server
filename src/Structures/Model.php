@@ -325,7 +325,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * The first three are DML and will run the associated procedures on the data source using the provided criteria;
      * any criteria specified for select will be applied as a filter to the refreshed dataset.
      *
-     * @param VeloxQL $vql The VeloxQL instance containing the data for each operation
+     * @param VeloxQL $vql The VeloxQL instance containing the data/criteria for each operation
      * @return void
      * @throws VeloxException
      */
