@@ -334,6 +334,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function columns() : array {
         return $this->_columns;
     }
+
+    /**
+     * @return array The raw dataset as a two-dimensional array, with filter applied if applicable
+     */
     public function data() : array {
         if ($this->_filter){
             return array_values(array_intersect_key($this->_data,array_flip($this->_filteredIndices)));
