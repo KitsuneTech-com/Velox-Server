@@ -790,7 +790,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     /**
      * Exports this Model in a chosen format.
      *
-     * As {@see KitsuneTech\Velox\Transport\Export()}, except this Model is used specifically.
+     * As {@see Export()}, except this Model is used specifically.
      *
      * @param int $flags
      * @param string|null $fileName
