@@ -6,7 +6,9 @@ use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
 use function KitsuneTech\Velox\Utility\isPowerOf2;
 
-/** The Export function acts on one or more Models, translating the underlying data into one of several formats (JSON,
+/** Exports the specified Model(s) in a specified format, to a specified destination.
+ *
+ * The Export function acts on one or more Models, translating the underlying data into one of several formats (JSON,
  * XML, HTML, and CSV are supported) and then sending the data to the specified destination (the browser, a locally-stored
  * file, stdout, or a returned string). These options can be specified by passing as the second argument one constant each
  * from the following categories, added together:
