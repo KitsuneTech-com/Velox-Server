@@ -32,7 +32,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
-     * @param string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
+     * @var   string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
      * @throws VeloxException                                           if the initial SELECT procedure throws an exception
      */
     public function __construct(
@@ -173,7 +173,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                         $this->_vql->insert[] = (object)$row;
                     }
                 }
-                //Note: no update is necessary on database-to-model diffs because the model has no foreign key constraints. It's assumed that the
+                //Note: no update is necessary on database-to-model VeloxQL because the model has no foreign key constraints. It's assumed that the
                 //database is taking care of this. Any SQL UPDATEs are propagated on the model as deletion and reinsertion.
                 return $this->_vql;
             }
