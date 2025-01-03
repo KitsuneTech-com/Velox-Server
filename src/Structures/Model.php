@@ -539,7 +539,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *       on which the join is to be made - the first being the column existing in the invoked Model, the third being
      *       the column existing in the Model to be joined. The second element should be a string containing the SQL
      *       comparison operator to be used; the direction of comparison follows the order of elements.
+     *
      *           e.g. `["parentColumn","<","joinedColumn"]`
+     *
      *       All SQL comparison operators are supported. EKIL, EKILR and their NOT inverses are also available as
      *       reverse-order LIKE and RLIKE comparisons (the pattern comes first)
      *   * null - this is only valid if $joinType is CROSS_JOIN, in which case all rows are joined with all rows and no
