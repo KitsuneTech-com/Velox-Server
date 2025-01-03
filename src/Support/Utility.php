@@ -73,9 +73,30 @@ function array_change_key_case_recursive($arr, $case = CASE_LOWER) {
 
 /**
  * Pretty self-explanatory.
+ *
  * @param int $num The integer to be checked
  * @return bool Whether this integer is a power of 2
  */
 function isPowerOf2(int $num) : bool {
     return ($num != 0) && (($num & ($num-1)) == 0);
+}
+
+/**
+ * Returns an array of all column names in a two-dimensional array.
+ *
+ * This accounts for sparse arrays by iterating through all rows and checking for the existence of unique keys, building
+ * up a list as it goes. This will be slightly slower than simply running {@see array_keys()} on the first row, but it's more
+ * reliable than assuming that the first row contains an element for each column.
+ *
+ * @param array $arr The array whose columns are to be determined
+ * @return array An array of all column names in the given array
+ */
+function array_all_columns(array $arr) : array {
+    $columns = [];
+    foreach ($arr as $row){
+        foreach ($row as $column => $value){
+            if (!isset($columns[$column])) $columns[$column] = null;
+        }
+    }
+    return array_keys($columns);
 }
