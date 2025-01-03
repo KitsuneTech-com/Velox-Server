@@ -56,8 +56,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             if (isset($this->_select)) $this->select();
     }
 
-    /**#@+
-     * Countable implementation
+    // Countable implementation
+    /**
      * @ignore
      */
     public function count() : int {
@@ -65,49 +65,68 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
     /**#@-*/
 
-    /**#@+
-     * Iterator implementation
+    // Iterator implementation
+    /**
      * @ignore
      */
     public function current() : array {
         return $this->_data[$this->_currentIndex];
     }
+    /**
+     * @ignore
+     */
     public function key() : int {
         return $this->_currentIndex;
     }
+    /**
+     * @ignore
+     */
     public function next() : void {
         $this->_currentIndex++;
     }
+    /**
+     * @ignore
+     */
     public function rewind() : void {
         $this->_currentIndex = 0;
     }
+    /**
+     * @ignore
+     */
     public function valid() : bool {
         return isset($this->_data[$this->_currentIndex]);
     }
-    /**#@-*/
 
-    /**#@+
-     * ArrayAccess implementation
+    // ArrayAccess implementation
+    /**
      * @ignore
      */
     public function offsetSet(mixed $offset, mixed $row) : void {
-        throw new VeloxException('Model rows cannot be inserted by array access. Use Model->insert() instead.',48);
+        throw new VeloxException('Model rows cannot be inserted by array access. Use Model->insert() instead.', 48);
     }
+    /**
+     * @ignore
+     */
     public function offsetGet(mixed $offset) : array {
         if (!$this->offsetExists($offset)){
             throw new VeloxException("Offset out of bounds",49);
         }
         return $this->_data[$offset];
     }
+    /**
+     * @ignore
+     */
     public function offsetUnset(mixed $offset) : void {
         $currentRow = $this->_data[$offset];
         $this->delete($currentRow);
         $this->select();
     }
+    /**
+     * @ignore
+     */
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_data[$offset]);
     }
-    /**#@-*/
 
     // Class-specific methods
     public function select(bool $vql = false) : VeloxQL|bool {
