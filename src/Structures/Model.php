@@ -55,8 +55,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             $this->_vql = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
-    
-    /**
+
+    /**#@+
      * Countable implementation
      * @ignore
      */
