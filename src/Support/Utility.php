@@ -2,7 +2,15 @@
 namespace KitsuneTech\Velox\Utility;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 
-function recur_ksort(&$array) {
+/**
+ * Recursively sorts a multidimensional array by key, in ascending order
+ *
+ * As {@see ksort()}, but applied to every nested array.
+ * @param $array array A multidimensional array to be sorted by key
+ * @return bool The return value of the root level ksort. This will always return
+ * true in PHP >=8.2.0 ({@see https://www.php.net/manual/en/function.ksort.php})
+ */
+function recur_ksort(array &$array) : bool {
     foreach ($array as &$value) {
         if (is_array($value)) {
             recur_ksort($value);
@@ -11,11 +19,32 @@ function recur_ksort(&$array) {
     return ksort($array);
 }
 
-function isAscii($str) {
+/**
+ * @param $str string A string to be checked
+ * @return bool Whether the string consists entirely of ASCII characters
+ */
+function isAscii(string $str) : bool {
     return preg_match('/[^\x00-\x7F]/', $str) == 0;
 }
 
-function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
+/**
+ * Performs a SQL-like comparison between two values.
+ *
+ * The order of parameters and the operators available are equivalent to what exists in a standard SQL comparison.
+ * Thus, a comparison that can be represented in SQL as `leftValue = rightValue` would be performed by this function
+ * as `sqllike_comp($leftValue,'=',$rightValue)`. All standard SQL operators are available, including LIKE/NOT LIKE
+ * and RLIKE/NOT RLIKE, with equivalent behavior. Type casting and case-sensitivity are equivalent to MySQL/MariaDB.
+ *
+ * (note: LIKE/NOT LIKE comparisons require replacing SQL wildcards with their PCRE equivalents, which may incur some
+ * overhead for iterative calls. It may be preferable to use RLIKE/NOT RLIKE with regexp syntax.)
+ *
+ * @param mixed $value1
+ * @param string $op
+ * @param mixed|null $value2
+ * @return bool
+ * @throws VeloxException
+ */
+function sqllike_comp(mixed $value1, string $op, mixed $value2) : bool {
     //This is based on and functionally equivalent to MySQL comparison operations.
     $v1_type = gettype($value1);
     $v2_type = gettype($value2);
@@ -47,7 +76,6 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
         case "LIKE":
         case "NOT LIKE":
             //Convert SQL wildcards to PCRE syntax
-            //*Note: this introduces overhead that could slow processing. It's better to use RLIKE and NOT RLIKE with regexp syntax. 
             $value2 = str_replace("%",".*",$value2);
             $value2 = str_replace("_",".",$value2);
             //fall through to RLIKE / NOT RLIKE case
@@ -59,11 +87,27 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2 = null) : bool {
     }
 }
 
-function isAssoc($array){
+/**
+ * @param array $array The array to be checked
+ * @return bool True if the array is associative (has non-sequential or non-numeric keys)
+ */
+function isAssoc(array $array) : bool {
     return (array_values($array) !== $array);
 }
 
-function array_change_key_case_recursive($arr, $case = CASE_LOWER) {
+/**
+ * Recursively sets the case on all keys in the given array.
+ *
+ * As {@see array_change_key_case()}, but applied to all levels of the array.
+ * @param $arr
+ * @param $case
+ * @return array|array[]
+ *
+ * @author zhangxuejiang
+ * @see https://www.php.net/manual/en/function.array-change-key-case.php#124285
+ */
+
+function array_change_key_case_recursive(array $arr, int $case = CASE_LOWER) : array {
     //from user zhangxuejiang on php.net
     return array_map(function($item) use($case) {
         if(is_array($item)) $item = array_change_key_case_recursive($item, $case);
@@ -72,9 +116,7 @@ function array_change_key_case_recursive($arr, $case = CASE_LOWER) {
 }
 
 /**
- * Pretty self-explanatory.
- *
- * @param int $num The integer to be checked
+ * @param int $num An integer to be checked
  * @return bool Whether this integer is a power of 2
  */
 function isPowerOf2(int $num) : bool {
