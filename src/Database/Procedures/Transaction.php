@@ -30,6 +30,11 @@ use KitsuneTech\Velox\VeloxException;
  * Transactions can also be nested for more granular control of the commit/rollback process.
  *
  * The Transaction instance is itself callable, and invoking it as a function is a simple alias for calling {@see Transaction::executeAll()}.
+ *
+ * @author KitsuneTech
+ * @version 1.0.0
+ * @since 1.0.0-alpha
+ *
  */
 
 class Transaction {

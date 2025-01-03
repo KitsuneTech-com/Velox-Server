@@ -14,8 +14,8 @@ use KitsuneTech\Velox\VeloxException;
  * sanitation of input parameters, and `StatementSet` provides the ability to execute multiple queries in a single call.
  *
  * @author KitsuneTech
- * @version 1.0 beta 1
- * @since 1.0 beta 1
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  *
  */
 class Query {

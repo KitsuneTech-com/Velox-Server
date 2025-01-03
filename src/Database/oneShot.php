@@ -15,6 +15,11 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
  * @param array|object|null $input               Parameter sets/criteria to be added before execution
  * @return array|ResultSet|bool|null             The results returned from the executed procedure
  * @throws VeloxException                        If parameters/criteria are specified for a base Query (this is not supported)
+ *
+ * @author KitsuneTech
+ * @version 1.0.0
+ * @since 1.0.0-alpha
+ *
  */
 function oneShot(Query|StatementSet|Transaction $query, array|object|null $input = null) : array|ResultSet|bool|null {
     $namespaceComponents = explode('\\', get_class($query));

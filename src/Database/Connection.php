@@ -11,16 +11,16 @@ use KitsuneTech\Velox\Structures\ResultSet;
  *
  * `Connection` establishes a connection to a given database. Supported databases include MySQL/MariaDB,
  * Microsoft SQL Server, or any ODBC-compliant data source. The connection can be established using native extensions
- * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, Connection assumes the database is MySQL/MariaDB.
+ * (mysqli or sqlsrv), PDO, or ODBC. If a database type isn't specified, `Connection` assumes the database is MySQL/MariaDB.
  * If a connection type isn't specified, `Connection` will first attempt to use PDO and fall back to native extensions if
  * PDO cannot be used. ODBC connections are established purely through connection strings and ignore the database type.
  *
  * The database connection itself is established at the time of instantiation, and remains open until the `Connection` object is
- * destroyed. The connection can be closed manually by calling the `close()` method.
+ * destroyed. The connection can be closed manually by calling the {@see close()} method.
  *
  * @author KitsuneTech
- * @version 1.0 beta 1
- * @since 1.0 beta 1
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  *
  */
 class Connection {
@@ -49,7 +49,7 @@ class Connection {
 
     /**
      * @param string|null $host             The hostname or IP address of the database server
-     * @param string|null $db               The name of the database to connect to
+     * @param string|null $db               The name of the database to which to connect
      * @param string|null $uid              The username to use for authentication
      * @param string|null $pwd              The password to use for authentication
      * @param int|null $port                The port to use for the connection (defaults to the default port for the database type)
@@ -242,8 +242,9 @@ class Connection {
     }
 
     /**
-     * Returns the internal reference to the database connection. This is only public for use by the `Query` class and
+     * Returns the internal reference to the database connection. This is only public for use by the {@see Query} class and
      * should not be used by application code.
+     * @ignore
      * @return mixed The database connection reference
      */
     public function connectionInstance() : mixed {

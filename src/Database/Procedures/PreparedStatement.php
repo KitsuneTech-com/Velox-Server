@@ -13,6 +13,11 @@ use KitsuneTech\Velox\VeloxException;
  * as an associative array to the {@see PreparedStatement::addParameterSet() addParameterSet()} method; several calls to
  * this method may be made to add multiple sets of parameters, each of which will be bound and executed in sequence when
  * the {@see Query::execute() execute()} method is called.
+ *
+ * @author KitsuneTech
+ * @version 1.0.0
+ * @since 1.0.0-alpha
+ *
  */
 
 class PreparedStatement extends Query {
@@ -25,7 +30,7 @@ class PreparedStatement extends Query {
      * @param int|null $queryType   The type of query to execute. This affects how placeholders are assigned and what type of result is expected. See the QUERY_* constants for possible values.
      * @param int $resultType       The type of result to return. This determines what response is stored in Query::results. See the RESULT_* constants for possible values.
      * @param string|null $name     The name of this query. This is used to identify the query in a {@see Transaction}.
-     * @param string|null $setId    An identifier used to group instances under a parent StatementSet. This can be freely omitted in standalone PreparedStatements.
+     * @param string|null $setId    An identifier used to group instances under a parent {@see StatementSet}. This can be omitted in standalone PreparedStatements.
      */
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = Query::QUERY_SELECT, public int $resultType = Query::RESULT_DISTINCT, public ?string $name = null, private ?string $setId = null) {
         parent::__construct($conn,$sql,$queryType,$resultType,$name);
