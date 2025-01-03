@@ -419,20 +419,24 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             unset ($this[$i][$oldName]);
         }
     }
-    public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
-        // This method performs a pivot-like operation on the current data and returns the result as a new Model.
-        //
-        // Arguments (in order):
-        //   $pivotBy (required)                 - a string containing the name of the column to be pivoted (containing the intended column names)
-        //   $indexColumn (required)             - a string containing the name of the column to be used as an index (the values by which the pivot results will
-        //                                         be grouped)
-        //   $valueColumn (required)             - a string containing the name of the column in which the pivoted data values are to be found
-        //   $pivotColumns (optional)            - an array of specific values from $pivotBy (i.e., intended columns) to be used; all others will be ignored
-        //                                         (if not provided, all unique values from the $pivotBy column will be used)
-        //   $ignore (optional)                  - if set to true, $pivotColumns is instead treated as a list of columns to be ignored, and all others are included
-        //   $suppressColumnException (optional) - if set to true, no exception will be thrown if one or more of the $pivotColumns do not exist in the original dataset;
-        //                                         instead, the missing columns will be included with their values set to null
 
+    /**
+     * Performs a pivot-like operation on the current data and returns the result as a new Model.
+     *
+     * @param string $pivotBy                   The column to be pivoted (containing the intended column names)
+     * @param string $indexColumna              The column to be used as an index (the values by which the pivot results will be grouped)
+     * @param string $valueColumn               The column in which the pivoted data values are to be found
+     * @param array|null $pivotColumns          A set of specific values from $pivotBy to be used; all others will be ignored
+     *                                          (if not provided, all unique values from the $pivotBy column will be used)
+     * @param bool $ignore                      If true, $pivotColumns is instead treated as a list of columns to be ignored, and all others are included
+     * @param bool $suppressColumnException     If true, no exception will be thrown if one or more of the $pivotColumns do not exist in the original dataset;
+     *                                          instead, the missing columns will be included with their values set to null
+     *
+     * @return Model                            A new Model containing the joined dataset (independent of the original Models)
+     * @throws VeloxException                   If any of the arguments specified are invalid (see the thrown exception for more details)
+     *
+     */
+    public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
         $outputModel = new Model;
         $rowCount = count($this->_data);
         if ($rowCount == 0){
@@ -520,17 +524,18 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
         return $outputModel;
     }
+
     /**
-     * Model::join() performs a join of the specified type between the dataset of this Model and the dataset of the specified Model.
+     * Performs a join of the specified type between the dataset of this Model and the dataset of the specified Model.
      *
      * @param int $joinType     One of the following constants, representing the type of join to be done: LEFT_JOIN,
      *      RIGHT_JOIN, INNER_JOIN, FULL_JOIN, CROSS_JOIN (with behavior according to SQL standards)
      * @param Model $joinModel  The Model with which the dataset of this Model will be joined
      *
      * @param string|array|null $joinConditions One of the following:
-     *   * a string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
+     *   * A string indicating a column name; in this case the join would work in the same manner as the SQL USING clause,
      *       performing an equijoin on columns having that name in each Model and coalescing those columns into one.
-     *   * an array; this array must have three elements. The first and third elements must be the names of the columns
+     *   * An array containing exactly three elements. The first and third elements must be the names of the columns
      *       on which the join is to be made - the first being the column existing in the invoked Model, the third being
      *       the column existing in the Model to be joined. The second element should be a string containing the SQL
      *       comparison operator to be used; the direction of comparison follows the order of elements.
