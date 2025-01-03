@@ -85,8 +85,8 @@ function isPowerOf2(int $num) : bool {
  * Returns an array of all column names in a two-dimensional array.
  *
  * This accounts for sparse arrays by iterating through all rows and checking for the existence of unique keys, building
- * up a list as it goes. This will be slightly slower than simply running {@see array_keys()} on the first row, but it's more
- * reliable than assuming that the first row contains an element for each column.
+ * up a list as it goes. This will be slightly slower than simply running {@see https://www.php.net/manual/en/function.array-keys.php array_keys()}
+ * on the first row, but it's more reliable than assuming that the first row contains an element for each column.
  *
  * @param array $arr The array whose columns are to be determined
  * @return array An array of all column names in the given array
