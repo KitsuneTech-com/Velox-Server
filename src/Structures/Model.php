@@ -735,6 +735,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $returnModel->_lastQuery = time();
         return $returnModel;
     }
+
+    /**
+     * @return int|null The Unix timestamp, in integer seconds, when the response was received from the Model's data source
+     * during the most recent {@see: select()} call, or null if such a call has yet to be made.
+     */
     public function lastQuery() : ?int {
         return $this->_lastQuery;
     }
