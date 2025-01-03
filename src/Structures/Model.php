@@ -405,8 +405,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     /**
-     * Renames the specified column. This renaming affects both the column list available with the {@see columns()} method
-     * and the individual keys of the underlying data.
+     * Renames the specified column.
+     *
+     * This renaming affects both the column list available with the {@see columns()} method and the individual keys of the underlying data.
      *
      * @param string $oldName The column to be renamed
      * @param string $newName The new name for the column
