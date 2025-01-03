@@ -7,8 +7,10 @@ use function KitsuneTech\Velox\Transport\Export as Export;
 use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
 
 /**
- * Model is the core data storage class for Velox. Each instance of this class holds an iterable dataset composed of the results of
- * the procedure passed to the first argument of its constructor; alternatively, the Model can be directly populated
+ * The core data storage class for Velox.
+ *
+ * Each instance of this class holds an iterable dataset composed of the results of the procedure passed to the first
+ * argument of its constructor; alternatively, the Model can be directly populated.
  */
 class Model implements \ArrayAccess, \Iterator, \Countable {
     
@@ -54,13 +56,18 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             if (isset($this->_select)) $this->select();
     }
     
-    // Countable implementation
+    /**
+     * Countable implementation
+     * @ignore
+     */
     public function count() : int {
         return count($this->_data);
     }
 
-
-    // Iterator implementation
+    /**#@+
+     * Iterator implementation
+     * @ignore
+     */
     public function current() : array {
         return $this->_data[$this->_currentIndex];
     }
@@ -76,8 +83,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function valid() : bool {
         return isset($this->_data[$this->_currentIndex]);
     }
-    
-    // ArrayAccess implementation
+    /**#@-*/
+
+    /**#@+
+     * ArrayAccess implementation
+     * @ignore
+     */
     public function offsetSet(mixed $offset, mixed $row) : void {
         throw new VeloxException('Model rows cannot be inserted by array access. Use Model->insert() instead.',48);
     }
@@ -95,6 +106,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_data[$offset]);
     }
+    /**#@-*/
 
     // Class-specific methods
     public function select(bool $vql = false) : VeloxQL|bool {
