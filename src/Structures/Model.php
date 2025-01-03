@@ -327,6 +327,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         $this->select();
         $this->_delaySelect = false;
     }
+
+    /**
+     * @return array The names of all columns in the current data set
+     */
     public function columns() : array {
         return $this->_columns;
     }
