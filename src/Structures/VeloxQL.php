@@ -16,7 +16,7 @@ namespace KitsuneTech\Velox\Structures;
  *    select:
  *      [{where: [{col1: ["=","someValue"]}],
  *    insert:
- *      [{values: {col2: 'data', col3: 'data'},{col2: 'moredata', col3: 'moredata'}}],
+ *      [{values: [{col2: 'data', col3: 'data'},{col2: 'moredata', col3: 'moredata'}]}],
  *    delete:
  *      [{where: [{col1: 1},{col2: 'deleteThis', col3: 'deleteThis'}]],
  *    update:
