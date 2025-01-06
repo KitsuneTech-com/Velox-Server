@@ -514,7 +514,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param bool $suppressColumnException     If true, no exception will be thrown if one or more of the $pivotColumns do not exist in the original dataset;
      *                                          instead, the missing columns will be included with their values set to null
      *
-     * @return Model                            A new Model containing the joined dataset (independent of the original Models)
+     * @return Model                            A new Model containing the pivoted dataset (independent of the original Models)
      * @throws VeloxException                   If any of the arguments specified are invalid (see the thrown exception for more details)
      *
      */
@@ -838,6 +838,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param bool $noHeader
      * @return string|bool
      * @throws VeloxException
+     * @throws \DOMException
      */
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
