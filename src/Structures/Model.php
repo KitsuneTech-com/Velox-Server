@@ -412,7 +412,10 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     /**
-     * @return VeloxQL A VeloxQL object representing the data changed by the last DML operation (inserted and/or deleted)
+     * Returns a representation of the data changed on the data source between the last two selects
+     *
+     * @return VeloxQL The difference between the datasets of the last two selects, as a VeloxQL object (inserts and/or deletes).
+     *     Updates are represented by a deletion of the affected row and an insertion of the updated data.
      */
     public function diff() : VeloxQL {
         return $this->_diff;
