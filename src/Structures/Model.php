@@ -19,7 +19,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     // in the model. In Model::insert(), any columns not specified are set as NULL.
     private array $_columns = [];
     private array $_data = [];
-    private object $_vql;
+    private object $_diff;
     private VeloxQL|array|null $_filter = null;
     private array $_filteredIndices = [];
     private int|null $_lastQuery = null;
@@ -58,7 +58,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
                 }
             }
             $this->instanceName = $instanceName;
-            $this->_vql = new VeloxQL('{}');
+            $this->_diff = new VeloxQL('{}');
             if (isset($this->_select)) $this->select();
     }
 
@@ -226,20 +226,20 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             }
             
             if ($vql) {
-                $this->_vql = new VeloxQL();
+                $this->_diff = new VeloxQL();
                 foreach ($this->_data as $index => $row){
                     if (!in_array($row,$results)){
                         unset($this->_data[$index]);
-                        $this->_vql->delete[] = (object)$row;
+                        $this->_diff->delete[] = (object)$row;
                     }
                 }
                 foreach($results as $row){
                     if (!in_array($row,$this->_data)){
                         $this->_data[] = $row;
-                        $this->_vql->insert[] = (object)$row;
+                        $this->_diff->insert[] = (object)$row;
                     }
                 }
-                return $this->_vql;
+                return $this->_diff;
             }
             else {
                 return true;
@@ -410,8 +410,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
         return count(array_unique(array_column($this->_data,$column)));
     }
-    public function vql() : VeloxQL {
-        return $this->_vql;
+
+    /**
+     * @return VeloxQL A VeloxQL object representing the data changed by the last DML operation (inserted and/or deleted)
+     */
+    public function diff() : VeloxQL {
+        return $this->_diff;
     }
 
     /**
