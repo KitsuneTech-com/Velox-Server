@@ -28,26 +28,14 @@ namespace KitsuneTech\Velox\Structures;
  *  their structure should be PHP-equivalent to the property in question.
  */
 class VeloxQL {
-    /**
-     * @var array The select criteria
-     */
     public array $select;
-    /**
-     * @var array The update criteria
-     */
     public array $update;
-    /**
-     * @var array The insert criteria
-     */
     public array $insert;
-    /**
-     * @var array The delete criteria
-     */
     public array $delete;
 
     /**
-
-     * @param string $json
+     * @param string $json A string representation of a JSON array having elements equivalent to the structure of the
+     * VeloxQL object
      */
     public function __construct(string $json = ""){
         //Expected JSON format (where col1 is an autoincrement field not set by this library):
