@@ -79,6 +79,13 @@ class Connection {
         }
         $this->establish();
     }
+
+    /**
+     * Establishes the connection as specified.
+     *
+     * @return void
+     * @throws VeloxException
+     */
     public function establish() : void {
         $connected = false;
         switch ($this->connectionType) {
@@ -121,7 +128,8 @@ class Connection {
                             }
                             if ($this->host) {
                                 $dsnArray['dsn'] = $this->host;
-                            } else {
+                            }
+                            else {
                                 $dsnArray = $this->options;
                             }
                             break;
@@ -235,6 +243,7 @@ class Connection {
                 throw new VeloxException("Connection type not supported or extension not available",55);
         }
     }
+    /** @ignore */
     public function __destruct(){
         if ($this->connectionType !== self::CONN_PDO){
             $this->close();
@@ -242,8 +251,10 @@ class Connection {
     }
 
     /**
-     * Returns the internal reference to the database connection. This is only public for use by the {@see Query} class and
-     * should not be used by application code.
+     * Returns the internal reference to the database connection.
+     *
+     * This is only public for use by the {@see Query} class and should not be used by application code.
+     *
      * @ignore
      * @return mixed The database connection reference
      */
@@ -253,6 +264,7 @@ class Connection {
 
     /**
      * Initiates a transaction, if supported by the database engine.
+     *
      * @return bool True if the transaction was successfully started, as indicated by the appropriate library.
      * @throws VeloxException If the database engine does not support transactions.
      */
@@ -283,6 +295,8 @@ class Connection {
                         return $this->_conn->begin_transaction();
                     case self::DB_MSSQL:
                         return sqlsrv_begin_transaction($this->_conn);
+                    default:
+                        /* Fall through to exception */
                 }
             default:
                 throw new VeloxException("Unknown connection type",55);
@@ -307,16 +321,11 @@ class Connection {
         switch ($this->connectionType){
             case self::CONN_PDO:
             case self::CONN_ODBC:
-                switch ($this->serverType){
-                    case self::DB_MYSQL:
-                        $savepointQuery = "SAVEPOINT currentQuery";
-                        break;
-                    case self::DB_MSSQL:
-                        $savepointQuery = "SAVE TRANSACTION currentQuery";
-                        break;
-                    default:
-                        throw new VeloxException("Savepoint not supported on this database engine",19);
-                }
+                $savepointQuery = match ($this->serverType) {
+                    self::DB_MYSQL => "SAVEPOINT currentQuery",
+                    self::DB_MSSQL => "SAVE TRANSACTION currentQuery",
+                    default => throw new VeloxException("Savepoint not supported on this database engine", 19),
+                };
                 return $this->_conn->exec($savepointQuery) !== false;
             case self::CONN_NATIVE:
                 switch ($this->serverType){
@@ -324,6 +333,8 @@ class Connection {
                         return $this->_conn->savepoint("currentQuery");
                     case self::DB_MSSQL:
                         return (bool)sqlsrv_query($this->_conn,"SAVE TRANSACTION currentQuery");
+                    default:
+                        /* Fall through to exception */
                 }
             default:
                 throw new VeloxException("Unknown connection type",55);
@@ -419,6 +430,7 @@ class Connection {
     }
 
     /** Returns the server type constant for this connection. See the `DB_*` constants defined above.
+     *
      * @return int The server type constant.
      */
     public function serverType() : int {
@@ -426,14 +438,17 @@ class Connection {
     }
 
     /** Returns the connection type constant for this connection. See the `CONN_*` constants defined above.
+     *
      * @return int The connection type constant.
      */
     public function connectionType() : int {
         return $this->connectionType;
     }
 
-    /** Returns the last affected indices of the most recent query (equivalent to `LAST_INSERT_ID()` in MySQL). Note: calling
-     * this method will clear the stored indices; subsequent calls will return an empty array until another query is executed.
+    /** Returns the last affected indices of the most recent query (equivalent to `LAST_INSERT_ID()` in MySQL).
+     *
+     * Note: calling this method will clear the stored indices; subsequent calls will return an empty array until another query is executed.
+     *
      * @return array The last affected indices.
      */
     public function getLastAffected() : array {
@@ -442,9 +457,11 @@ class Connection {
         return $lastAffected;
     }
 
-    /** Closes the active connection. Note: once the connection is closed, it cannot be reopened. PDO connections remain
-     * open until the object is destroyed, so this method cannot be used to close these; therefore, the preferred means
-     * to close a database connection is to destroy the object.
+    /** Closes the active connection.
+     *
+     * Note: once the connection is closed, it cannot be reopened. PDO connections remain open until the object is destroyed,
+     * so this method cannot be used to close these; therefore, the preferred means to close a database connection is to destroy the object.
+     *
      * @return bool True if the connection was successfully closed.
      * @throws VeloxException If this method is attempted on a PDO connection.
      */
@@ -471,6 +488,7 @@ class Connection {
      *
      * This can either be an instance of the {@see Query} class or a standalone SQL query string. If the
      * latter is passed, a new Query instance will be created from it.
+     *
      * @param Query|string $query The query to execute.
      * @param int $resultType The type of result to return (default is {@see Query::RESULT_ARRAY}). See {@see Query} for the constants to use.
      * @return ResultSet|array|bool The result of the query, or false if the query failed.
@@ -485,6 +503,7 @@ class Connection {
     }
 
     /** Returns the specified host for this connection.
+     *
      * @return string The host as originally specified.
      */
     public function getHost() : string {
@@ -492,6 +511,7 @@ class Connection {
     }
 
     /** Returns the database name for this connection.
+     *
      * @return string The database name as originally specified.
      */
     public function getDB() : string {
@@ -499,6 +519,7 @@ class Connection {
     }
 
     /** Returns the server type for this connection, in user-readable format (presently either MySQL or SQL Server).
+     *
      * @return string The server type.
      */
     public function getServerType() : string {
