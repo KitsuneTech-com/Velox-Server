@@ -818,6 +818,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     }
 
     /**
+     * Returns the timestamp of the last update from the Model's data source.
+     *
      * @return int|null The Unix timestamp, in integer seconds, when the response was received from the Model's data source
      * during the most recent {@see: select()} call, or null if such a call has yet to be made.
      */
