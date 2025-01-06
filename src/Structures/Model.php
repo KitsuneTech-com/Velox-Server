@@ -249,16 +249,45 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
             return false;
         }
     }
-    
+
+    /**#@+
+     * Model DML methods
+     */
+
+    /**
+     * Performs the designated update on the data source.
+     *
+     * @param array $rows The rows to be updated
+     * @return bool
+     * @throws VeloxException
+     */
     public function update(array $rows) : bool {
         return $this->executeDML("update", $rows);
     }
+
+    /**
+     * Performs the designated insert on the data source.
+     *
+     * @param array $rows The rows to be inserted
+     * @return bool
+     * @throws VeloxException
+     */
     public function insert(array $rows) : bool {
         return $this->executeDML("insert", $rows);
     }
+
+    /**
+     * Performs the designated delete on the data source.
+     *
+     * @param array $rows The rows to be deleted
+     * @return bool
+     * @throws VeloxException
+     */
     public function delete(array $rows) : bool {
         return $this->executeDML("delete", $rows);
     }
+
+    /**#@-*/
 
     /**
      * Sorts the Model in the manner specified.
