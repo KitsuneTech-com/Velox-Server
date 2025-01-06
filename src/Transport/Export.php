@@ -27,7 +27,7 @@ use function KitsuneTech\Velox\Utility\isPowerOf2;
  *
  * @param Model|array $models The Model(s) whose data is to be exported
  * @param int $flags A bitmask indicating the destination type and format of the exported data.
- * @param string|null $location The path and/or filename to which the data will be exported
+ * @param string|null $location The path and/or filename to which the data will be exported (required for TO_FILE but ignored for TO_STRING and TO_STDOUT)
  * @param int|null $ignoreRows The number of data rows (if any) to be skipped at the beginning
  * @param bool $noHeader If passed as true, no column headers will be included with the exported data
  * @return string|bool If exported to string, the result will be returned. Otherwise, this will be a boolean indicating success.
@@ -175,9 +175,6 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
                 }
                 $output = implode(",",$headerData);
             }
-            else {
-                $output = "";
-            }
             foreach($details['data'] as $row){
                 if ($output) {
                     $output .= "\r\n";    //add newline first, if rows already exist
@@ -217,7 +214,6 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
             else {
                 header('Content-Disposition: inline');
             }
-            //header('Content-Length: '.mb_strlen($output,'UTF-8'));
             header('Last-Modified: '.gmdate('D, d M Y H:i:s ', $mostRecent) . 'GMT');
             echo $output;
             return true;
