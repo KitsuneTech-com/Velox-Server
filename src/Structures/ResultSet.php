@@ -2,7 +2,12 @@
 declare(strict_types=1);
 
 namespace KitsuneTech\Velox\Structures;
-
+/**
+ * The default data structure returned by Velox database procedures.
+ *
+ * This can be iterated as a sparse two-dimensional array using native functions, and the available column names can
+ * be retrieved through the {@see columns()} method.
+ */
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private array $_columns = [];
     private int $_position = 0;
@@ -10,11 +15,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private array $_keys = [];
 
     /**
-     * ResultSet is the default data structure returned by Velox database procedures. This can be iterated as
-     * a sparse two-dimensional array using native functions, and the available column names can be retrieved
-     * through the ResultSet::columns() method.
-     *
-     * @param array $_resultArray
+     * @param array $_resultArray A two-dimensional array containing the results returned by a Velox procedure.
      */
     public function __construct(private array $_resultArray = []) {
         for ($i=0; $i<count($this->_resultArray); $i++) {
@@ -121,11 +122,14 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     }
 
     /**
-     * ResultSet::merge() is functionally equivalent to a SQL UNION or UNION ALL. The contents of the ResultSet
+     * Appends the data of another ResultSet to the existing dataset.
+     *
+     * This method is functionally equivalent to a SQL UNION or UNION ALL. The contents of the ResultSet
      * provided are appended to the end of this ResultSet. If $filterDuplicates is passed as true, any rows from
      * the provided ResultSet that already exist in this ResultSet are skipped (as in a UNION operation).
      *
-     * The provided ResultSet is unaltered by this operation.
+     * Only the data of this ResultSet is affected by this method. The ResultSet provided as the first argument
+     * remains unchanged.
      *
      * @param ResultSet $mergeResultSet
      * @param bool $filterDuplicates
