@@ -19,7 +19,8 @@
         "ext-odbc": "Needed for standalone ODBC support",
         "ext-xmlwriter": "Needed for XML data export",
         "ext-pcntl": "Needed for webhook implementation",
-        "ext-posix": "Needed for webhook implementation"
+        "ext-posix": "Needed for webhook implementation",
+        "ext-dom": "Needed for HTML data export"
     },
     "autoload": {
         "psr-4": {
