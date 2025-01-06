@@ -413,6 +413,21 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function vql() : VeloxQL {
         return $this->_vql;
     }
+
+    /**
+     * Set a filter on the current dataset using the specified criteria.
+     *
+     * The filter is applied on the Model itself and only changes what data is visible when accessing the Model's data.
+     * The underlying dataset is not altered, nor is the data source requeried. Each call to setFilter() is applied to the
+     * underlying dataset irrespective of previous calls (they do not stack).
+     *
+     * The filter should be either a {@see VeloxQL} object or an array having an equivalent structure; null can also be
+     * passed, in which case the previous filter is removed.
+     *
+     * @param VeloxQL|array|null $filter The filtering criteria to be used
+     * @return void
+     * @throws VeloxException if a column specified in the argument does not exist in the Model.
+     */
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
         $this->_filteredIndices = [];
