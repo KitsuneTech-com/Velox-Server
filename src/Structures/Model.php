@@ -250,10 +250,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         }
     }
 
-    /**#@+
-     * Model DML methods
-     */
-
     /**
      * Performs the designated update on the data source.
      *
@@ -286,8 +282,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public function delete(array $rows) : bool {
         return $this->executeDML("delete", $rows);
     }
-
-    /**#@-*/
 
     /**
      * Sorts the Model in the manner specified.
