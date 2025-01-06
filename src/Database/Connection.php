@@ -400,6 +400,7 @@ class Connection {
     }
 
     /** Commits the active transaction.
+     *
      * @return bool True if the commit was successful.
      * @throws VeloxException If no active transaction exists.
      */
