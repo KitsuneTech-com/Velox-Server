@@ -7,9 +7,9 @@ namespace KitsuneTech\Velox\Structures;
  * An object-oriented representation of SQL CRUD operations (SELECT, INSERT, UPDATE, DELETE) meant to be applied to a Model
  * or a Velox API endpoint.
  *
- * Any or all of the operations can be applied at the same time, either
- *  by supplying a JSON string to the constructor, or by manipulating the appropriate properties directly. If supplying
- *  JSON to the constructor, it should look similar to the following, depending on the operations required:
+ * Any or all of the operations can be applied at the same time, either by supplying a JSON string to the constructor,
+ * or by manipulating the appropriate properties directly. If supplying JSON to the constructor, it should look similar
+ * to the following, depending on the operations required:
  *
  *  ```json
  *   {
@@ -28,9 +28,21 @@ namespace KitsuneTech\Velox\Structures;
  *  their structure should be PHP-equivalent to the property in question.
  */
 class VeloxQL {
+    /**
+     * @var array The select criteria
+     */
     public array $select;
+    /**
+     * @var array The update criteria
+     */
     public array $update;
+    /**
+     * @var array The insert criteria
+     */
     public array $insert;
+    /**
+     * @var array The delete criteria
+     */
     public array $delete;
 
     /**
@@ -48,5 +60,3 @@ class VeloxQL {
         $this->delete = $vqlObj->delete ?? [];
     }
 }
-
-class_exists(VeloxQL::class);
