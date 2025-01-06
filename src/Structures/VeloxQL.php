@@ -11,7 +11,7 @@ namespace KitsuneTech\Velox\Structures;
  *  by supplying a JSON string to the constructor, or by manipulating the appropriate properties directly. If supplying
  *  JSON to the constructor, it should look similar to the following, depending on the operations required:
  *
- *  ```
+ *  ```json
  *   {
  *    select:
  *      [{where: [{col1: ["=","someValue"]}],
