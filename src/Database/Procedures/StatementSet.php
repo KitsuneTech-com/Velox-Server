@@ -63,7 +63,6 @@ use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
  * UPDATE myTable SET col1 = "val1", col2 = "val2" WHERE (col1 = "val1" AND col2 BETWEEN 3 AND 4) OR (col2 IN ("val2", "val3")) OR (col1 IS NULL)
  * ```
  *
- * @author KitsuneTech
  * @version 1.0.0
  * @since 1.0.0-alpha
  *

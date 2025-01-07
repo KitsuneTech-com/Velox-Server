@@ -31,7 +31,6 @@ use KitsuneTech\Velox\VeloxException;
  *
  * The Transaction instance is itself callable, and invoking it as a function is a simple alias for calling {@see Transaction::executeAll()}.
  *
- * @author KitsuneTech
  * @version 1.0.0
  * @since 1.0.0-alpha
  *

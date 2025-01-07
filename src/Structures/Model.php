@@ -32,7 +32,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     public ?string $instanceName = null;
 
     /**
-
      * @param PreparedStatement|StatementSet|null $_select              The SELECT-equivalent procedure used to populate the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_update  The procedure used to UPDATE the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model

@@ -13,7 +13,6 @@ use KitsuneTech\Velox\VeloxException;
  * that require input, {@see PreparedStatement} or {@see StatementSet} should be used instead. These classes provide automatic
  * sanitation of input parameters, and `StatementSet` provides the ability to execute multiple queries in a single call.
  *
- * @author KitsuneTech
  * @version 1.0.0
  * @since 1.0.0-alpha
  *
