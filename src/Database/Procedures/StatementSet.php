@@ -76,12 +76,14 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     /** @var ResultSet|array|bool|null The results returned from the last execution */
     public ResultSet|array|bool|null $results;
 
-    /** @param Connection   $conn       The Connection instance to use for this instance
-     *  @param string       $_baseSql   The SQL template by which to generate the prepared statements
-     *  @param int|null     $queryType  The type of query to be run (see the QUERY_ constants in {@see Query})
-     *  @param array|VeloxQL   $criteria   The initial criteria to be applied; this can be used to avoid having to call {@see StatementSet::setCriteria()} later
-     *  @param string|null  $name       The name of this StatementSet; this can be used to distinguish between multiple StatementSets in a single Transaction
-     *  @throws VeloxException          if criteria are incorrectly formatted (see exception text for description)
+    /**
+     *  @param Connection $conn The Connection instance to use for this instance.
+     *  @param string $_baseSql The SQL template by which to generate the prepared statements.
+     *  @param int|null $queryType The type of query to be run (see the QUERY_ constants in {@see Query}).
+     *  @param array|VeloxQL $criteria The initial criteria to be applied; this can be used to avoid having to call {@see StatementSet::setCriteria()} later.
+     *  @param string|null $name The name of this StatementSet; this can be used to distinguish between multiple StatementSets in a single Transaction.
+     *
+     *  @throws VeloxException if criteria are incorrectly formatted (see exception text for description)
      */
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
