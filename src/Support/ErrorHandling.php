@@ -5,6 +5,7 @@ namespace KitsuneTech\Velox;
 if (!isset($GLOBALS['Velox']['ErrorReportingMode'])){
     $GLOBALS['Velox']['ErrorReportingMode'] = VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE;
 }
+/** @ignore */
 function VeloxExceptionHandler(\Throwable $ex) : void {
     function getExceptionObject(\Throwable $ex) : object {
         $exObj = (object)['timestamp'=>time(), 'class'=>get_class($ex), 'code'=>$ex->getCode(), 'file'=>$ex->getFile(), 'line'=>$ex->getLine(), 'message'=>$ex->getMessage()];
@@ -43,6 +44,7 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 
 $errorLevel = VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE;
 
+/** @ignore */
 function veloxErrorReporting(int $errorLevel) : void {
     $GLOBALS['Velox']['ErrorReportingMode'] = $errorLevel;
 }
