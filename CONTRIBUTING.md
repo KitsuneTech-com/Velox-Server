@@ -8,7 +8,7 @@ creating the pull request in order to make it clear what the request is for. Any
 without action.
 
 If you're contributing code and would like to be credited, mention how you would like to be credited in a comment with your pull request. If your request is
-accepted and merged, this will be added to the list below.
+accepted and merged, this will be added to the list below. Additionally, if your work adds or makes major modifications to any of the classes or methods herein, feel free to include a PHPDoc @author tag with your submission.  
 
 | Project Administrator                |
 | ------------------------------------ |
