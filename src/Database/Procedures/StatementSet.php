@@ -76,7 +76,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     /** @var ResultSet|array|bool|null $results The results returned from the last execution */
     public ResultSet|array|bool|null $results;
 
-    /** StatementSet constructor
+    /**
+     * StatementSet constructor
      *
      *  @param Connection &$conn The Connection instance to use for this instance (passed by reference).
      *  @param string $_baseSql The SQL template by which to generate the prepared statements.
