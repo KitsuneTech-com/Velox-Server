@@ -18,7 +18,6 @@ use KitsuneTech\Velox\Structures\ResultSet;
  * The database connection itself is established at the time of instantiation, and remains open until the `Connection` object is
  * destroyed. The connection can be closed manually by calling the {@see close()} method.
  *
- * @author KitsuneTech
  * @version 1.0.0
  * @since 1.0.0-alpha
  *
