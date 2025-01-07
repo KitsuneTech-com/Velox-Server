@@ -239,11 +239,13 @@ class Query {
     }
 
     /**
-     * Prepares and executes the query. If the query is being run as a prepared statement with placeholders and parameters,
-     * the query is prepared and executed once for each set of parameters.
+     * Prepares and executes the query.
+     *
+     * If the query is being run as a prepared statement with placeholders and parameters, the query is prepared and
+     * executed once for each set of parameters.
      *
      * @return bool True if the query was executed successfully, false otherwise.
-     * @throws VeloxException If the query cannot be prepared and/or executed successfully. The content of the exception
+     * @throws VeloxException if the query cannot be prepared and/or executed successfully. The content of the exception
      * will vary depending on the nature of the error.
      */
     public function execute() : bool {
@@ -373,6 +375,7 @@ class Query {
     /**
      * Returns the results of the query as executed. The return type will vary depending on which result type was set
      * for the query.
+     *
      * @return ResultSet|array|null The results of the query, or null if the query was run as QUERY_NONE.
      * @throws VeloxException If the query has not yet returned results. It may be useful to try-catch this method
      * in a sleep() loop while waiting for the query to complete.
@@ -386,9 +389,12 @@ class Query {
         }
     }
     /**
-     * @return array An array of the last affected indices from this query. Note: due to idiosyncrasies in the way inserted ids
-     * are returned by different database engines for different queries, it's best not to use this for queries that could
-     * affect several rows per execution.
+     * Returns an array of the last affected indices from this query.
+     *
+     * Note: due to idiosyncrasies in the way inserted ids are returned by different database engines for different
+     * queries, it's best not to use this for queries that could affect several rows per execution.
+     *
+     * @return array An array of indices affected by the query
      */
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
