@@ -101,6 +101,7 @@ class PreparedStatement extends Query {
     }
     /**
      * @return string|null The set id assigned to this instance, for use by StatementSet.
+     * @ignore
      */
     public function getSetId() : ?string {
         return $this->setId;
