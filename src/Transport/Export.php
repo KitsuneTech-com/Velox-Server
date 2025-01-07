@@ -30,9 +30,13 @@ use function KitsuneTech\Velox\Utility\isPowerOf2;
  * @param string|null $location The path and/or filename to which the data will be exported (required for TO_FILE but ignored for TO_STRING and TO_STDOUT)
  * @param int|null $ignoreRows The number of data rows (if any) to be skipped at the beginning
  * @param bool $noHeader If passed as true, no column headers will be included with the exported data
+ *
  * @return string|bool If exported to string, the result will be returned. Otherwise, this will be a boolean indicating success.
  * @throws VeloxException
  * @throws \DOMException
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     //unpack flags
