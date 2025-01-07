@@ -19,16 +19,9 @@ use KitsuneTech\Velox\VeloxException;
  *
  */
 class Query {
-    /** @var int SELECT */
     public const QUERY_SELECT = 1;
-
-    /** @var int UPDATE */
     public const QUERY_UPDATE = 2;
-
-    /** @var int INSERT */
     public const QUERY_INSERT = 3;
-
-    /** @var int DELETE */
     public const QUERY_DELETE = 4;
 
     /** @var int CALL/EXECUTE (for stored procedure) */
