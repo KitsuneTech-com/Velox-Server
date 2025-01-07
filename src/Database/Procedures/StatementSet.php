@@ -85,7 +85,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      *  @param array|VeloxQL $criteria The initial criteria to be applied; this can be used to avoid having to call {@see StatementSet::setCriteria()} later.
      *  @param string|null $name The name of this StatementSet; this can be used to distinguish between multiple StatementSets in a single Transaction.
      *
-     *  @throws VeloxException if criteria are incorrectly formatted (see exception text for description)
+     *  @throws VeloxException if the provided SQL is a stored procedure call (these are not supported)
      */
     public function __construct(public Connection &$conn, string $baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null) {
         $this->_baseSql = $baseSql;
