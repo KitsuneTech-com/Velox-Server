@@ -373,10 +373,9 @@ class Query {
     }
 
     /**
-     * Returns the results of the query as executed. The return type will vary depending on which result type was set
-     * for the query.
+     * Returns the results of the query as executed.
      *
-     * @return ResultSet|array|null The results of the query, or null if the query was run as QUERY_NONE.
+     * @return ResultSet|array|null The results of the query, according to the query type specified, or null if the query was run as QUERY_NONE.
      * @throws VeloxException If the query has not yet returned results. It may be useful to try-catch this method
      * in a sleep() loop while waiting for the query to complete.
      */
