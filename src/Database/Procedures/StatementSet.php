@@ -28,6 +28,9 @@ use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
  * - `UPDATE myTable SET <<values>> WHERE <<condition>>`
  * - `DELETE FROM myTable WHERE <<condition>>`
  *
+ * (Note: because stored procedure calls do not have clauses in the sense above, these are not supported by StatementSet.
+ * Use {@see PreparedStatement} for such calls.)
+ *
  * Criteria are passed in as an associative array. This array should contain either or both of two keys, as appropriate
  * for the query type:
  * - `"values"`: An array of associative arrays, with the keys being the column names and the values being the values to be
@@ -75,10 +78,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
     /** @param Connection   $conn       The Connection instance to use for this instance
      *  @param string       $_baseSql   The SQL template by which to generate the prepared statements
-     *  @param int|null     $queryType  The type of query to be run ({@see Query::QUERY_SELECT QUERY_SELECT, etc.})
-     *  @param array|VeloxQL   $criteria   Initial criteria to be applied; this can be used to avoid having to call setCriteria() later
-     *  @param string|null  $name       The name of this StatementSet; can be used to distinguish between multiple StatementSets in a single Transaction
-     *  @throws VeloxException          If criteria are incorrectly formatted (see exception text for description)
+     *  @param int|null     $queryType  The type of query to be run (see the QUERY_ constants in {@see Query})
+     *  @param array|VeloxQL   $criteria   The initial criteria to be applied; this can be used to avoid having to call {@see StatementSet::setCriteria()} later
+     *  @param string|null  $name       The name of this StatementSet; this can be used to distinguish between multiple StatementSets in a single Transaction
+     *  @throws VeloxException          if criteria are incorrectly formatted (see exception text for description)
      */
     public function __construct(public Connection &$conn, private string $_baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null){
         $lc_query = strtolower($this->_baseSql);
@@ -158,7 +161,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     public function offsetGet(mixed $offset) : PreparedStatement|null {
         return $this->_statements[$offset] ?? null;
     }
-
+    /** @ignore */
+    public function __invoke() : bool {
+        return $this->execute();
+    }
     //Class-specific methods
     private function criterionHash(object|array $criterion) : string {
         $criterion = (array)$criterion;
@@ -447,9 +453,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
         }
         return true;
     }
-    public function __invoke() : bool {
-        return $this->execute();
-    }
+
 
     /** Clears all assigned criteria and PreparedStatements so this instance can be reused. */
     public function clear() : void {
