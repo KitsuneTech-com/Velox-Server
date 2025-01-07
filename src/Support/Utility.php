@@ -9,6 +9,9 @@ use KitsuneTech\Velox\VeloxException as VeloxException;
  * @param $array array A multidimensional array to be sorted by key
  * @return bool The return value of the root level ksort. This will always return
  * true in PHP >=8.2.0 ({@see https://www.php.net/manual/en/function.ksort.php})
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function recur_ksort(array &$array) : bool {
     foreach ($array as &$value) {
@@ -21,7 +24,11 @@ function recur_ksort(array &$array) : bool {
 
 /**
  * @param $str string A string to be checked
+ *
  * @return bool Whether the string consists entirely of ASCII characters
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function isAscii(string $str) : bool {
     return preg_match('/[^\x00-\x7F]/', $str) == 0;
