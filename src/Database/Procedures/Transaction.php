@@ -82,7 +82,7 @@ class Transaction {
      *
      * @param string|Query|StatementSet|Transaction $query A Velox query or SQL query string to be run at this point in the execution order
      * @param int|null $resultType If the provided query is a SQL string, this is the desired result type (see the RESULT_ constants in {@see Query}) Default (null) is no result.
-     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see getTransactionPlan()}.
+     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
      * @return void
      * @throws VeloxException if a string is passed as the query and the Transaction does not have a base connection
      */
@@ -123,7 +123,7 @@ class Transaction {
      * available in the first array, and any arguments already defined for the next procedure will be available in the second array. These can be modified as
      *
      * If no previous or next procedure exists, the corresponding argument will be null. If this function expects parameters itself [as might be defined in
-     * {@see addTransactionParameters()}], these will be chained to the argument list after the second array.
+     * {@see Transaction::addTransactionParameters()}], these will be chained to the argument list after the second array.
      *
      * Thus, the definition should resemble the following (type hinting is, of course, optional):
      *
@@ -138,7 +138,7 @@ class Transaction {
      * references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
      *
      * @param callable $function An anonymous function to be added to the execution order, following the description above.
-     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see getTransactionPlan()}.
+     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
      * @return void
      */
     public function addFunction(callable $function, ?string $name = null) : void {
@@ -340,7 +340,7 @@ class Transaction {
     /**
      * Executes all remaining iterations of this Transaction.
      *
-     * This acts as {@see executeIteration()}, except that it will continue executing iterations until there are none left.
+     * This acts as {@see Transaction::executeIteration()}, except that it will continue executing iterations until there are none left.
      * These iterations are not autocommitted [as the default behavior for executeIteration()], but the iterations can
      * be force-committed as a group by passing true as the sole argument.
      *
