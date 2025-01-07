@@ -5,7 +5,11 @@ namespace KitsuneTech\Velox;
 if (!isset($GLOBALS['Velox']['ErrorReportingMode'])){
     $GLOBALS['Velox']['ErrorReportingMode'] = VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE;
 }
-/** @ignore */
+/** @ignore
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
+ * */
 function VeloxExceptionHandler(\Throwable $ex) : void {
     function getExceptionObject(\Throwable $ex) : object {
         $exObj = (object)['timestamp'=>time(), 'class'=>get_class($ex), 'code'=>$ex->getCode(), 'file'=>$ex->getFile(), 'line'=>$ex->getLine(), 'message'=>$ex->getMessage()];

@@ -11,6 +11,9 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
  *
  * Each instance of this class holds an iterable dataset composed of the results of the procedure passed to the first
  * argument of its constructor; alternatively, the Model can be directly populated.
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 class Model implements \ArrayAccess, \Iterator, \Countable {
     
@@ -37,7 +40,11 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param PreparedStatement|StatementSet|Transaction|null $_insert  The procedure used to INSERT new records into the database from the Model
      * @param PreparedStatement|StatementSet|Transaction|null $_delete  The procedure used to DELETE records removed from the Model
      * @param string|null $instanceName                                 An optional identifier (required for any Models involved in a join in which column names overlap)
+     *
      * @throws VeloxException                                           if the initial SELECT procedure throws an exception
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct(
         private PreparedStatement|StatementSet|null             $_select = null,
@@ -146,9 +153,14 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * update object is a PreparedStatement, each element must be an array of parameter sets ["placeholder"=>"value"];
      * if the update object is a StatementSet, the array should be VeloxQL-like (each element having "values" and "where"
      * keys with the appropriate structure [see {@see VeloxQL}].
+     *
      * @return bool Success/failure
      * @throws VeloxException if the procedure for the given SQL verb has not been defined.
-     * @ignore
+     *
+     * @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     private function executeDML(string $verb, array $rows) : bool {
         $procedure = $this->{'_'.$verb};
@@ -190,9 +202,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param bool $vql If this is passed as true, a VeloxQL object will be returned containing the rows inserted
      *     and/or deleted from the previous dataset. (Updates are counted as a deletion of the old row and an insertion
      *     of the updated row.)
+     *
      * @return VeloxQL|bool As above, if $vql is passed as true. Otherwise, a boolean representing success or failure.
      * @throws VeloxException if the select procedure is a {@see PreparedStatement} and the procedure returns multiple
      *     result sets. Only one result set may be used to populate a Model.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function select(bool $vql = false) : VeloxQL|bool {
         if (!$this->_select){
@@ -253,8 +269,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * Performs the designated update on the data source.
      *
      * @param array $rows The rows to be updated
+     *
      * @return bool
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function update(array $rows) : bool {
         return $this->executeDML("update", $rows);
@@ -264,8 +284,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * Performs the designated insert on the data source.
      *
      * @param array $rows The rows to be inserted
+     *
      * @return bool
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function insert(array $rows) : bool {
         return $this->executeDML("insert", $rows);
@@ -275,8 +299,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * Performs the designated delete on the data source.
      *
      * @param array $rows The rows to be deleted
+     *
      * @return bool
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function delete(array $rows) : bool {
         return $this->executeDML("delete", $rows);
@@ -285,10 +313,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
     /**
      * Sorts the Model in the manner specified.
      *
-     *
      * @param ...$args
+     *
      * @return void
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function sort(...$args) : void {
         //Note: this sorting will use the default case-sensitive PHP sorting behavior, since the default
@@ -356,8 +387,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * any criteria specified for select will be applied as a filter to the refreshed dataset.
      *
      * @param VeloxQL $vql The VeloxQL instance containing the data/criteria for each operation
+     *
      * @return void
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function synchronize(VeloxQL $vql) : void {
         $this->_delaySelect = true;
@@ -376,6 +411,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
     /**
      * @return array The names of all columns in the current data set
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function columns() : array {
         return $this->_columns;
@@ -383,6 +421,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
 
     /**
      * @return array The raw dataset as a two-dimensional array, with filter applied if applicable
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function data() : array {
         if ($this->_filter){
@@ -397,8 +438,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * Returns the number of distinct values in a given column.
      *
      * @param string $column A column whose distinct values are to be counted
+     *
      * @return int The number of distinct values in the specified column
      * @throws VeloxException if the specified column doesn't exist
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function countDistinct(string $column) : int {
         if (count($this->_data) == 0){
@@ -415,6 +460,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *
      * @return VeloxQL The difference between the datasets of the last two selects, as a VeloxQL object (inserts and/or deletes).
      *     Updates are represented by a deletion of the affected row and an insertion of the updated data.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function diff() : VeloxQL {
         return $this->_diff;
@@ -431,8 +479,12 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * passed, in which case the previous filter is removed.
      *
      * @param VeloxQL|array|null $filter The filtering criteria to be used
+     *
      * @return void
      * @throws VeloxException if a column specified in the argument does not exist in the Model.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function setFilter(VeloxQL|array|null $filter = null) : void {
         $this->_filter = $filter instanceof VeloxQL ? $filter->select : (!is_null($filter) ? $filter : []);
@@ -487,9 +539,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *
      * @param string $oldName The column to be renamed
      * @param string $newName The new name for the column
+     *
      * @return void
      * @throws VeloxException if the old column name doesn't exist, the new column name already does, or if one or the
      * other isn't specified.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function renameColumn(string $oldName, string $newName) : void {
         if (!$oldName || !$newName) throw new VeloxException("Both old and new column names must be specified.",79);
@@ -523,6 +579,8 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @return Model                            A new Model containing the pivoted dataset (independent of the original Models)
      * @throws VeloxException                   If any of the arguments specified are invalid (see the thrown exception for more details)
      *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function pivot(string $pivotBy, string $indexColumn, string $valueColumn, array $pivotColumns = null, bool $ignore = false, bool $suppressColumnException = false) : Model {
         $outputModel = new Model;
@@ -634,18 +692,27 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *
      * @return Model A new Model representing the joined data set
      * @throws VeloxException if the join is improperly specified by the parameters
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function join(int $joinType, Model $joinModel, string|array|null $joinConditions = null) : Model
     {
         /**
-         * changeColumn() replaces the given $oldColumn key with the $newColumn key for each row in a two-dimensional array.
+         * Replaces the given $oldColumn key with the $newColumn key for each row in a two-dimensional array.
+         *
          * This acts directly on the given $array, by reference.
          *
          * @param string $oldColumn The old column key
          * @param string $newColumn The replacement column key
          * @param array $array The array on which the operation is to be performed
+         *
          * @return void
-
+         *
+         * @internal
+         *
+         * @version 1.0.0
+         * @since 1.0.0-alpha
          */
         function changeColumn(string $oldColumn, string $newColumn, array &$array) : void {
             $rowCount = count($array);
@@ -828,6 +895,9 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      *
      * @return int|null The Unix timestamp, in integer seconds, when the response was received from the Model's data source
      * during the most recent {@see: select()} call, or null if such a call has yet to be made.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function lastQuery() : ?int {
         return $this->_lastQuery;
@@ -842,9 +912,13 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param string|null $fileName
      * @param int|null $ignoreRows
      * @param bool $noHeader
+     *
      * @return string|bool
      * @throws VeloxException
      * @throws \DOMException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
         return Export($this,$flags,$fileName,$ignoreRows,$noHeader);

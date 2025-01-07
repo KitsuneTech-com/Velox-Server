@@ -41,8 +41,12 @@ function isAscii(string $str) : bool {
  * @param mixed $value1
  * @param string $op
  * @param mixed|null $value2
+ *
  * @return bool
  * @throws VeloxException
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function sqllike_comp(mixed $value1, string $op, mixed $value2) : bool {
     //This is based on and functionally equivalent to MySQL comparison operations.
@@ -89,7 +93,11 @@ function sqllike_comp(mixed $value1, string $op, mixed $value2) : bool {
 
 /**
  * @param array $array The array to be checked
+ *
  * @return bool True if the array is associative (has non-sequential or non-numeric keys)
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function isAssoc(array $array) : bool {
     return (array_values($array) !== $array);
@@ -101,6 +109,7 @@ function isAssoc(array $array) : bool {
  * As {@see array_change_key_case()}, but applied to all levels of the array.
  * @param $arr
  * @param $case
+ *
  * @return array|array[]
  *
  * @author zhangxuejiang
@@ -117,7 +126,11 @@ function array_change_key_case_recursive(array $arr, int $case = CASE_LOWER) : a
 
 /**
  * @param int $num An integer to be checked
+ *
  * @return bool Whether this integer is a power of 2
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function isPowerOf2(int $num) : bool {
     return ($num != 0) && (($num & ($num-1)) == 0);
@@ -131,7 +144,11 @@ function isPowerOf2(int $num) : bool {
  * on the first row, but it's more reliable than assuming that the first row contains an element for each column.
  *
  * @param array $arr The array whose columns are to be determined
+ *
  * @return array An array of all column names in the given array
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 function array_all_columns(array $arr) : array {
     $columns = [];

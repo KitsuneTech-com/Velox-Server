@@ -24,8 +24,11 @@ namespace KitsuneTech\Velox\Structures;
  *  }
  *  ```
  *
- *  The corresponding properties of the VeloxQL object will be set accordingly if these properties are set directly,
- *  their structure should be PHP-equivalent to the property in question.
+ * The corresponding properties of the VeloxQL object will be set accordingly if these properties are set directly,
+ * their structure should be PHP-equivalent to the property in question.
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 class VeloxQL {
     public array $select;
@@ -36,6 +39,9 @@ class VeloxQL {
     /**
      * @param string $json A string representation of a JSON array having elements equivalent to the structure of the
      * VeloxQL object
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct(string $json = ""){
         //Expected JSON format (where col1 is an autoincrement field not set by this library):

@@ -82,8 +82,12 @@ class Transaction {
      * @param string|Query|StatementSet|Transaction $query A Velox query or SQL query string to be run at this point in the execution order
      * @param int|null $resultType If the provided query is a SQL string, this is the desired result type (see the RESULT_ constants in {@see Query}) Default (null) is no result.
      * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
+     *
      * @return void
      * @throws VeloxException if a string is passed as the query and the Transaction does not have a base connection
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function addQuery(string|Query|StatementSet|Transaction &$query, ?int $resultType = Query::RESULT_NONE, ?string $name = null) : void {
         $executionCount = count($this->procedures);
@@ -138,7 +142,11 @@ class Transaction {
      *
      * @param callable $function An anonymous function to be added to the execution order, following the description above.
      * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
+     *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function addFunction(callable $function, ?string $name = null) : void {
         $procedureIndex = count($this->procedures);
@@ -172,7 +180,11 @@ class Transaction {
      * multiple times; the Transaction will be run once for each set of parameters/criteria, in the order provided.
      *
      * @param array $procedureParams
+     *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function addTransactionParameters(array $procedureParams) : void {
         $this->_iterations[] = $procedureParams;
@@ -182,6 +194,9 @@ class Transaction {
      * Initiates the T-SQL transaction for each distinct connection used by this Transaction.
      *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function begin() : void {
         foreach ($this->_connections as $conn){
@@ -195,6 +210,9 @@ class Transaction {
      *
      * @return bool True if the procedure or function completed successfully.
      * @throws VeloxException if the procedure or function fails. See the call stack for more details.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function executeNextProcedure() : bool {
         if (!(isset($this->procedures[$this->_currentProcedureIndex]))){
@@ -267,8 +285,12 @@ class Transaction {
      *
      * @param int|null $iterationIndex The index of the iteration whose results are to be returned
      * @param int|string|null $name The name or index of the procedure whose results are to be returned
+     *
      * @return ResultSet|array|bool The desired result set, in whichever form results from the combination (or lack thereof)
      * of arguments passed.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getQueryResults(?int $iterationIndex = null, int|string|null $name = null) : ResultSet|array|bool {
         if ($iterationIndex == Transaction::LAST) $iterationIndex = $this->_currentIterationIndex - 1;
@@ -305,9 +327,13 @@ class Transaction {
      * the next iteration.
      *
      * @param bool $commit If true, commit the iteration on completion.
+     *
      * @return bool Whether there are any more iterations to execute (useful for a while loop)
      * @throws VeloxException if any errors occur during the execution of the underlying procedures. If this happens,
      *   the Transaction is rolled back.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
 
     public function executeIteration(bool $commit = false) : bool {
@@ -344,9 +370,13 @@ class Transaction {
      * be force-committed as a group by passing true as the sole argument.
      *
      * @param bool $commit If true, commit the set of iterations once all are executed.
+     *
      * @return void
      * @throws VeloxException if any errors occur during the execution of the underlying procedures. If this happens,
      *    the Transaction is rolled back.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
 
     public function executeAll(bool $commit = false) : void {
@@ -363,6 +393,9 @@ class Transaction {
      * is advanced to the next iteration of the Transaction.
      *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function commit() : void {
         foreach ($this->_connections as $conn){
@@ -375,7 +408,11 @@ class Transaction {
     /**
      * Returns an array of indices affected by the most recent Velox procedure run in this Transaction. See the
      *  documentation on the procedure class in question for expected behavior.
+     *
      * @return array The array of affected indices.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getLastAffected() : array {
         return $this->_lastAffected;
@@ -383,6 +420,9 @@ class Transaction {
 
     /**
      * @return int|string The name (if assigned) or index of the last function or Velox procedure assigned to this Transaction
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function finalProcedure() : int|string {
         return $this->_lastDefinedProcedure;
@@ -390,7 +430,11 @@ class Transaction {
 
     /**
      * A diagnostic method to retrieve details about the Transaction and the functions/procedures assigned to it
+     *
      * @return array
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getTransactionPlan() : array {
         $queryDumpArray = [];

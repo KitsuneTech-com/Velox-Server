@@ -84,6 +84,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * @param string|null $name         The name of this StatementSet; this can be used to distinguish between multiple StatementSets in a single Transaction.
      *
      * @throws VeloxException if the provided SQL is a stored procedure call (these are not supported)
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct(public Connection &$conn, string $baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null) {
         $this->_baseSql = $baseSql;
@@ -174,7 +177,10 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * Generates a hash value for the given criterion. Used to coalesce criteria having the same columns and operators
      * so that redundant PreparedStatements are not created.
      *
-     * @ignore
+     * @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     private function criterionHash(object|array $criterion) : string {
         $criterion = (array)$criterion;
@@ -206,8 +212,12 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * execute the prepared statements based on the base SQL template and its <<placeholders>>.
      *
      * @param array|VeloxQL $criteria  The criteria to be added
+     *
      * @return void
      * @throws VeloxException       If criteria are incorrectly formatted (see exception text for description)
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function addCriteria(array|VeloxQL $criteria) : void {
         if ($criteria instanceof VeloxQL){
@@ -264,6 +274,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      *
      * @return void
      * @throws VeloxException if the criteria are incorrectly formatted. See the exception text for details.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function setStatements() : void {
 
@@ -439,6 +452,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      *
      * @return bool True if the transaction was successful.
      * @throws VeloxException If no criteria have yet been set for this StatementSet.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function execute() : bool {
         if (count($this->_statements) == 0){
@@ -480,6 +496,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * Clears all assigned criteria and PreparedStatements so this instance can be reused.
      *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function clear() : void {
         $this->rewind();
@@ -488,6 +507,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
     /**
      * @return array An array of index values affected by the last execution of this StatementSet, as returned by the data source.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getLastAffected() : array {
         $affected = [];
@@ -499,6 +521,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
 
     /**
      * @return ResultSet|array|null The results of the last execution of this StatementSet
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getResults() : ResultSet|array|null {
         return $this->results;
@@ -510,6 +535,9 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      * This provides an overview of the current execution context for this StatementSet, and may be useful for debugging.
      *
      * @return array The combined results for all {@see PreparedStatement::dumpQuery()} calls associated with this StatementSet
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function dumpQueries() : array {
         $queries = [];
@@ -524,10 +552,14 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      *
      * @param string $key
      * @param mixed $value
+     *
      * @return mixed The value given
      * @throws VeloxException if the value given isn't either a scalar or a null
      *
-     * @ignore
+     * @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     private static function scalarCheck(string $key, mixed $value) : mixed {
         //Passes through the value if it is a scalar or null, otherwise throws an exception

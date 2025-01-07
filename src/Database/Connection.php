@@ -57,6 +57,9 @@ class Connection {
      * @param array $options                An array of options to use for the connection (as would be defined in a DSN connection string)
      *
      * @throws VeloxException if the connection cannot be established (exception specifies the reason)
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct (
         private string|null $host = null,
@@ -84,6 +87,9 @@ class Connection {
      *
      * @return void
      * @throws VeloxException
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function establish() : void {
         $connected = false;
@@ -254,8 +260,12 @@ class Connection {
      *
      * This is only public for use by the {@see Query} class and should not be used by application code.
      *
-     * @ignore
      * @return mixed The database connection reference
+     *
+     * @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function connectionInstance() : mixed {
         return $this->_conn;
@@ -266,6 +276,9 @@ class Connection {
      *
      * @return bool True if the transaction was successfully started, as indicated by the appropriate library.
      * @throws VeloxException If the database engine does not support transactions.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function beginTransaction() : bool {
         $this->_inTransaction = true;
@@ -302,16 +315,26 @@ class Connection {
         }
     }
 
-    /** Identifies whether the connection has an active transaction.
+    /**
+     * Identifies whether the connection has an active transaction.
+     *
      * @return bool True if a transaction exists.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function inTransaction() : bool {
         return $this->_inTransaction;
     }
 
-    /** Sets a transaction savepoint for rollback.
+    /**
+     * Sets a transaction savepoint for rollback.
+     *
      * @return bool True if the savepoint was successfully set.
      * @throws VeloxException If no active transaction exists.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function setSavepoint() : bool {
         if (!$this->_inTransaction){
@@ -340,11 +363,16 @@ class Connection {
         }
     }
 
-    /** Rolls back the active transaction.
+    /**
+     * Rolls back the active transaction.
+     *
      * @param bool $toSavepoint If true, rolls back to the last savepoint. If false or unspecified, rolls back the entire transaction.
      *
      * @return bool True if the rollback was successful.
      * @throws VeloxException If no active transaction exists.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function rollBack(bool $toSavepoint = false) : bool {
         if (!$this->_inTransaction){
@@ -398,10 +426,14 @@ class Connection {
         }
     }
 
-    /** Commits the active transaction.
+    /**
+     * Commits the active transaction.
      *
      * @return bool True if the commit was successful.
      * @throws VeloxException If no active transaction exists.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function commit() : bool {
         if (!$this->_inTransaction){
@@ -429,27 +461,39 @@ class Connection {
         return (bool)$success;
     }
 
-    /** Returns the server type constant for this connection. See the `DB_*` constants defined above.
+    /**
+     * Returns the server type constant for this connection. See the `DB_*` constants defined above.
      *
      * @return int The server type constant.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function serverType() : int {
         return $this->serverType;
     }
 
-    /** Returns the connection type constant for this connection. See the `CONN_*` constants defined above.
+    /**
+     * Returns the connection type constant for this connection. See the `CONN_*` constants defined above.
      *
      * @return int The connection type constant.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function connectionType() : int {
         return $this->connectionType;
     }
 
-    /** Returns the last affected indices of the most recent query (equivalent to `LAST_INSERT_ID()` in MySQL).
+    /**
+     * Returns the last affected indices of the most recent query (equivalent to `LAST_INSERT_ID()` in MySQL).
      *
      * Note: calling this method will clear the stored indices; subsequent calls will return an empty array until another query is executed.
      *
      * @return array The last affected indices.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getLastAffected() : array {
         $lastAffected = $this->_lastAffected;
@@ -457,13 +501,17 @@ class Connection {
         return $lastAffected;
     }
 
-    /** Closes the active connection.
+    /**
+     * Closes the active connection.
      *
      * Note: once the connection is closed, it cannot be reopened. PDO connections remain open until the object is destroyed,
      * so this method cannot be used to close these; therefore, the preferred means to close a database connection is to destroy the object.
      *
      * @return bool True if the connection was successfully closed.
      * @throws VeloxException If this method is attempted on a PDO connection.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function close() : bool {
         switch ($this->connectionType){
@@ -484,15 +532,20 @@ class Connection {
                 throw new VeloxException("Unknown connection type",55);
         }
     }
-    /** Executes a given query.
+    /**
+     * Executes a given query.
      *
      * This can either be an instance of the {@see Query} class or a standalone SQL query string. If the
      * latter is passed, a new Query instance will be created from it.
      *
      * @param Query|string $query The query to execute.
      * @param int $resultType The type of result to return (default is {@see Query::RESULT_ARRAY}). See {@see Query} for the constants to use.
+     *
      * @return ResultSet|array|bool The result of the query, or false if the query failed.
      * @throws VeloxException If the query failed. The exception will be passed through from the Query class.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function execute(string|Query $query, int $queryType = Query::QUERY_SELECT, int $resultType = Query::RESULT_ARRAY) : ResultSet|array|bool {
         if (gettype($query) == "string"){
@@ -502,25 +555,37 @@ class Connection {
         return $query->getResults();
     }
 
-    /** Returns the specified host for this connection.
+    /**
+     * Returns the specified host for this connection.
      *
      * @return string The host as originally specified.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getHost() : string {
         return $this->host;
     }
 
-    /** Returns the database name for this connection.
+    /**
+     * Returns the database name for this connection.
      *
      * @return string The database name as originally specified.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getDB() : string {
         return $this->db;
     }
 
-    /** Returns the server type for this connection, in user-readable format (presently either MySQL or SQL Server).
+    /**
+     * Returns the server type for this connection, in user-readable format (presently either MySQL or SQL Server).
      *
      * @return string The server type.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getServerType() : string {
         return match ($this->serverType) {

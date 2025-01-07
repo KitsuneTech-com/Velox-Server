@@ -7,6 +7,9 @@ namespace KitsuneTech\Velox\Structures;
  *
  * This can be iterated as a sparse two-dimensional array using native functions, and the available column names can
  * be retrieved through the {@see columns()} method.
+ *
+ * @version 1.0.0
+ * @since 1.0.0-alpha
  */
 class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     private array $_columns = [];
@@ -16,6 +19,9 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
 
     /**
      * @param array $_resultArray A two-dimensional array containing the results returned by a Velox procedure.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct(private array $_resultArray = []) {
         for ($i=0; $i<count($this->_resultArray); $i++) {
@@ -32,7 +38,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     
     // Countable implementation
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function count() : int {
         return count($this->_keys);
@@ -40,31 +46,31 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     
     // Iterator implementation
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function current() : array {
         return $this->_resultArray[$this->_keys[$this->_position]];
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function key() : int|string {
         return $this->_keys[$this->_position];
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function next() : void {
         $this->_position++;
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function rewind() : void {
         $this->_position = 0;
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function valid() : bool {
         return isset($this->_keys[$this->_position]);
@@ -72,7 +78,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
 
     // ArrayAccess implementation
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function offsetSet(mixed $offset, mixed $row) : void {
         if (is_null($offset)){
@@ -87,13 +93,13 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
         }
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_resultArray[$offset]);
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function offsetUnset(mixed $offset) : void {
         unset($this->_resultArray[$offset]);
@@ -101,7 +107,7 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
         $this->_keys = array_values($this->_keys);
     }
     /**
-     * @ignore No usage documentation required for core interface implementation
+     * @ignore
      */
     public function offsetGet(mixed $offset) : ?array {
         return $this->_resultArray[$offset] ?? null;
@@ -110,12 +116,18 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
     //Class-specific functionality
     /**
      * @return array The index values of the last row(s) affected by the procedure that generated this ResultSet.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function lastAffected() : array {
         return $this->_lastAffected;
     }
     /**
-     * @ignore This is to only be used by Velox procedures
+     * @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function appendAffected(array $affected) : void {
         $this->_lastAffected = array_merge($this->_lastAffected,$affected);
@@ -133,7 +145,11 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
      *
      * @param ResultSet $mergeResultSet
      * @param bool $filterDuplicates
+     *
      * @return void
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function merge(ResultSet $mergeResultSet, bool $filterDuplicates = false) : void {
         foreach ($mergeResultSet as $row){
@@ -148,6 +164,9 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
 
     /**
      * @return array The unwrapped contents of this ResultSet, as a two-dimensional array
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getRawData() : array {
         return $this->_resultArray;
@@ -155,6 +174,9 @@ class ResultSet implements \ArrayAccess, \Iterator, \Countable {
 
     /**
      * @return array An array consisting of all column names in this ResultSet.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function columns() : array {
         return $this->_columns;

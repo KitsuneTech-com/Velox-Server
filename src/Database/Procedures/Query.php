@@ -53,6 +53,9 @@ class Query {
      * @param int|null $queryType   The type of query to execute. This affects how placeholders are assigned and what type of result is expected. See the QUERY_* constants for possible values.
      * @param int $resultType       The type of result to return. This determines what response is stored in Query::results. See the RESULT_* constants for possible values.
      * @param string|null $name     The name of this query. This is used to identify the query in a {@see Transaction}.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function __construct(public Connection &$conn, public string $sql, public ?int $queryType = null, public int $resultType = Query::RESULT_ARRAY, public ?string $name = null) {
         if (!$this->queryType){
@@ -91,7 +94,11 @@ class Query {
     public function __invoke() : bool {
         return $this->execute();
     }
-    /** @internal */
+    /** @internal
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
+     * */
     private function executeStatement(&$stmt, array &$parameters = null) : ResultSet {
         $connObj = $this->conn;
         $queryType = $this->queryType;
@@ -246,6 +253,9 @@ class Query {
      * @return bool True if the query was executed successfully, false otherwise.
      * @throws VeloxException if the query cannot be prepared and/or executed successfully. The content of the exception
      * will vary depending on the nature of the error.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function execute() : bool {
         if (!$this->sql){
@@ -377,6 +387,9 @@ class Query {
      * @return ResultSet|array|null The results of the query, according to the query type specified, or null if the query was run as QUERY_NONE.
      * @throws VeloxException If the query has not yet returned results. It may be useful to try-catch this method
      * in a sleep() loop while waiting for the query to complete.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getResults() : array|ResultSet|null {
         if ($this->resultType !== Query::RESULT_NONE && !isset($this->results)){
@@ -393,6 +406,9 @@ class Query {
      * queries, it's best not to use this for queries that could affect several rows per execution.
      *
      * @return array An array of indices affected by the query
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function getLastAffected() : array {
 	    return $this->_lastAffected;
@@ -401,6 +417,9 @@ class Query {
     /**
      * @return array An array containing the execution context for this query, including the base SQL and connection parameters.
      * This may be useful for debugging.
+     *
+     * @version 1.0.0
+     * @since 1.0.0-alpha
      */
     public function dumpQuery() : array {
         return [
