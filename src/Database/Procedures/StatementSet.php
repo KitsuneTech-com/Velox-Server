@@ -72,8 +72,7 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private array $_statements = [];
     private int $_position = 0;
     private array $_keys = [];
-
-    private $_baseSql = "";
+    private string $_baseSql = "";
 
     /** @var ResultSet|array|bool|null $results The results returned from the last execution */
     public ResultSet|array|bool|null $results;
