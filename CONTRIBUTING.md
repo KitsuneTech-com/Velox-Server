@@ -13,7 +13,7 @@ feel free to include a PHPDoc @author tag with your submission.
 
 Note: if your contribution includes code from outside sources, be sure that you have the right to use the code in this manner and that the original source is properly
 credited. Kitsune Technologies does not condone code theft, and if any code contributed is found to infringe on a copyright or license, it will be removed or otherwise
-remedied, and the contributor will be banned from any further contributions to this or any other Kitsune Technologies project.
+remedied, and the contributor may be banned from any further contributions to this or any other Kitsune Technologies project.
 
 | Project Administrator                |
 | ------------------------------------ |
