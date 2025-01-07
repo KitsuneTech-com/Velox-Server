@@ -73,6 +73,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     private int $_position = 0;
     private array $_keys = [];
 
+    private $_baseSql = "";
+
     /** @var ResultSet|array|bool|null $results The results returned from the last execution */
     public ResultSet|array|bool|null $results;
 
@@ -85,7 +87,8 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
      *
      *  @throws VeloxException if criteria are incorrectly formatted (see exception text for description)
      */
-    public function __construct(public Connection &$conn, public string $_baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null) {
+    public function __construct(public Connection &$conn, string $baseSql = "", public ?int $queryType = null, public array|VeloxQL $criteria = [], public ?string $name = null) {
+        $this->_baseSql = $baseSql;
         $lc_query = strtolower($this->_baseSql);
         if (str_starts_with($lc_query,"call")){
             throw new VeloxException("Stored procedure calls are not supported by StatementSet.",46);
