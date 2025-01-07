@@ -110,27 +110,33 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
     }
 
     // Countable implementation
+    /** @ignore */
     public function count() : int {
         return count($this->_keys);
     }
 
     //Iterator implementation
+    /** @ignore */
     public function current() : PreparedStatement {
         return $this->_statements[$this->_position];
     }
+    /** @ignore */
     public function key() : int {
         return $this->_position;
     }
+    /** @ignore */
     public function next() : void {
         $this->_position++;
     }
+    /** @ignore */
     public function rewind() : void {
         $this->_position = 0;
     }
+    /** @ignore */
     public function valid() : bool {
         return isset($this->_statements[$this->_position]);
     }
-
+    /** @ignore */
     //ArrayAccess implementation
     public function offsetSet(mixed $offset, mixed $value) : void {
         if (is_null($offset)){
@@ -140,12 +146,15 @@ class StatementSet implements \Countable, \Iterator, \ArrayAccess {
             $this->_statements[$offset] = $value;
         }
     }
+    /** @ignore */
     public function offsetExists(mixed $offset) : bool {
         return isset($this->_statements[$offset]);
     }
+    /** @ignore */
     public function offsetUnset(mixed $offset) : void {
         unset($this->_statements[$offset]);
     }
+    /** @ignore */
     public function offsetGet(mixed $offset) : PreparedStatement|null {
         return $this->_statements[$offset] ?? null;
     }
