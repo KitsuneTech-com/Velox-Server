@@ -65,6 +65,7 @@ use function KitsuneTech\Velox\Utility\{recur_ksort, isAssoc};
  *
  * @version 1.0.0
  * @since 1.0.0-alpha
+ * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  *
  */
 class StatementSet implements \Countable, \Iterator, \ArrayAccess {

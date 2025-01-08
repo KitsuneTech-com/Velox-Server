@@ -3,6 +3,8 @@ namespace KitsuneTech\Velox\Utility;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 
 /**
+ * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
+ *
  * Recursively sorts a multidimensional array by key, in ascending order
  *
  * As {@see ksort()}, but applied to every nested array.

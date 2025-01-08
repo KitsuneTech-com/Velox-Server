@@ -37,6 +37,7 @@ use function KitsuneTech\Velox\Utility\isPowerOf2;
  *
  * @version 1.0.0
  * @since 1.0.0-alpha
+ * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  */
 function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
     //unpack flags

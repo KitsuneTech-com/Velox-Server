@@ -14,6 +14,7 @@ use function KitsuneTech\Velox\Utility\sqllike_comp as sqllike_comp;
  *
  * @version 1.0.0
  * @since 1.0.0-alpha
+ * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  */
 class Model implements \ArrayAccess, \Iterator, \Countable {
     

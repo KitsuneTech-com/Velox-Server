@@ -21,6 +21,7 @@ use KitsuneTech\Velox\Structures\ResultSet as ResultSet;
  *
  * @version 1.0.0
  * @since 1.0.0-alpha
+ * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  */
 function oneShot(Query|StatementSet|Transaction $query, array|object|null $input = null) : array|ResultSet|bool|null {
     $namespaceComponents = explode('\\', get_class($query));
