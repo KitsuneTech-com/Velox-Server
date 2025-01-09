@@ -20,6 +20,9 @@ minimum software requirements for Velox Server are as follows:
 * Certain forms of output may require a web server that supports PHP server-side scripting (Apache 2.4+ is specifically
   supported, but NGINX, IIS, and others may work as well)
 
+## Installation
+
+
 ## Note for Developers and Potential Contributors
 As an open source project, the Velox MVA and its components (including Velox Server) have been developed for common
 use, and any feature requests are welcome and will be considered on their merits. Feel free to drop any such requests
