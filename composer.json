@@ -1,6 +1,6 @@
 {
     "name": "kitsunetech/velox",
-    "description": "Velox Framework",
+    "description": "Velox Server",
     "type": "library",
     "keywords": ["database","AJAX","JSON"],
     "support": {
