@@ -1,11 +1,14 @@
 {
-    "name": "kitsunetech/velox",
-    "description": "Velox Framework",
+    "name": "kitsunetech/velox-server",
+    "description": "Velox Server",
     "type": "library",
     "keywords": ["database","AJAX","JSON"],
     "support": {
-        "email": "admin@kitsunetech.com"
+        "email": "admin@kitsunetech.com",
+        "source": "https://github.com/KitsuneTech-com/Velox-Server",
+        "issues": "https://github.com/KitsuneTech-com/Velox-Server/issues"
     },
+    "license": "MPL-2.0",
     "require": {
         "php": ">=8.0.2"
     },
