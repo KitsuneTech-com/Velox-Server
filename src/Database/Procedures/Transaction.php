@@ -59,7 +59,8 @@ class Transaction {
 
     /**
      * @param Connection|null $conn     (optional) The Connection instance to begin this Transaction with; this is
-     * optional, and if this isn't provided, the Connection associated with the first added procedure will be adopted at that time.
+     * optional, and if this isn't provided, the Connection associated with the first added procedure will be adopted at
+     * that time.
      */
     public function __construct(?Connection &$conn = null) {
         if (isset($conn)){
@@ -80,9 +81,12 @@ class Transaction {
      * This query can take the form of a string of SQL, or any Velox procedure object. If a string is provided, the query
      * will be run on the Transaction's base connection, as provided to the {@see __construct() constructor}.
      *
-     * @param string|Query|StatementSet|Transaction $query A Velox query or SQL query string to be run at this point in the execution order
-     * @param int|null $resultType If the provided query is a SQL string, this is the desired result type (see the RESULT_ constants in {@see Query}) Default (null) is no result.
-     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
+     * @param string|Query|StatementSet|Transaction $query A Velox query or SQL query string to be run at this point in
+     *     the execution order
+     * @param int|null $resultType If the provided query is a SQL string, this is the desired result type (see the
+     *     RESULT_ constants in {@see Query}) Default (null) is no result.
+     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis
+     *     with {@see Transaction::getTransactionPlan()}.
      *
      * @return void
      * @throws VeloxException if a string is passed as the query and the Transaction does not have a base connection
@@ -120,14 +124,17 @@ class Transaction {
     /**
      * Inserts a user-defined callable function into the Transaction execution order.
      *
-     * Any functions added with this method are passed two arguments. Each of these arguments is an array containing two elements; the first element of each
-     * is a Velox procedure or a callable function, and the second element is an array of arguments or parameters to be applied to that procedure or function.
-     * The first array corresponds to the last procedure or function that was added to the transaction, and the second array corresponds to
-     * the next procedure or function that will be added to the transaction. Whatever arguments or parameters were passed to the previous procedure will be
-     * available in the first array, and any arguments already defined for the next procedure will be available in the second array. These can be modified as
+     * Any functions added with this method are passed two arguments. Each of these arguments is an array containing two
+     * elements; the first element of each is a Velox procedure or a callable function, and the second element is an
+     * array of arguments or parameters to be applied to that procedure or function. The first array corresponds to the
+     * last procedure or function that was added to the transaction, and the second array corresponds to the next
+     * procedure or function that will be added to the transaction. Whatever arguments or parameters were passed to the
+     * previous procedure will be available in the first array, and any arguments already defined for the next procedure
+     * will be available in the second array.
      *
-     * If no previous or next procedure exists, the corresponding argument will be null. If this function expects parameters itself [as might be defined in
-     * {@see Transaction::addTransactionParameters()}], these will be chained to the argument list after the second array.
+     * If no previous or next procedure exists, the corresponding argument will be null. If this function expects
+     * parameters itself [as might be defined in {@see Transaction::addTransactionParameters()}], these will be chained
+     * to the argument list after the second array.
      *
      * Thus, the definition should resemble the following (type hinting is, of course, optional):
      *
@@ -138,11 +145,13 @@ class Transaction {
      * }
      * $transactionInstance.addFunction($myFunction);
      * ```
-     * No return value is necessary for functions defined in this way. Any actions performed by the function should act on or use the
-     * references passed in with the arguments, or else global variables. They are run as closures, and do not inherit any external scope.
+     * No return value is necessary for functions defined in this way. Any actions performed by the function should act
+     * on or use the references passed in with the arguments, or else global variables. They are run as closures, and do
+     * not inherit any external scope.
      *
      * @param callable $function An anonymous function to be added to the execution order, following the description above.
-     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis with {@see Transaction::getTransactionPlan()}.
+     * @param string|null $name An optional name by which to refer to the function. This will be available for analysis
+     *     with {@see Transaction::getTransactionPlan()}.
      *
      * @return void
      *
@@ -206,8 +215,8 @@ class Transaction {
     }
 
     /**
-     * Runs the next procedure or function in the execution order. This can be used to step through a Transaction incrementally
-     * without committing the results for the procedure or function in question.
+     * Runs the next procedure or function in the execution order. This can be used to step through a Transaction
+     * incrementally without committing the results for the procedure or function in question.
      *
      * @return bool True if the procedure or function completed successfully.
      * @throws VeloxException if the procedure or function fails. See the call stack for more details.
@@ -273,22 +282,23 @@ class Transaction {
      * Returns the result set(s) from the Transaction in its current state.
      *
      * These results are returned by default as a
-     * two-dimensional array in which each element is an array containing the results of each iteration of the Transaction,
-     * in order. These arrays themselves contain, in execution order, the results for each procedure in the given iteration.
+     * two-dimensional array in which each element is an array containing the results of each iteration of the
+     * Transaction, in order. These arrays themselves contain, in execution order, the results for each procedure in the
+     * given iteration.
      *
      * Arguments can be passed to this method to filter the results as desired. The first optional argument is the index
-     * of the iteration whose results are to be retrieved (zero-indexed, in order of execution) and the second is the name
-     * or index (again in execution order) of a particular procedure. Specifying one and passing null for the other
+     * of the iteration whose results are to be retrieved (zero-indexed, in order of execution) and the second is the
+     * name or index (again in execution order) of a particular procedure. Specifying one and passing null for the other
      * retrieves an array of results, in execution order belonging to the specified iteration or procedure.
      *
-     * The special constant {@see Transaction::LAST} can also be passed as the first argument; in this case, only the result
-     * of the most recently committed iteration is returned.
+     * The special constant {@see Transaction::LAST} can also be passed as the first argument; in this case, only the
+     * result of the most recently committed iteration is returned.
      *
      * @param int|null $iterationIndex The index of the iteration whose results are to be returned
      * @param int|string|null $name The name or index of the procedure whose results are to be returned
      *
-     * @return ResultSet|array|bool The desired result set, in whichever form results from the combination (or lack thereof)
-     * of arguments passed.
+     * @return ResultSet|array|bool The desired result set, in whichever form results from the combination (or lack
+     * thereof) of arguments passed.
      *
      * @version 1.0.0
      * @since 1.0.0-alpha
@@ -366,9 +376,9 @@ class Transaction {
     /**
      * Executes all remaining iterations of this Transaction.
      *
-     * This acts as {@see Transaction::executeIteration()}, except that it will continue executing iterations until there are none left.
-     * These iterations are not autocommitted [as the default behavior for executeIteration()], but the iterations can
-     * be force-committed as a group by passing true as the sole argument.
+     * This acts as {@see Transaction::executeIteration()}, except that it will continue executing iterations until
+     * there are none left. These iterations are not autocommitted [as the default behavior for executeIteration()], but
+     * the iterations can be force-committed as a group by passing true as the sole argument.
      *
      * @param bool $commit If true, commit the set of iterations once all are executed.
      *
@@ -390,8 +400,8 @@ class Transaction {
     /**
      * Commits any executed procedures that have yet to been committed.
      *
-     * This performs a commit on each connection assigned to the Transaction. When all commits are done, the internal pointer
-     * is advanced to the next iteration of the Transaction.
+     * This performs a commit on each connection assigned to the Transaction. When all commits are done, the internal
+     * pointer is advanced to the next iteration of the Transaction.
      *
      * @return void
      *
