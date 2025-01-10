@@ -101,9 +101,9 @@ results to you. (See the full documentation for a complete description of the av
 Example:
 ```php
 $myConnection = new Connection(host: "myDatabaseServer.xyz", dbName: "myDatabase", serverType: Connection::DB_MYSQL, connectionType: Connection::CONN_PDO);
-$myQuery = new Query($myConnection, "SELECT thisColumn FROM myTable", Query::QUERY_SELECT, Query::RESULT_ARRAY);
+$myQuery = new Query($myConnection, "SELECT thisColumn FROM myTable WHERE thatColumn BETWEEN 0 AND 9", Query::QUERY_SELECT, Query::RESULT_ARRAY);
 $myQuery->execute();
-$resultArray = $myQuery->getResults();
+$resultsZeroToNine = $myQuery->getResults();
 ```
 
 #### PreparedStatement
@@ -140,6 +140,14 @@ clauses would be. The general pattern for each type of query is as follows:
   DELETE FROM myTable WHERE <<condition>>
   ```
 
+Example:
+```php
+$myStatementSet = new StatementSet($myConnection, "SELECT <<columns>> FROM myTable WHERE <<condition>>");
+$myStatementSet->addCriteria(["columns"=>["thisColumn"], "where"=>[["thatColumn"=>["BETWEEN",0,9]]]]);
+$myStatementSet->setStatements();
+$myStatementSet->execute();
+$resultsZeroToNine = $myStatementSet->getResults();
+```
 #### Transaction
 
 `Transaction` is a representation of a SQL transaction, in which multiple statements are run and only committed when
@@ -150,12 +158,49 @@ interstitial code to be run between procedures; code defined in this way has acc
 procedures, which allows this code to store and manipulate prior results, and to manipulate the following procedure as
 needed. The execution plan can then be run all at once, or one step at a time.
 
-#### Constructor arguments
+As an example, this is what a simple ETL Transaction would look like, from a MySQL source to a SQL Server destination.
+```php
+//Create connections to the source and destination databases
+$mysqlConnection = new Connection(host: "mysqlServer.xyz", dbName: "sourceDatabase", serverType: Connection::DB_MYSQL, connectionType: Connection::CONN_PDO);
+$sqlsrvConnection = new Connection(host: "sqlsrvServer.xyz", dbName: "destinationDatabase", serverType: Connection::DB_MSSQL, connectionType: Connection::CONN_NATIVE);
 
-The first argument for each of these is a reference to the `Connection` object that is to run them. This is the sole
-(and optional) argument for a Transaction instance; otherwise the next argument is the SQL query string itself, followed
-by a constant describing what type of query it is (`Query::QUERY_SELECT`, `Query::QUERY_INSERT`, `Query::QUERY_UPDATE`,
-`Query::QUERY_DELETE`, or `Query::QUERY_PROC` [for a stored procedure]). If omitted, `Query::QUERY_SELECT` is assumed.
+//Map the source column names to the destination column names
+$columnMap = ["sourceAbc" => "destinationAbc", "sourceXyz" => "destinationXyz"];
+
+//Create StatementSets for the source SELECT and the destination INSERT
+$sourceStatementSet = new StatementSet($mysqlConnection,"SELECT <<columns>> FROM sourceTable");
+$destinationStatementSet = new StatementSet($sqlsrvConnection,"INSERT INTO destinationTable (<<columns>>) VALUES <<values>>",QUERY::QUERY_INSERT);
+
+//Add the criteria for the source SELECT (the source column names above)
+$sourceStatementSet->addCriteria(["columns"=>array_keys($columnMap)]);
+
+//Define a transformation function to perform on the selected data
+$transform = function($source,$destination) use ($columnMap) {
+    //The Transaction will supply the arguments on execution. Each will be an array of two elements: the previous or
+    //next defined procedure, respectively; and the arguments by which it was invoked, passed by reference.
+    $sourceData = $source[0]->getResults();
+    
+    //Transform the data (here, we're just remapping columns) and feed it to the destination StatementSet
+    foreach ($sourceData as $sourceRow){
+        $destinationRow = [];
+        foreach ($sourceRow as $sourceColumn => $value){
+            $destinationRow[$columnMap[$sourceColumn]] = $value;
+        }
+        $destination[0]->addCriteria(["values"=>$destinationRow]);
+    }
+};
+
+//Assemble the Transaction (in order of execution)
+$myTransaction = new Transaction();
+$myTransaction->addQuery($sourceStatementSet);
+$myTransaction->addFunction($transform);
+$myTransaction->addQuery($destinationStatementSet);
+
+//Execute and finally commit it.
+$myTransaction->executeAll();
+$myTransaction->commit();
+```
+There are ways to simplify this process even further, using the classes below.
 
 ### Structures
 
