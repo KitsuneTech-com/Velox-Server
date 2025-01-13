@@ -175,8 +175,6 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
         switch ($statementType){
             case "PreparedStatement":
                 foreach($rows as $row){
-                    //Submodel updates are disallowed when the parent Model's update procedure is a PreparedStatement.
-                    //PreparedStatement placeholders do not supply the necessary criteria for filtering.
                     $currentProcedure->addParameterSet($row);
                 }
                 break;
