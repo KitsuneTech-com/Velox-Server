@@ -14,13 +14,13 @@ namespace KitsuneTech\Velox\Structures;
  *  ```json
  *   {
  *    select:
- *      [{where: [{col1: ["=","someValue"]}],
+ *      [{where: [{col1: ["=","someValue"]}]}],
  *    insert:
  *      [{values: [{col2: 'data', col3: 'data'},{col2: 'moredata', col3: 'moredata'}]}],
  *    delete:
- *      [{where: [{col1: 1},{col2: 'deleteThis', col3: 'deleteThis'}]],
+ *      [{where: [{col1: ["=",1]},{col2: ["=",'deleteThis'], col3: ["=",'deleteThis']}]}],
  *    update:
- *      [{values: {col2: 'changeThis'}, where: {col2: 'fromThis'}},{values: {col2: 'thisToo'}, where: {col1: 2}}]
+ *      [{values: [{col2: 'changeThis'}], where: [{col2: ["=",'fromThis']}]},{values: {col2: 'thisToo'}, where: [{col1: ["=",2]}]}]
  *  }
  *  ```
  *
