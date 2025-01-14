@@ -213,6 +213,65 @@ various methods. Once a Model is populated, filtering and sorting can be done wi
 any changes made through the corresponding methods are automatically forwarded to the database by way of the associated
 procedures; the Model is subsequently refreshed with current data.
 
+#### VeloxQL
+The VeloxQL class is a purely structural entity (no methods) which implements an object-oriented equivalent of the
+VALUES and/or WHERE clauses of a query -- in short, the conditional part. By using VeloxQL objects with a StatementSet
+or Model, instances of the latter can be defined one time for a given dataset and easily reused with multiple sets of
+values or criteria.
+
+Each VeloxQL instance has four properties, one for each query type -- select, insert, update, and delete. Each
+represents an array of operations of that type to be performed, with the clauses appropriate to that query type.
+Thus, each element of a given property must be an array having the following keys, respectively:
+
+* select: "where"
+* update: "values", "where"
+* insert: "values"
+* delete: "where"
+
+The value for each key must itself be an array, the expected contents of which depend on the key, as described below:
+
+##### "where"
+A "where" array is an array of arrays, with each array being a set of conditions to be applied to the corresponding
+SELECT query, ORed together; each set of conditions is an associative array wherein each key is a column name for that
+dataset, and the corresponding value is an array representation of a SQL-equivalent comparison expression for that
+column; this array will contain between one and three elements, depending on the expression; the general format of this
+is as follows:
+
+* Unary operations: `["IS NULL"]`, `["IS NOT NULL"]`
+* Binary comparisons: `["=", "someValue"]` (all SQL-standard binary comparisons are supported)
+* Trinary comparisons: `["BETWEEN","firstValue","secondValue"]` (the values here should of course be of a type that can
+be compared in this manner)
+* Set comparisons: `["IN",["value1","value2","value3"]]`
+
+Put together, a "where" array might look something like this:
+```php
+[
+    ["column1" => ["=",2], "column2" => ["<", 3]],
+    ["column1" => ["<>", 5], "column2" => ["IS NULL"]],
+    ["column1" => ["BETWEEN", 1, 10]]
+]
+```
+which corresponds to the following SQL WHERE clause:
+```sql
+WHERE (column1 = 2 AND column2 < 3) OR (column1 <> 5 AND column2 IS NULL) OR (column1 BETWEEN 1 AND 10)
+```
+
+##### "values"
+A "values" array is also an array of arrays, but a much simpler one. Each array represents one set of columns/values
+(as an associative array) to be either inserted or updated, depending on the query type. Only one such array is used
+for each UPDATE, but several arrays can be used to perform a batch INSERT. For example, this VeloxQL object is set up
+to insert two rows into a dataset, each having different values for the two given columns:
+```php
+$vql = new VeloxQL;
+$vql->insert = [
+    [
+    "values"=>[
+        ["column1" => "firstValueColumn1", "column2" => "firstValueColumn2"],
+        ["column1" => "secondValueColumn1", "column2" => "secondValueColumn2"]
+    ]
+];
+```
+
 ### Transport
 
 The `Transport` sub-namespace contains one primary function: `Export`. This is used in combination with one or more
