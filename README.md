@@ -282,6 +282,18 @@ $vql->insert = [
 ];
 ```
 
+#### ResultSet
+ResultSet is the default return datatype for most Velox procedures, unless specified otherwise. This can be accessed and
+iterated as a typical two-dimensional array, but it also includes some extra utility methods that provide metadata about
+the result data and to be able to merge this data with that of another ResultSet (akin to a SQL UNION operation).
+
+| Method         | Description                                                                                                                                                                                           |
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| lastAffected() | Returns an array of the indices affected by the procedure that returned this ResultSet [as LAST_INSERT_ID() in MySQL, but run after each SQL statement executed]                                      |
+| columns()      | Returns an array containing the column names from the result                                                                                                                                          |
+| getRawData()   | Sometimes you just need an actual array.                                                                                                                                                              |
+| merge()        | Takes two arguments, in order: another ResultSet, and a boolean. The contents of the given ResultSet are appended to this one, filtering out duplicate rows if true is passed as the second argument. |
+
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
