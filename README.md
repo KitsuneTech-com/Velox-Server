@@ -323,7 +323,7 @@ the argument is an array of parameter sets or criteria to be added to the proced
 then invoked immediately after these parameter sets/criteria are added, and once the operation is complete, `select()`
 is called to refresh the Model with the updated data.
 
-`synchronize()` is a shortcut method to perform all desired DDL queries in sequence; it takes as its argument a VeloxQL
+`synchronize()` is a shortcut method to perform all desired DDL queries in sequence. It takes as its argument a VeloxQL
 object containing all changes to be made, applies them to their designated procedures, and then executes them in the
 following order: `update()`,`delete()`,`insert()`, with the `select()` call postponed until the end.
 
