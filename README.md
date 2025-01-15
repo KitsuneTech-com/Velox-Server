@@ -314,6 +314,22 @@ data source.) A Model can also be defined without any procedures at all; in such
 and the data will need to be populated through direct access. (This may be useful if Model features are desired without
 a SQL-compatible data source.)
 
+##### Data source synchronization
+Model contains five methods by which the Model is synchronized with the remote data source. Four of these -- `select()`,
+`update()`,`insert()`, and `delete()` -- correspond to the procedures defined in the constructor, and run the appropriate
+procedure using the arguments supplied. For `select()`, that argument is a boolean indicating whether the return value
+should be a VeloxQL object indicating the changes in the remote data since the last `select()` call; for the other three,
+the argument is an array of parameter sets or criteria to be added to the procedure in question. The procedure is
+then invoked immediately after these parameter sets/criteria are added, and once the operation is complete, `select()`
+is called to refresh the Model with the updated data.
+
+`synchronize()` is a shortcut method to perform all desired DDL queries in sequence; it takes as its argument a VeloxQL
+object containing all changes to be made, applies them to their designated procedures, and then executes them in the
+following order: `update()`,`delete()`,`insert()`, with the `select()` call postponed until the end.
+
+##### Joining, filtering, and sorting
+
+
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
