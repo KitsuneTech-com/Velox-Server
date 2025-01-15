@@ -300,20 +300,21 @@ string, or STDOUT). The usage is also quite simple -- it's a single function cal
 
 The constants expected in the second parameter are predefined as follows:
 
-| Format  | Description                                                                  |
-|---------|------------------------------------------------------------------------------|
-| AS_JSON | A JSON array of objects, each of which represent one row in key/value format |
-| AS_CSV  | A CSV spreadsheet containing the exported data in tabular form               |
-| AS_XML  | An XML representation of the exported Model(s)                               |
-| AS_HTML | An HTML page containing a <table> populated with the exported data           |
+##### Format
+| Constant | Description                                                                  |
+|----------|------------------------------------------------------------------------------|
+| AS_JSON  | A JSON array of objects, each of which represent one row in key/value format |
+| AS_CSV   | A CSV spreadsheet containing the exported data in tabular form               |
+| AS_XML   | An XML representation of the exported Model(s)                               |
+| AS_HTML  | An HTML page containing a <table> populated with the exported data           |
 
-
-| Destination | Description                                                                                           |
-|-------------|-------------------------------------------------------------------------------------------------------|
-| TO_BROWSER  | HTTP headers are sent before the data is sent to the web server in the given format                   |
-| TO_FILE     | A local file is created from the exported data                                                        |
-| TO_STRING   | Export() returns a string representation of the data in the given format, without outputting anything |
-| TO_STDOUT   | The results are sent directly to the console (if executing a script from the command line)            |
+##### Destination
+| Constant   | Description                                                                                           |
+|------------|-------------------------------------------------------------------------------------------------------|
+| TO_BROWSER | HTTP headers are sent before the data is sent to the web server in the given format                   |
+| TO_FILE    | A local file is created from the exported data                                                        |
+| TO_STRING  | Export() returns a string representation of the data in the given format, without outputting anything |
+| TO_STDOUT  | The results are sent directly to the console (if executing a script from the command line)            |
 
 Any combination of format and destination constants can be provided, added together. For example, TO_FILE+AS_CSV will
 create a local CSV file, while TO_BROWSER+AS_HTML will render an HTML page to a web client.
