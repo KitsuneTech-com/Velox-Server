@@ -332,8 +332,11 @@ To apply a filter to the Model without altering the underlying data, the `setFil
 either a ["where" array](#where) or a VeloxQL object as the argument. (In the latter case, the "where" array will be
 parsed from the VeloxQL object's select property.) The filter will be applied as if it were a WHERE clause of an SQL
 query, but only affecting the visibility of the data in the Model. Subsequent calls to `setFilter()` will set a new
-filter, replacing the previous one (the filters do not stack), and passing null to `setFilter()` will remove the filter
-entirely.
+filter, replacing the previous one (the filters do not stack), and passing null to `setFilter()` (or calling it
+with no arguments) will remove the filter entirely.
+
+##### Sorting
+The `sort()` method sorts the Model's data according to the 
 
 ### Transport
 
