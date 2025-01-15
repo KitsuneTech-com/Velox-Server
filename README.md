@@ -308,7 +308,7 @@ string, or STDOUT). The usage is also quite simple -- it's a single function cal
 2. A pair of constants added together, indicating the format and destination for the exported data,
 3. A path and/or filename to which the data will be sent (this only applies to file and browser exports),
 4. The number of rows from the Model(s) to be skipped from the beginning of the dataset, if desired (default: 0), and
-5. whether to leave off the column headers (these are included by default).
+5. A boolean, true to leave off the column headers (these are included by default).
 
 The constants expected in the second parameter are predefined as follows:
 
