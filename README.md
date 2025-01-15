@@ -284,9 +284,37 @@ $vql->insert = [
 
 ### Transport
 
-The `Transport` sub-namespace contains one primary function: `Export`. This is used in combination with one or more
-instances of Structures\Model as a means to send the contents of the given Models to the desired location (the browser,
-a file, a PHP object, or STDOUT) in the desired format (JSON, CSV, XML, or HTML) - set through a sum of flags
-(see Support/Constants.php).
+The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
+non-database media. This currently consists of one primary function: `Export`.
 
 #### Export
+Export's purpose is more or less self-explanatory: it exports the dataset(s) of one or several Models in one of several
+formats (JSON, CSV, XML, and HTML are currently supported) to the specified destination (the browser, a file, a PHP
+string, or STDOUT). The usage is also quite simple -- it's a single function call, with the following parameters, in order:
+
+1. The Model (or array of Models) to be exported,
+2. A pair of constants added together, indicating the format and destination for the exported data,
+3. A path and/or filename to which the data will be sent (this only applies to file and browser exports),
+4. The number of rows from the Model(s) to be skipped from the beginning of the dataset, if desired (default: 0), and
+5. whether to leave off the column headers (these are included by default).
+
+The constants expected in the second parameter are predefined as follows:
+
+| Format  | Description                                                                  |
+|---------|------------------------------------------------------------------------------|
+| AS_JSON | A JSON array of objects, each of which represent one row in key/value format |
+| AS_CSV  | A CSV spreadsheet containing the exported data in tabular form               |
+| AS_XML  | An XML representation of the exported Model(s)                               |
+| AS_HTML | An HTML page containing a <table> populated with the exported data           |                                                                          
+
+| Destination | Description                                                                                           |
+|-------------|-------------------------------------------------------------------------------------------------------|
+| TO_BROWSER  | HTTP headers are sent before the data is sent to the web server in the given format                   |
+| TO_FILE     | A local file is created from the exported data                                                        |
+| TO_STRING   | Export() returns a string representation of the data in the given format, without outputting anything |
+| TO_STDOUT   | The results are sent directly to the console (if executing a script from the command line)            |
+
+Any combination of format and destination constants can be provided, added together. For example, TO_FILE+AS_CSV will
+create a local CSV file, while TO_BROWSER+AS_HTML will render an HTML page to a web client.
+
+
