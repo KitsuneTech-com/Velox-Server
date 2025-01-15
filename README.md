@@ -318,7 +318,7 @@ a SQL-compatible data source.)
 Model contains five methods by which the Model is synchronized with the remote data source. Four of these -- `select()`,
 `update()`,`insert()`, and `delete()` -- correspond to the procedures defined in the constructor, and run the appropriate
 procedure using the arguments supplied. For `select()`, that argument is a boolean indicating whether the return value
-should be a VeloxQL object indicating the changes in the remote data since the last `select()` call; for the other three,
+should be a VeloxQL object indicating the changes in the remote data since the last `select` call; for the other three,
 the argument is an array of parameter sets or criteria to be added to the procedure in question. The procedure is
 then invoked immediately after these parameter sets/criteria are added, and once the operation is complete, `select()`
 is called to refresh the Model with the updated data.
@@ -327,8 +327,13 @@ is called to refresh the Model with the updated data.
 object containing all changes to be made, applies them to their designated procedures, and then executes them in the
 following order: `update()`,`delete()`,`insert()`, with the `select()` call postponed until the end.
 
-##### Joining, filtering, and sorting
-
+##### Filtering
+To apply a filter to the Model without altering the underlying data, the `setFilter()` method can be called, passing
+either a ["where" array](#where) or a VeloxQL object as the argument. (In the latter case, the "where" array will be
+parsed from the VeloxQL object's select property.) The filter will be applied as if it were a WHERE clause of an SQL
+query, but only affecting the visibility of the data in the Model. Subsequent calls to `setFilter()` will set a new
+filter, replacing the previous one (the filters do not stack), and passing null to `setFilter()` will remove the filter
+entirely.
 
 ### Transport
 
