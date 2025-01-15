@@ -297,9 +297,9 @@ the result data and to be able to merge this data with that of another ResultSet
 #### Model
 Model is the big fish among the Velox structures. Behind the scenes it holds a full representation of the dataset
 retrieved through the SELECT-equivalent Velox procedure used to instantiate it, and changes to this can be synchronized
-with the data source through the use of the methods corresponding to the given query type [update(), insert(), delete()],
-which use the specified changes to generate parameter sets/criteria for, and subsequently execute, the Velox procedures
-defined for those operations. All these are specified initially in the constructor, similar to the following example:
+with the data source through the use of the methods corresponding to the given query type [`update()`, `insert()`,
+`delete()`], which use the specified changes to generate parameter sets/criteria for, and subsequently execute, the
+Velox procedures defined for those operations. All these are specified initially in the constructor, similar to the following example:
 
 ```php
 $select = new Query($myConnection,"SELECT firstColumn, secondColumn, thirdColumn FROM myTable");
