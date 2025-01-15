@@ -306,7 +306,7 @@ The constants expected in the second parameter are predefined as follows:
 | AS_CSV  | A CSV spreadsheet containing the exported data in tabular form               |
 | AS_XML  | An XML representation of the exported Model(s)                               |
 | AS_HTML | An HTML page containing a <table> populated with the exported data           |
-|---------|------------------------------------------------------------------------------|
+
 
 | Destination | Description                                                                                           |
 |-------------|-------------------------------------------------------------------------------------------------------|
