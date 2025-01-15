@@ -335,9 +335,6 @@ query, but only affecting the visibility of the data in the Model. Subsequent ca
 filter, replacing the previous one (the filters do not stack), and passing null to `setFilter()` (or calling it
 with no arguments) will remove the filter entirely.
 
-##### Sorting
-The `sort()` method sorts the Model's data according to the 
-
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
