@@ -306,7 +306,7 @@ The constants expected in the second parameter are predefined as follows:
 | AS_JSON  | A JSON array of objects, each of which represent one row in key/value format |
 | AS_CSV   | A CSV spreadsheet containing the exported data in tabular form               |
 | AS_XML   | An XML representation of the exported Model(s)                               |
-| AS_HTML  | An HTML page containing a <table> populated with the exported data           |
+| AS_HTML  | An HTML page containing a `<table>` populated with the exported data           |
 
 ##### Destination
 | Constant   | Description                                                                                           |
