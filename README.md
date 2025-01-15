@@ -50,6 +50,16 @@ underneath the `KitsuneTech\Velox` base, as reflected in the structure of the sr
 the Support directory, which contains independent helper functions and constants that are not part of the class
 structure.) Each of these sub-namespaces handles a different facet of the server-side component.
 
+To use any of these classes, include your autoloader according to its documentation, then write use statements for
+the fully qualified class name of each class or function you wish to implement. Remember to include the subnamespace
+as appropriate.
+
+```php
+use KitsuneTech\Velox\Database\Connection;
+use KitsuneTech\Velox\Structures\{Model, VeloxQL};
+use function KitsuneTech\Velox\Transport\Export;
+```
+
 ### Database
 
 The Database sub-namespace controls database communication. The `Connection` object serves as the interface for this
@@ -278,3 +288,5 @@ The `Transport` sub-namespace contains one primary function: `Export`. This is u
 instances of Structures\Model as a means to send the contents of the given Models to the desired location (the browser,
 a file, a PHP object, or STDOUT) in the desired format (JSON, CSV, XML, or HTML) - set through a sum of flags
 (see Support/Constants.php).
+
+#### Export
