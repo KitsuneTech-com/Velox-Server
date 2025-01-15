@@ -294,6 +294,26 @@ the result data and to be able to merge this data with that of another ResultSet
 | getRawData()   | Sometimes you just need an actual array.                                                                                                                                                              |
 | merge()        | Takes two arguments, in order: another ResultSet, and a boolean. The contents of the given ResultSet are appended to this one, filtering out duplicate rows if true is passed as the second argument. |
 
+#### Model
+Model is the big fish among the Velox structures. Behind the scenes it holds a full representation of the dataset
+retrieved through the SELECT-equivalent Velox procedure used to instantiate it, and changes to this can be synchronized
+with the data source through the use of the methods corresponding to the given query type [update(), insert(), delete()],
+which use the specified changes to generate parameter sets/criteria for, and subsequently execute, the Velox procedures
+defined for those operations. All these are specified initially in the constructor, similar to the following example:
+
+```php
+$select = new Query($myConnection,"SELECT firstColumn, secondColumn, thirdColumn FROM myTable");
+$update = new StatementSet($myConnection,"UPDATE myTable SET <<values>> WHERE <<criteria>>");
+$insert = new StatementSet($myConnection,"INSERT INTO myTable (<<columns>>) VALUES <<values>>");
+$delete = new StatementSet($myConnection,"DELETE FROM myTable WHERE <<criteria>>");
+$myModel = new Model($select, $update, $insert, $delete);
+```
+All procedures are optional; however, only those operations that have been supplied to the Model at instantiation will
+be available for use. (e.g., if only a SELECT is provided, the Model will be read-only relative to the external
+data source.) A Model can also be defined without any procedures at all; in such a case, the Model will be created empty
+and the data will need to be populated through direct access. (This may be useful if Model features are desired without
+a SQL-compatible data source.)
+
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
@@ -312,12 +332,12 @@ string, or STDOUT). The usage is also quite simple -- it's a single function cal
 
 The constants expected in the second parameter are predefined as follows:
 
-| Format  | Description                                                                  |
-|---------|------------------------------------------------------------------------------|
-| AS_JSON | A JSON array of objects, each of which represent one row in key/value format |
-| AS_CSV  | A CSV spreadsheet containing the exported data in tabular form               |
-| AS_XML  | An XML representation of the exported Model(s)                               |
-| AS_HTML | An HTML page containing a `<table>` populated with the exported data           |
+| Format  | Description                                                                                                                                          |
+|---------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AS_JSON | A JSON representation of the exported Model(s), having a "data" property as an array of objects, each of which represent one row in key/value format |
+| AS_CSV  | A CSV spreadsheet containing the exported data in tabular form                                                                                       |
+| AS_XML  | An XML representation of the exported Model(s)                                                                                                       |
+| AS_HTML | An HTML page containing a `<table>` populated with the exported data                                                                                 |
 
 | Destination | Description                                                                                           |
 |-------------|-------------------------------------------------------------------------------------------------------|
