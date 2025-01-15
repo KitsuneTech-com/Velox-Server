@@ -51,7 +51,7 @@ the Support directory, which contains independent helper functions and constants
 structure.) Each of these sub-namespaces handles a different facet of the server-side component.
 
 To use any of these classes, include your autoloader according to its documentation, then write use statements for
-the fully qualified class name of each class or function you wish to implement. Remember to include the subnamespace
+the fully qualified class name of each class or function you wish to implement. Remember to include the sub-namespace
 as appropriate.
 
 ```php
