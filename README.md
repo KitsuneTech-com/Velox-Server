@@ -263,7 +263,10 @@ Put together, a "where" array might look something like this:
 ```
 which corresponds to the following SQL WHERE clause:
 ```sql
-WHERE (column1 = 2 AND column2 < 3) OR (column1 <> 5 AND column2 IS NULL) OR (column1 BETWEEN 1 AND 10)
+WHERE
+(column1 = 2 AND column2 < 3)
+OR (column1 <> 5 AND column2 IS NULL)
+OR (column1 BETWEEN 1 AND 10)
 ```
 
 ##### "values"
