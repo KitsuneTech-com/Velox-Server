@@ -172,8 +172,8 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
                     $thead = $table->appendChild($doc->createElement('thead'));
                     $thead_tr = $thead->appendChild($doc->createElement('tr'));
                     foreach($details['columns'] as $column){
-                        $td = $thead_tr->appendChild($doc->createElement('td'));
-                        $td->textContent = $column;
+                        $th = $thead_tr->appendChild($doc->createElement('th'));
+                        $th->textContent = $column;
                     }
                 }
                 foreach($details['data'] as $row){
