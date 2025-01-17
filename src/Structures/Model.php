@@ -911,6 +911,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @param string|null $fileName
      * @param int|null $ignoreRows
      * @param bool $noHeader
+     * @param string|null $css
      *
      * @return string|bool
      * @throws VeloxException
@@ -919,7 +920,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable {
      * @version 1.0.0
      * @since 1.0.0-alpha
      */
-    public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
-        return Export($this,$flags,$fileName,$ignoreRows,$noHeader);
+    public function export(int $flags = TO_BROWSER+AS_JSON, ?string $fileName = null, ?int $ignoreRows = 0, bool $noHeader = false, ?string $css = null) : string|bool {
+        return Export($this,$flags,$fileName,$ignoreRows,$noHeader,$css);
     }
 }

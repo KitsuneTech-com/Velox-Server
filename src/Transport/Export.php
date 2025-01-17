@@ -5,6 +5,7 @@ namespace KitsuneTech\Velox\Transport;
 use KitsuneTech\Velox\VeloxException as VeloxException;
 use KitsuneTech\Velox\Structures\Model as Model;
 use function KitsuneTech\Velox\Utility\isPowerOf2;
+use function KitsuneTech\Velox\Utility\validateURLPath;
 
 /** Exports the specified Model(s) in a specified format, to a specified destination.
  *
@@ -25,11 +26,18 @@ use function KitsuneTech\Velox\Utility\isPowerOf2;
  *  * AS_XML
  *  * AS_HTML
  *
+ * **Important security note:** The final parameter, $css, is provided as an optional means to apply a stylesheet to
+ * exported HTML. This is perfectly safe when supplied with a known-good URL or CSS snippet; however, no validation is
+ * performed to check whether what is supplied may be malicious. If using this parameter, **do not** pass user input
+ * directly to it without first ensuring that the contents are safe and valid.
+ *
  * @param Model|array $models The Model(s) whose data is to be exported
  * @param int $flags A bitmask indicating the destination type and format of the exported data.
  * @param string|null $location The path and/or filename to which the data will be exported (required for TO_FILE but ignored for TO_STRING and TO_STDOUT)
  * @param int|null $ignoreRows The number of data rows (if any) to be skipped at the beginning
  * @param bool $noHeader If passed as true, no column headers will be included with the exported data
+ * @param string $css A string containing either CSS rules to be applied to the exported HTML, or a URI (absolute or relative)
+ *      pointing to a CSS resource. (This only applies to AS_HTML exports.)
  *
  * @return string|bool If exported to string, the result will be returned. Otherwise, this will be a boolean indicating success.
  * @throws VeloxException
@@ -39,7 +47,7 @@ use function KitsuneTech\Velox\Utility\isPowerOf2;
  * @since 1.0.0-alpha
  * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  */
-function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false) : string|bool {
+function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false, string $css = '') : string|bool {
     //unpack flags
     $destination = $flags & 0x0F;  //First 5 bits
     $format = $flags & 0xF0;       //Next 4 bits
@@ -53,6 +61,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
         throw new VeloxException("Only one to-browser Export can be called per request.",32);
     }
     $data = [];
+    $titles = [];
     if ($models instanceof Model){
         $models = [$models];
     }
@@ -68,6 +77,7 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
         }
         if ($model->instanceName){
             $data[$model->instanceName] = $details;
+            $titles[] = $model->instanceName;
         }
         else {
             $data[] = $details;
@@ -135,6 +145,24 @@ function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $l
         case AS_HTML:
             $doc = new \DOMDocument;
             $html = $doc->appendChild($doc->createElement('html'));
+            $head = $html->appendChild($doc->createElement('head'));
+            if (count($titles) > 0){
+                $title = $head->appendChild($doc->createElement('title'));
+                $title->textContent = implode(", ",$titles);
+            }
+            if ($css){
+                if (validateURLPath($css)){
+                    $link = $head->appendChild($doc->createElement('link'));
+                    $link->setAttribute('rel','stylesheet');
+                    $link->setAttribute('type','text/css');
+                    $link->setAttribute('href',$css);
+                }
+                else {
+                    $style = $head->appendChild($doc->createElement('style'));
+                    $style->setAttribute('type','text/css');
+                    $style->textContent = $css;
+                }
+            }
             $body = $html->appendChild($doc->createElement('body'));
             foreach($data as $instanceName => $details){
                 $table = $body->appendChild($doc->createElement('table'));

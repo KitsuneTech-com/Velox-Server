@@ -168,3 +168,21 @@ function array_all_columns(array $arr) : array {
     }
     return array_keys($columns);
 }
+
+/**
+ * Determines whether the string supplied is a valid URI path.
+ *
+ * (note: this does not determine whether the resource in question exists, only that the string is appropriate
+ * to be used in a src attribute.)
+ *
+ * @param string $path The string to be checked
+ *
+ * @return bool Whether the string is a valid path.
+ *
+ * @version 1.0.0
+ * @since 1.0.0
+ */
+function validateURLPath(string $path) : bool {
+    //A dummy domain is prepended so that incomplete paths can be validated. This URL is not actually accessed.
+    return filter_var('https://www.test.xyz'.$path, FILTER_VALIDATE_URL) !== false;
+}
