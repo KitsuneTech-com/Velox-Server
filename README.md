@@ -338,6 +338,18 @@ query, but only affecting the visibility of the data in the Model. Subsequent ca
 filter, replacing the previous one (the filters do not stack), and passing null to `setFilter()` (or calling it
 with no arguments) will remove the filter entirely.
 
+##### Sorting
+Models can be sorted using the `sort()` method, in a manner somewhat similar to that of PHP's native
+[array_multisort()](https://www.php.net/manual/en/function.array-multisort.php) function (in fact, this method uses
+array_multisort() to perform the sorting). The method call differs only in that the arrays expected by array_multisort()
+are replaced by the column names by which the Model is to be sorted. For example:
+```php
+$myModel->sort("column1", SORT_ASC, "column2", SORT_DESC);
+```
+will sort $myModel by "column1" first in ascending order, then by "column2" in descending order. As in array_multisort(),
+optional flags can also be applied to determine the sort behavior (e.g., whether the column is to be sorted
+alphabetically or numerically). See the documentation on array_multisort() for details on what flags are available.
+
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
