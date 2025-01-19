@@ -363,8 +363,9 @@ string, or STDOUT). The usage is also quite simple -- it's a single function cal
 1. The Model (or array of Models) to be exported,
 2. A pair of constants added together, indicating the format and destination for the exported data,
 3. A path and/or filename to which the data will be sent (this only applies to file and browser exports),
-4. The number of rows from the Model(s) to be skipped from the beginning of the dataset, if desired (default: 0), and
-5. A boolean, true to leave off the column headers (these are included by default).
+4. The number of rows from the Model(s) to be skipped from the beginning of the dataset, if desired (default: 0),
+5. A boolean, true to leave off the column headers (these are included by default), and
+6. An optional string containing either CSS text or a URL to an external style sheet with which the output can be formatted.
 
 The constants expected in the second parameter are predefined as follows:
 
@@ -384,5 +385,9 @@ The constants expected in the second parameter are predefined as follows:
 
 Any combination of format and destination constants can be provided, added together. For example, `TO_FILE+AS_CSV` will
 create a local CSV file, while `TO_BROWSER+AS_HTML` will render an HTML page to a web client.
+
+***Important:*** If using the CSS parameter to specify styling, it's crucial to ensure that the content is safe (either
+the URL or code is known and trusted, or it's been properly sanitized). Allowing end users to specify their own styling
+without first validating it could leave open the possibility of XSS injection.
 
 
