@@ -506,7 +506,7 @@ without first validating it could leave open the possibility of XSS injection.
 Velox defines its own exception class, named VeloxException. Any exceptions raised by the Velox library (see
 [exceptions.md](exceptions.md) for specific details) will be of this class. Velox also defines and implements an
 exception handler that formats and outputs exception details (including, optionally, a call stack) in a chosen manner.
-This behavior can be specified by defining the `$GLOBALS['Velox']['ErrorReportingMode']` variable as any of the
+This behavior can be specified by calling the veloxErrorReporting() function, passing as an argument any of the
 following constants, added together:
 
 | Constant             | Behavior                                                                            |
