@@ -400,6 +400,49 @@ after the join will not be propagated to the joined Model, and the joined Model 
 original Models' synchronization procedures. The results should therefore be treated as a static snapshot at the time
 of the join.
 
+##### Pivoting
+In addition to the above SQL-analogous methods, Model also provides a `pivot()` method that creates a derivative Model 
+with column names generated from the values of a specified pivot column, with the corresponding values of another
+column summarized appropriately. `pivot()` has three required parameters, in order: the name of the pivot column (i.e.,
+the column having the intended column names), the name of the index column whose values will be used to group the
+results, and the name of the column where the values for the pivoted columns are to be found. The transformation
+applied will look something like the following:
+
+Original:
+
+| index | pivot     | values |
+|-------|-----------|--------|
+| 1     | column1   | 10     |
+| 1     | column2   | 20     |
+| 1     | column3   | value1 |
+| 2     | column1   | 20     |
+| 2     | column2   | 30     |
+| 2     | column2   | 20     |
+| 2     | column3   | value2 |
+| 2     | column3   | value3 |
+
+Pivoted:
+
+| index | column1 | column2 | column3       |
+|-------|---------|---------|---------------|
+| 1     | 10      | 20      | value1        |
+| 2     | 20      | 50      | value2,value3 |
+
+Any values having the same pivot and index will be either summed or concatenated (using a comma delimiter) depending on
+the data type of the values associated with the pivot value (specifically, if any such value is non-numeric, the values
+are concatenated).
+
+Three optional parameters are also available for more fine-grained control over the results. The first optional parameter
+(fourth in the order) is an array of pivot values to be used; the results will only have these values as columns, and
+all other pivot values will be ignored. The second optional parameter is a boolean indicating whether these pivot values
+should instead be ignored; if passed as true, the results will instead contain columns for every pivot value *except*
+those specified in the previous argument. Finally, one more boolean parameter allows for suppression of the exception
+that would otherwise be thrown if one of the pivot values specified do not exist in the Model; in this case, the pivot
+column will be created, but it will be filled with nulls.
+
+As in the `join()` method above, the Model returned by `pivot()` is independent of the original Model and is not updated when
+the data in the original Model is changed.
+
 ### Transport
 
 The `Transport` sub-namespace defines classes and functions used to package and transport data between Velox and other
