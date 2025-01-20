@@ -43,6 +43,11 @@ Alternatively, the source can be downloaded directly from this repository and im
 your choice. Velox Server can also be implemented without an autoloader, but this is not recommended since the class
 files will have to be included/required individually based on dependencies. These methods may work but are not supported.
 
+**Note for web implementation:** When using this or any other Composer application in a web context, it's best to
+initialize Composer one level below the web root (e.g., if your web root is /srv/www/htdocs, you should install Composer
+at /srv/www). This will limit malicious actors' ability to directly access and exploit server-side libraries, scripts,
+and/or configuration files if the server is not properly configured to execute PHP.
+
 ## Usage
 
 Having been built according to the PSR-4 standard, Velox Server class structure is divided into a set of sub-namespaces
@@ -496,5 +501,3 @@ create a local CSV file, while `TO_BROWSER+AS_HTML` will render an HTML page to 
 ***Important:*** If using the CSS parameter to specify styling, it's crucial to ensure that the content is safe (either
 the URL or code is known and trusted, or it's been properly sanitized). Allowing end users to specify their own styling
 without first validating it could leave open the possibility of XSS injection.
-
-
