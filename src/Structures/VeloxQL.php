@@ -45,9 +45,6 @@ class VeloxQL {
      * @since 1.0.0-alpha
      */
     public function __construct(string $json = ""){
-        //Expected JSON format (where col1 is an autoincrement field not set by this library):
-        //(each row is an object with properties representing each field name)
-
         $vqlObj = $json != "" ? json_decode($json) : (object)[];
         $this->select = $vqlObj->select ?? [];
         $this->update = $vqlObj->update ?? [];
