@@ -501,3 +501,20 @@ create a local CSV file, while `TO_BROWSER+AS_HTML` will render an HTML page to 
 ***Important:*** If using the CSS parameter to specify styling, it's crucial to ensure that the content is safe (either
 the URL or code is known and trusted, or it's been properly sanitized). Allowing end users to specify their own styling
 without first validating it could leave open the possibility of XSS injection.
+
+### Error handling
+Velox defines its own exception class, named VeloxException. Any exceptions raised by the Velox library (see
+[exceptions.md](exceptions.md) for specific details) will be of this class. Velox also defines and implements an
+exception handler that formats and outputs exception details (including, optionally, a call stack) in a chosen manner.
+This behavior can be specified by defining the `$GLOBALS['Velox']['ErrorReportingMode']` variable as any of the
+following constants, added together:
+
+| Constant             | Behavior                                                                            |
+|----------------------|-------------------------------------------------------------------------------------|
+| VELOX_ERR_NONE       | Only an exception code is output (this is overridden by any of the other constants) |
+| VELOX_ERR_STDERR     | Error messages are sent to stderr                                                   |
+| VELOX_ERR_JSONOUT    | Error messages are formatted as JSON                                                |
+| VELOX_ERR_STACKTRACE | A full stack trace is included with the error output                                |
+
+The default behavior is VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE.
+
