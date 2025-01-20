@@ -326,7 +326,7 @@ the argument is an array of parameter sets or criteria to be added to the proced
 then invoked immediately after these parameter sets/criteria are added, and once the operation is complete, `select()`
 is called to refresh the Model with the updated data.
 
-`synchronize()` is a shortcut method to perform all desired DDL queries in sequence. It takes as its argument a VeloxQL
+`synchronize()` is a shortcut method to perform all desired DML queries in sequence. It takes as its argument a VeloxQL
 object containing all changes to be made, applies them to their designated procedures, and then executes them in the
 following order: `update()`,`delete()`,`insert()`, with the `select()` call postponed until the end.
 
@@ -349,6 +349,56 @@ $myModel->sort("column1", SORT_ASC, "column2", SORT_DESC);
 will sort $myModel by "column1" first in ascending order, then by "column2" in descending order. As in array_multisort(),
 optional flags can also be applied to determine the sort behavior (e.g., whether the column is to be sorted
 alphabetically or numerically). See the documentation on array_multisort() for details on what flags are available.
+
+##### Joining
+Any two Models, regardless of their underlying data sources, can be joined in a manner similar to SQL joins, using the
+`join()` method. While not as full-featured as a native SQL join (in particular, only one pair of columns can be
+specified per join), this allows data from two different sources to be joined without having to export data from one
+source to the other.
+
+The `join()` method is invoked on whichever Model is to be used as the left side of the join. It takes three arguments:
+a constant specifying the join type (`LEFT_JOIN`, `RIGHT_JOIN`, `INNER_JOIN`, `FULL_JOIN`, or `CROSS_JOIN` -- the
+behavior corresponds to the SQL standard), the Model to be used as the right side of the join, and a third argument
+specifying the conditions on which the join is to be performed. This third argument depends on the manner in which the
+join is to be performed, and can be one of the following:
+
+   * A string indicating a common column name in both Models to be joined upon; if this is used, the join is done as
+      if using the USING predicate. For example, a join written like this in SQL:
+      ```sql
+      SELECT * FROM model1 LEFT JOIN model2 USING (myColumn);
+     ```
+     would be performed with a Model join as follows:
+     ```php
+     $joinedModel = $model1->join(LEFT_JOIN,$model2,"myColumn");
+     ```
+   * An array of three strings. These strings are, in order: the left-side column to be joined, the operator to be
+     used, and the right-side column to be joined. These elements represent the comparison that would be
+     specified in SQL using the ON predicate. For example, a join written like this in SQL:
+      ```sql
+      SELECT * FROM model1 LEFT JOIN model2 ON model1.thisColumn = model2.thatColumn;
+     ```
+     would be performed with a Model join as follows:
+     ```php
+     $joinedModel = $model1->join(LEFT_JOIN,$model2,["thisColumn","=","thatColumn"]);
+     ```
+     Note in this case that though in the SQL standard the order of the columns in the expression doesn't matter, in a 
+     Model join the columns must be specified in left-to-right order (i.e., the first element must be a column from 
+     the left-side Model, and the third must come from the right-side Model). All SQL binary comparison operators are
+     supported.
+   * Null or omitted if a cross join is to be performed, since a cross join matches all rows on the left with all rows
+     on the right unconditionally.
+
+The join results are returned as a new Model having the columns of both original Models (as appropriate to the manner of
+the join -- a USING-equivalent join [as in the first example above] would contain only one copy of the specified column).
+It's important to note that because variable names are not equivalent to table names, ambiguous column names can't be
+resolved and will throw an exception unless each Model has its instanceName property set to a distinct value; if this is
+done, then any columns having the same name on both sides will be renamed using the Model's instanceName as a prefix
+("instanceName.columnName").
+
+Note also that the resulting Model is independent of the original Models; any changes performed on the original Models
+after the join will not be propagated to the joined Model, and the joined Model will not have access to either of the
+original Models' synchronization procedures. The results should therefore be treated as a static snapshot at the time
+of the join.
 
 ### Transport
 
