@@ -518,3 +518,8 @@ following constants, added together:
 
 The default behavior is VELOX_ERR_STDERR + VELOX_ERR_STACKTRACE.
 
+### Utility functions
+While not designed to be a core feature of this library, a handful of possibly useful utility functions are available
+in [src/Support/Utility.php](src/Support/Utility.php) that can be used independently of the rest of the library.
+Since these are mostly meant to provide necessary functionality to the core classes, this readme will not cover
+details and usage, but this information can be found in the docblocks therein.
