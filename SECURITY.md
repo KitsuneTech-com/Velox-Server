@@ -7,5 +7,11 @@ these are to be considered end-of-life and will receive no further updates; ther
 latest major version whenever possible to do so.
 
 ## Reporting a Vulnerability
-As this is an open-source project in development, there is no need at present to privately disclose the
-nature of a vulnerability. These can be brought up in Issues, tagged as "security".
+Any vulnerabilities in Velox Server or any other Kitsune Technologies project should be reported by e-mailing 
+[admin@kitsunetech.com](admin@kitsunetech.com). In this e-mail, please provide the following:
+* The name of the project affected by the vulnerability (Velox Server, Velox Client, etc.)
+* A description of how this vulnerability may be exploited;
+* If known, the file, class, and/or function in which the vulnerability was found;
+* and, optionally, any suggestions for remedies.
+
+
