@@ -27,14 +27,8 @@ and run the ```composer update``` command:
 
 ```json
 {
-  "repositories": [
-    {
-      "url": "https://github.com/KitsuneTech-com/Velox-Server.git",
-      "type": "git"
-    }
-  ],
   "require": {
-    "kitsunetech/velox": "dev-main"
+    "kitsunetech/velox": "v1.0.0"
   }
 }
 ```
