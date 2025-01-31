@@ -10,6 +10,9 @@ latest major version whenever possible to do so.
 Any vulnerabilities in Velox Server or any other Kitsune Technologies project should be reported by e-mailing 
 [admin@kitsunetech.com](mailto:admin@kitsunetech.com). In this e-mail, please provide the following:
 * The name of the project affected by the vulnerability (Velox Server, Velox Client, etc.)
-* A description of how this vulnerability may be exploited;
+* A description of the vulnerability and possible method of exploitation;
 * If known, the file, class, and/or function in which the vulnerability was found;
-* and, optionally, any suggestions for remedies.
+* and, optionally, any suggestions to remedy or mitigate the vulnerability
+
+Kitsune Technologies will use this information to triage the issue, issue a security advisory if necessary, and
+develop a patch for the vulnerability in question.
