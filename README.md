@@ -28,7 +28,7 @@ and run the ```composer update``` command:
 ```json
 {
   "require": {
-    "kitsunetech/velox": "v1.0.0"
+    "kitsunetech/velox": ">=1.0.0"
   }
 }
 ```
