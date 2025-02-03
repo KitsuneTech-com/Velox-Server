@@ -36,7 +36,7 @@ use function KitsuneTech\Velox\Utility\validateURLPath;
  * @param string|null $location The path and/or filename to which the data will be exported (required for TO_FILE but ignored for TO_STRING and TO_STDOUT)
  * @param int|null $ignoreRows The number of data rows (if any) to be skipped at the beginning
  * @param bool $noHeader If passed as true, no column headers will be included with the exported data
- * @param string $css A string containing either CSS rules to be applied to the exported HTML, or a URI (absolute or relative)
+ * @param string|null $css A string containing either CSS rules to be applied to the exported HTML, or a URI (absolute or relative)
  *      pointing to a CSS resource. (This only applies to AS_HTML exports.)
  *
  * @return string|bool If exported to string, the result will be returned. Otherwise, this will be a boolean indicating success.
@@ -47,7 +47,7 @@ use function KitsuneTech\Velox\Utility\validateURLPath;
  * @since 1.0.0-alpha
  * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  */
-function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false, string $css = '') : string|bool {
+function Export(Model|array $models, int $flags = TO_BROWSER+AS_JSON, ?string $location = null, ?int $ignoreRows = 0, bool $noHeader = false, ?string $css = '') : string|bool {
     //unpack flags
     $destination = $flags & 0x0F;  //First 5 bits
     $format = $flags & 0xF0;       //Next 4 bits
