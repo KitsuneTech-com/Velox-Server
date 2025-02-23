@@ -31,7 +31,7 @@ use KitsuneTech\Velox\VeloxException;
  *
  * The Transaction instance is itself callable, and invoking it as a function is a simple alias for calling {@see Transaction::executeAll()}.
  *
- * @version 1.0.0
+ * @version 1.0.2
  * @since 1.0.0-alpha
  * @license https://www.mozilla.org/en-US/MPL/2.0/ Mozilla Public License 2.0
  *
@@ -72,7 +72,7 @@ class Transaction {
      * @ignore
      */
     public function __invoke(bool $commit = false) : void {
-        $this->executeAll();
+        $this->executeAll($commit);
     }
 
     /**
