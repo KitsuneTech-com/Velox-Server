@@ -69,8 +69,10 @@ class PreparedStatement extends Query {
             if (!is_scalar($value) && !is_null($value)){
                 throw new VeloxException("Value for :".$key." is not a scalar or null.",50);
             }
-            $paramArray[":".$prefix.$key] = $value;
-            unset($paramArray[$key]);
+            if (filter_var($key, FILTER_VALIDATE_INT) === false) {
+                $paramArray[":" . $prefix . $key] = $value;
+                unset($paramArray[$key]);
+            }
         }
         $this->_paramArray[] = $paramArray;
     }

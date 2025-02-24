@@ -126,7 +126,7 @@ class Query {
                         }
                     }
                     else {
-                        throw new VeloxException('PDO Error: SQLSTATE '.$stmt->errorCode().': '.$stmt->errorInfo()[2], $stmt->errorInfo()[1]);
+                        throw new VeloxException('PDO Error: SQLSTATE '.$stmt->errorCode().': '.$stmt->errorInfo()[2], $stmt->errorInfo()[1] ?? 0);
                     }
                 }
                 break;
@@ -276,7 +276,7 @@ class Query {
                 }
             }
             else {
-                $placeholders = array_fill(1,$this->getParamCount(),null);
+                $placeholders = array_fill(0,$this->getParamCount(),null);
             }
         }
 
@@ -292,7 +292,7 @@ class Query {
                             try {
                                 //PDOStatement::bindParam() is called once for each parameter.
                                 //Equivalent non-PDO parameter binding tends to be done once per statement using an array of parameters, so these calls happen outside the loop.
-                                $stmt->bindParam($key, $placeholders[$key]);
+                                $stmt->bindParam(is_int($key) ? $key+1 : $key, $placeholders[$key]);
                             }
                             catch (\PDOException $ex) {
                                 if (!($this->queryType == Query::QUERY_PROC && str_starts_with($key, ':op_'))) {
